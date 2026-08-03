@@ -1,85 +1,87 @@
-# MedRDV — Plateforme de prise de rendez-vous médicaux (Israël)
+# MedRDV — Medical Appointment Booking Platform (Israel)
 
 ## What This Is
 
-Une plateforme web inspirée de Doctolib, adaptée au marché israélien, qui permet à un patient de rechercher un médecin privé selon la spécialité, la langue parlée (hébreu/anglais), le quartier et la disponibilité, puis de réserver un rendez-vous directement en ligne. La v1 est concentrée sur Tel-Aviv. Les profils médecins et leurs disponibilités sont des données de démonstration clairement identifiées comme telles — aucune intégration avec de vrais cabinets médicaux. C'est un projet final universitaire de développement Full-Stack.
+A Doctolib-like web platform adapted for the Israeli market, letting a patient search for a private doctor by specialty, spoken language (Hebrew/English), neighborhood, and availability, then book an appointment directly online. V1 is scoped to Tel-Aviv only. Doctor profiles and their availability are clearly-labeled demo data — there is no integration with real medical practices. This is a university final-year Full-Stack development project.
 
 ## Core Value
 
-Un patient doit pouvoir trouver un médecin adapté à ses critères et réserver un créneau disponible en quelques clics, avec une garantie absolue que deux patients ne réservent jamais le même créneau.
+A patient must be able to find a doctor matching their criteria and book an available slot in a few clicks, with an absolute guarantee that two patients can never book the same slot.
 
 ## Business Context
 
-- **Customer**: Patients (utilisation gratuite) et médecins/cabinets privés (abonnement — non implémenté en v1)
-- **Revenue model**: Abonnement mensuel médecin/cabinet, envisagé pour une version future — le modèle de données ne doit rien bloquer pour l'ajouter plus tard, mais aucune intégration de paiement n'est construite maintenant
-- **Success metric**: Un parcours de réservation complet et sans faille (recherche → profil → créneau → réservation → confirmation → gestion), démontrable en soutenance
+- **Customer**: Patients (free to use) and private doctors/clinics (subscription — not implemented in v1)
+- **Revenue model**: Monthly doctor/clinic subscription, envisioned for a future version — the data model must not block adding it later, but no payment integration is built now
+- **Success metric**: A complete, flawless booking journey (search → profile → slot → booking → confirmation → management), demonstrable in the defense
 - **Strategy notes**: —
 
 ## Requirements
 
 ### Validated
 
-(Aucune pour l'instant — projet greenfield)
+(None yet — greenfield project)
 
 ### Active
 
-- [ ] Authentification patient (inscription, connexion, déconnexion, session persistante)
-- [ ] Comptes médecins créés et activés par l'administrateur (pas d'auto-inscription médecin)
-- [ ] Recherche de médecins multi-critères : nom, spécialité, langue, quartier, disponibilité
-- [ ] Profils publics de médecins (spécialité, description, adresse, quartier, langues, prochains créneaux, statut démo)
-- [ ] Réservation de rendez-vous avec prévention garantie de la double réservation
-- [ ] Annulation de rendez-vous (patient et médecin)
-- [ ] Déplacement d'un rendez-vous vers un autre créneau disponible
-- [ ] Historique des rendez-vous (à venir / passés) côté patient et médecin
-- [ ] Gestion des disponibilités par le médecin (ajout/suppression de créneaux, blocage de périodes)
-- [ ] Favoris : le patient peut enregistrer des médecins favoris
-- [ ] Notifications internes (confirmation, annulation, déplacement de rendez-vous)
-- [ ] Dashboard patient, dashboard médecin, dashboard administrateur
-- [ ] Gestion complète des médecins par l'administrateur (créer, modifier, activer/désactiver)
-- [ ] Gestion des référentiels par l'administrateur (spécialités, quartiers/localisations)
-- [ ] Interface bilingue hébreu/anglais avec support RTL pour l'hébreu
+- [ ] Patient authentication (sign up, log in, log out, persistent session)
+- [ ] Doctor accounts created and activated by the admin (no doctor self-registration)
+- [ ] Multi-criteria doctor search: name, specialty, language, neighborhood, availability
+- [ ] Public doctor profiles (specialty, description, address, neighborhood, languages, next slots, demo status)
+- [ ] Appointment booking with guaranteed double-booking prevention
+- [ ] Appointment cancellation (patient and doctor)
+- [ ] Rescheduling an appointment to another available slot
+- [ ] Appointment history (upcoming/past) for patient and doctor
+- [ ] Doctor availability management (add/remove slots, block periods)
+- [ ] Favorites: patient can save favorite doctors
+- [ ] In-app notifications (confirmation, cancellation, reschedule)
+- [ ] Patient dashboard, doctor dashboard, admin dashboard
+- [ ] Full doctor management by the admin (create, edit, activate/deactivate)
+- [ ] Reference data management by the admin (specialties, neighborhoods)
+- [ ] Bilingual Hebrew/English interface with RTL support
 
 ### Out of Scope
 
-- Dossier médical, diagnostic, ordonnance, résultats d'analyse — donnée médicale sensible réglementée, hors périmètre éthique/légal d'un projet démo
-- Téléconsultation complète — complexité vidéo/streaming disproportionnée par rapport à la valeur pour ce projet
-- Paiement de la consultation, remboursement, gestion des assurances/caisses de santé — nécessite une intégration financière/réglementaire réelle non pertinente pour la démo
-- Intégration réelle avec de vrais médecins ou systèmes de santé israéliens — toutes les données sont des profils de démonstration clairement étiquetés
-- IA médicale, recommandations de diagnostic — hors sujet et risque de mauvaise interprétation par un utilisateur
-- Messagerie médicale détaillée entre patient et médecin — au-delà de la prise de rendez-vous
+- Medical records, diagnosis, prescriptions, lab results — regulated sensitive medical data, out of the ethical/legal scope of a demo project
+- Full teleconsultation — video/streaming complexity disproportionate to the value for this project
+- Consultation payment, reimbursement, insurance management — requires real financial/regulatory integration not relevant to the demo
+- Real integration with actual doctors or Israeli healthcare systems — all data is clearly labeled demo data
+- Medical AI, diagnostic recommendations — off-topic and risks user misinterpretation
+- Detailed patient-doctor medical messaging — beyond appointment booking
 
 ## Context
 
-- Projet final universitaire de développement Full-Stack — doit être présentable en 10-15 minutes de soutenance et suffisamment complet pour démontrer une maîtrise du Full-Stack (CRUD, rôles, permissions, sécurité, tests, scalabilité).
-- Contrainte de stack imposée par le cahier des charges : Next.js, TypeScript, Supabase (DB + Auth), déploiement sur Vercel, URL publique.
-- L'utilisateur préfère explicitement des choix techniques standards et largement connus plutôt que des abstractions propres à un framework, même si cela demande un peu plus de code — priorité à la clarté et à la facilité de défense en soutenance sur l'idiomatisme Next.js. Voir décisions ci-dessous (REST plutôt que Server Actions, validation manuelle plutôt que Zod).
-- La base de données est considérée par l'utilisateur comme la partie la plus critique du projet — le schéma doit être solide, bien contraint (anti-double-réservation au niveau DB, RLS pour l'isolation des rôles) et validé explicitement avant l'implémentation.
-- Marché cible : Israël, v1 concentrée sur Tel-Aviv uniquement. Langues supportées : hébreu et anglais uniquement.
+- University final-year Full-Stack development project — must be presentable in a 10-15 minute defense and complete enough to demonstrate Full-Stack mastery (CRUD, roles, permissions, security, tests, scalability).
+- Tech stack imposed by the assignment: Next.js, TypeScript, Supabase (DB + Auth), deployment on Vercel, public URL.
+- The user explicitly prefers standard, widely-known technical choices over framework-specific abstractions, even if it means writing a bit more code — clarity and ease of defense take priority over Next.js idiomatic style. See decisions below (REST instead of Server Actions, manual validation instead of Zod).
+- The database is considered by the user to be the most critical part of the project — the schema must be solid, well-constrained (DB-level anti-double-booking, RLS for role isolation) and explicitly validated before implementation.
+- Target market: Israel, v1 scoped to Tel-Aviv only. Supported languages: Hebrew and English only.
 
 ## Constraints
 
-- **Tech stack**: Next.js (App Router) + TypeScript + Supabase (Postgres, Auth, Storage) + déploiement Vercel — imposé par le cahier des charges universitaire
-- **Architecture API**: Routes API REST classiques (Next.js Route Handlers, `app/api/.../route.ts`) — pas de Server Actions. Choix explicite de l'utilisateur : plus standard, plus universellement compris, plus facile à défendre en soutenance
-- **Validation**: fonctions de validation manuelles en TypeScript (pas de librairie de schéma type Zod) — même raison de simplicité et de familiarité
-- **Tests**: Playwright uniquement (bout-en-bout) — pas de Vitest ni de React Testing Library. L'utilisateur juge que les tests de composants isolés n'apportent pas de valeur suffisante ici ; Playwright doit couvrir tous les parcours critiques (réservation, permissions, double-réservation)
-- **Données médicales**: aucune donnée médicale sensible stockée (pas de diagnostic, ordonnance, dossier médical, résultat d'analyse)
-- **i18n**: solution custom légère (contexte React + dictionnaires JSON, `dir="rtl"` conditionnel) — pas de librairie i18n lourde (next-intl écarté, pas de routing par locale nécessaire pour 2 langues statiques)
-- **UI**: Tailwind CSS + shadcn/ui — léger, personnalisable, bon support RTL via propriétés logiques CSS, plus idiomatique avec les Server Components que Material UI ou Ant Design
-- **Fuseau horaire**: tout stocké en `timestamptz` UTC en base ; conversion `Asia/Jerusalem` uniquement à l'affichage/saisie (gestion du changement d'heure/DST)
+- **Tech stack**: Next.js (App Router) + TypeScript + Supabase (Postgres, Auth, Storage) + Vercel deployment — imposed by the university assignment
+- **API architecture**: Classic REST API routes (Next.js Route Handlers, `app/api/.../route.ts`) — no Server Actions. Explicit user choice: more standard, more universally understood, easier to defend. Supabase Auth itself is used via its own client SDK/REST API — this decision applies to our own business-logic endpoints (booking, admin CRUD, availability), not to Supabase Auth's own calls.
+- **Validation**: manual TypeScript validation functions (no schema library like Zod) — same reasoning of simplicity and familiarity
+- **Tests**: Playwright only (end-to-end) — no Vitest, no React Testing Library. The user judges isolated component tests add little value here; Playwright must cover all critical flows (booking, permissions, double-booking)
+- **Medical data**: no sensitive medical data stored (no diagnosis, prescription, medical record, lab result)
+- **i18n**: lightweight custom solution (React context + JSON dictionaries, conditional `dir="rtl"`) — no heavy i18n library (next-intl ruled out, no locale routing needed for 2 static languages)
+- **UI**: Tailwind CSS + shadcn/ui — lightweight, customizable, good RTL support via CSS logical properties, more idiomatic with Server Components than Material UI or Ant Design
+- **Timezone**: everything stored as `timestamptz` UTC; conversion to `Asia/Jerusalem` only at display/input time (DST handling)
+- **Language**: all project documentation, code, comments, and commit messages are written in English
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Routes API REST classiques plutôt que Server Actions | Plus standard, plus facile à expliquer/défendre en soutenance, moins de "magie" propre à Next.js | — Pending |
-| Validation manuelle plutôt que Zod | Simplicité, aucune dépendance supplémentaire, logique explicite et lisible par tous | — Pending |
-| Playwright seul, pas de Vitest/React Testing Library | Les tests E2E couvrent tout ce qui compte réellement (parcours, permissions, double-réservation) ; les tests de composants isolés n'apportent pas de valeur ajoutée ici | — Pending |
-| Fusion de `blocked_periods` dans `availability_slots` (statut `blocked`) | Une seule table à interroger pour le planning du médecin, même logique de détection de chevauchement à appliquer | — Pending |
-| Anti-double-réservation garanti au niveau base de données (contrainte d'unicité partielle + transaction) | Garantie forte contre les réservations concurrentes, pas seulement une vérification applicative | — Pending |
-| Tailwind CSS + shadcn/ui | Léger, personnalisable, bon support RTL, plus idiomatique avec les Server Components que MUI/Ant Design | — Pending |
-| i18n custom (pas de next-intl) | Seulement 2 langues statiques, pas besoin de routing par locale | — Pending |
-| Ville v1 : Tel-Aviv uniquement | Marché plus jeune, forte densité de médecins privés anglophones simulée, cohérent avec les données de démo | — Pending |
-| Création de compte médecin par mot de passe temporaire (pas d'email d'invitation) | Évite de configurer un service d'envoi d'email réel pour la démo | — Pending |
+| Classic REST API routes instead of Server Actions | More standard, easier to explain/defend, less Next.js-specific "magic" | — Pending |
+| Manual validation instead of Zod | Simplicity, no extra dependency, explicit logic readable by anyone | — Pending |
+| Playwright only, no Vitest/React Testing Library | E2E tests cover everything that matters (flows, permissions, double-booking); isolated component tests add little value here | — Pending |
+| Merge `blocked_periods` into `availability_slots` (status `blocked`) | Single table to query for the doctor's schedule, same overlap-detection logic applies | — Pending |
+| DB-level guaranteed anti-double-booking (partial unique constraint + transaction) | Strong guarantee against concurrent bookings, not just an application-level check | — Pending |
+| Tailwind CSS + shadcn/ui | Lightweight, customizable, good RTL support, more idiomatic with Server Components than MUI/Ant Design | — Pending |
+| Custom i18n (no next-intl) | Only 2 static languages, no locale routing needed | — Pending |
+| V1 city: Tel-Aviv only | Younger market, high simulated density of English-speaking private doctors, consistent with demo data | — Pending |
+| Doctor account creation via temporary password (no email invite) | Avoids setting up a real email-sending service for the demo | — Pending |
+| Project language: English | Standard for software artifacts and code, even though the user chats in French | — Pending |
 
 ## Evolution
 
