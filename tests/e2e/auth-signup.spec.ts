@@ -181,7 +181,11 @@ test.describe("app/patient/layout.tsx role guard", () => {
   test("opening /patient without a session redirects to /login", async ({ page }) => {
     await page.context().clearCookies();
     await page.goto("/patient");
-    await page.waitForURL("/login");
-    await expect(page).toHaveURL("/login");
+    // The root proxy.ts request gate (Plan 05) now redirects unauthenticated
+    // requests with a `?from=` return-path param, so the URL is no longer
+    // an exact "/login" match.
+    await page.waitForURL(/\/login/);
+    const url = new URL(page.url());
+    expect(url.pathname).toBe("/login");
   });
 });
