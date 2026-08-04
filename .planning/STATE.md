@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 02
-current_phase_name: Admin — Doctor & Reference Data Management
+current_phase_name: admin-doctor-reference-data-management
 status: executing
-stopped_at: Phase 2 UI-SPEC approved
-last_updated: "2026-08-04T11:38:06.835Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-08-04T17:15:59.634Z"
 last_activity: 2026-08-04
-last_activity_desc: Phase 01 complete, transitioned to Phase 02
+last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 13
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-03)
 
 **Core value:** A patient must be able to find a doctor matching their criteria and book an available slot in a few clicks, with an absolute guarantee that two patients never book the same slot.
-**Current focus:** Phase 01 — foundation-database-schema-authentication
+**Current focus:** Phase 02 — admin-doctor-reference-data-management
 
 ## Current Position
 
-Phase: 02 — Admin — Doctor & Reference Data Management
-Plan: Not started
+Phase: 02 (admin-doctor-reference-data-management) — EXECUTING
+Plan: 2 of 7
 Status: Ready to execute
-Last activity: 2026-08-04 — Phase 01 complete, transitioned to Phase 02
+Last activity: 2026-08-04 — Phase 02 execution started
 
-Progress: [████████░░] 83%
+Progress: [█████░░░░░] 54%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [████████░░] 83%
 | Phase 01 P03 | 35min | 2 tasks | 9 files |
 | Phase 01 P04 | 30min | 2 tasks | 7 files |
 | Phase 01 P05 | 35min | 2 tasks | 7 files |
+| Phase 02 P01 | 50min | 2 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 01] Plan 01-04: components/site-header.tsx is an async Server Component that resolves getUser()+profiles.full_name itself and renders null for anonymous visitors, with the only interactive piece split into a small 'use client' components/logout-button.tsx
 - [Phase ?]: [Phase 01] Plan 01-05: proxy.ts (root) delegates to lib/supabase/proxy.ts's updateSession() which checks auth-presence only by path prefix (/patient, /doctor, /admin) and redirects to /login?from=<pathname>; role comparison is deliberately deferred to the role-scoped layouts to avoid a profiles DB round trip on every request
 - [Phase ?]: [Phase 01] Plan 01-05: tests/e2e/auth-signup.spec.ts's pre-existing unauthenticated-/patient redirect assertion was updated to tolerate the new ?from= query param appended by proxy.ts, since that test predates this plan's request gate
+- [Phase ?]: [Phase 02] Plan 02-01: session-bound createClient() used for every admin/doctors route RLS already authorizes; createAdminClient() reserved for routes that structurally need it (e.g. future link-account)
+- [Phase ?]: [Phase 02] Plan 02-01: validateDoctorInput() returns a single string | null message (mirrors lib/validation/auth.ts); client maps that message to a specific form field via a literal FIELD_BY_MESSAGE lookup
+- [Phase ?]: [Phase 02] Plan 02-01: doctors list loading-skeleton state only shows on the very first mount fetch; post-submit refresh and Retry reuse loadDoctors() without resetting to loading
 
 ### Pending Todos
 
@@ -92,6 +96,7 @@ None yet.
 ### Blockers/Concerns
 
 - REQUIREMENTS.md's original Traceability section stated "45 total" v1 requirements, but the actual requirement list in the file contains 59 REQ-IDs across 10 categories. The roadmap maps all 59 as found in the file; the stale "45" count has been corrected in REQUIREMENTS.md.
+- RESOLVED (2026-08-04): Phase 02 Plan 01's Supabase CLI link blocker was fixed by the orchestrator (linked project-ref hyxipqnrkpjkiojrxqtl with an access token); Plan 01 re-executed from Task 1 and completed successfully. Note for later plans in this phase: `npx supabase db push` intermittently timed out on the direct-DB-connection step (IPv6-only DNS for `db.<ref>.supabase.co`) before succeeding on retry — treat a single timeout as transient, confirm via `npx supabase migration list` before assuming failure.
 
 ## Deferred Items
 
@@ -103,6 +108,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-04T11:05:41.153Z
-Stopped at: Phase 2 UI-SPEC approved
-Resume file: .planning/phases/02-admin-doctor-reference-data-management/02-UI-SPEC.md
+Last session: 2026-08-04T17:15:59.600Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

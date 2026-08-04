@@ -73,7 +73,7 @@
 
 ### Admin
 
-- [ ] **ADMIN-01**: Admin can create a doctor profile with all public details
+- [x] **ADMIN-01**: Admin can create a doctor profile with all public details
 - [ ] **ADMIN-02**: Admin can edit a doctor profile
 - [ ] **ADMIN-03**: Admin can activate or deactivate a doctor profile
 - [ ] **ADMIN-04**: Admin can link a doctor profile to a login account (temporary password)
@@ -140,7 +140,7 @@ Which phases cover which requirements.
 | AUTH-05 | Phase 1 | Complete |
 | AUTH-06 | Phase 1 | Complete |
 | AUTH-07 | Phase 1 | Complete |
-| ADMIN-01 | Phase 2 | Pending |
+| ADMIN-01 | Phase 2 | Complete |
 | ADMIN-02 | Phase 2 | Pending |
 | ADMIN-03 | Phase 2 | Pending |
 | ADMIN-04 | Phase 2 | Pending |
