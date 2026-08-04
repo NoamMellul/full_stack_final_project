@@ -28,7 +28,9 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import InitialsAvatar from "@/components/initials-avatar";
+import TempPasswordDialog from "@/components/admin/temp-password-dialog";
 import { createClient } from "@/lib/supabase/client";
+import { validateEmail } from "@/lib/validation/auth";
 import { validateDoctorInput, validateDoctorPatch } from "@/lib/validation/doctor";
 
 const TABLE_COLUMN_COUNT = 7;
@@ -244,6 +246,20 @@ export default function DoctorsPageClient() {
   // Activate/deactivate switch — disables itself only for the row in flight.
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Link-account dialog state — the small email-entry form (ADMIN-04).
+  const [linkingDoctor, setLinkingDoctor] = useState<DoctorListRow | null>(null);
+  const [linkEmail, setLinkEmail] = useState("");
+  const [linkFieldError, setLinkFieldError] = useState<string | null>(null);
+  const [linkApiError, setLinkApiError] = useState<string | null>(null);
+  const [linkIsSubmitting, setLinkIsSubmitting] = useState(false);
+
+  // The one-time temporary password dialog (D-03). Cleared on close so the
+  // password never lingers in memory after the admin has dismissed it.
+  const [tempPasswordInfo, setTempPasswordInfo] = useState<{
+    password: string;
+    doctorName: string;
+  } | null>(null);
 
   // "loading" only covers the very first GET — later refreshes (post-submit,
   // Retry) update `doctors` in place without re-showing the skeleton rows.
@@ -471,6 +487,56 @@ export default function DoctorsPageClient() {
     }
   }
 
+  function openLinkDialog(doctor: DoctorListRow) {
+    setLinkingDoctor(doctor);
+    setLinkEmail("");
+    setLinkFieldError(null);
+    setLinkApiError(null);
+  }
+
+  function closeLinkDialog() {
+    setLinkingDoctor(null);
+  }
+
+  async function handleLinkSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!linkingDoctor) return;
+    setLinkApiError(null);
+
+    const emailError = validateEmail(linkEmail);
+    if (emailError) {
+      setLinkFieldError(emailError);
+      return;
+    }
+    setLinkFieldError(null);
+
+    setLinkIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/admin/doctors/${linkingDoctor.id}/link-account`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: linkEmail }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setLinkApiError(
+          data.error ?? "Could not create a login for this doctor. Please try again.",
+        );
+        return;
+      }
+
+      const doctorName = linkingDoctor.full_name;
+      closeLinkDialog();
+      setTempPasswordInfo({ password: data.tempPassword, doctorName });
+      await loadDoctors();
+    } catch {
+      setLinkApiError("Could not create a login for this doctor. Please try again.");
+    } finally {
+      setLinkIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="mt-6 flex flex-col gap-6">
       <Card>
@@ -559,6 +625,56 @@ export default function DoctorsPageClient() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={linkingDoctor !== null}
+        onOpenChange={(open) => {
+          if (!open) closeLinkDialog();
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Link account</DialogTitle>
+          </DialogHeader>
+          {linkingDoctor ? (
+            <form onSubmit={handleLinkSubmit} noValidate className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="link-email">Email</Label>
+                <Input
+                  id="link-email"
+                  name="email"
+                  type="email"
+                  value={linkEmail}
+                  onChange={(e) => setLinkEmail(e.target.value)}
+                  aria-invalid={linkFieldError ? true : undefined}
+                />
+                {linkFieldError ? (
+                  <p className="text-sm font-normal text-destructive">{linkFieldError}</p>
+                ) : null}
+              </div>
+
+              {linkApiError ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{linkApiError}</AlertDescription>
+                </Alert>
+              ) : null}
+
+              <DialogFooter>
+                <Button type="submit" disabled={linkIsSubmitting}>
+                  {linkIsSubmitting ? "Generating…" : "Generate temporary password"}
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <TempPasswordDialog
+        open={tempPasswordInfo !== null}
+        password={tempPasswordInfo?.password ?? ""}
+        doctorName={tempPasswordInfo?.doctorName ?? ""}
+        onClose={() => setTempPasswordInfo(null)}
+      />
 
       <div className="flex flex-col gap-2">
         {listStatus === "ready" ? (
@@ -668,16 +784,28 @@ export default function DoctorsPageClient() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        className="relative after:absolute after:-inset-2"
-                        aria-label={`Edit ${doctor.full_name}`}
-                        onClick={() => openEditDialog(doctor)}
-                      >
-                        <PencilIcon />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="relative after:absolute after:-inset-2"
+                          aria-label={`Edit ${doctor.full_name}`}
+                          onClick={() => openEditDialog(doctor)}
+                        >
+                          <PencilIcon />
+                        </Button>
+                        {!doctor.profile_id ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openLinkDialog(doctor)}
+                          >
+                            Link account
+                          </Button>
+                        ) : null}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

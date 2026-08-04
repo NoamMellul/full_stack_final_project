@@ -59,6 +59,29 @@ export async function deleteTestUserByEmail(email: string): Promise<void> {
   await admin.auth.admin.deleteUser(profile.id);
 }
 
+// Admin-created doctor accounts (via /api/admin/doctors/[id]/link-account)
+// are born inside the route under test, not through createTestUser, so
+// their ids are never in `createdUserIds`. Track them by email instead and
+// resolve to a profile id at cleanup time, on the same
+// swallow-individual-failures behaviour as cleanupTestUsers.
+const trackedAccountEmails: string[] = [];
+
+export function trackLinkedAccountEmail(email: string): void {
+  trackedAccountEmails.push(email);
+}
+
+export async function cleanupTrackedAccountEmails(): Promise<void> {
+  const emails = trackedAccountEmails.splice(0, trackedAccountEmails.length);
+
+  for (const email of emails) {
+    try {
+      await deleteTestUserByEmail(email);
+    } catch {
+      // Swallow individual failures so one dead email cannot abort the rest.
+    }
+  }
+}
+
 export async function cleanupTestUsers(): Promise<void> {
   const admin = testAdminClient();
   const ids = createdUserIds.splice(0, createdUserIds.length);
