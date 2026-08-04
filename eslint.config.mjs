@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Claude Code's own tooling (hooks, scripts, GSD workflow files) is not
+    // project application source and should never be subject to this
+    // project's lint rules.
+    ".claude/**",
   ]),
 ]);
 
