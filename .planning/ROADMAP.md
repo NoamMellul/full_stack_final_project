@@ -58,12 +58,23 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 7 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 02-01-PLAN.md — Tracer: admin creates a doctor end-to-end, plus the doctors list states
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 02-02-PLAN.md — Doctor edit and activate/deactivate, proven at the RLS boundary
 - [ ] 02-03-PLAN.md — Specialties and locations CRUD with the server-enforced delete guard
 - [ ] 02-04-PLAN.md — Read-only users and appointments oversight views
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 02-05-PLAN.md — Link doctor login account, one-time temporary password, forced password change
 - [ ] 02-06-PLAN.md — Idempotent demo-data seed script
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 02-07-PLAN.md — Admin dashboard, section navigation, cross-cutting route protection
 
 **UI hint**: yes
