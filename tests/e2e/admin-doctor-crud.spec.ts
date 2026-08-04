@@ -1,0 +1,164 @@
+import { expect, test } from "@playwright/test";
+
+import { cleanupTestUsers, createTestUser } from "./helpers/test-users";
+import { cleanupTestReferenceData, createTestSpecialty, createTestLocation } from "./helpers/reference-data";
+
+test.describe("ADMIN-01: admin creates a doctor", () => {
+  let adminCreds: { email: string; password: string };
+  let specialty: { id: string; nameEn: string };
+  let location: { id: string; city: string; neighborhood: string };
+
+  test.beforeAll(async () => {
+    const admin = await createTestUser("admin");
+    adminCreds = { email: admin.email, password: admin.password };
+    specialty = await createTestSpecialty();
+    location = await createTestLocation();
+  });
+
+  test.afterAll(async () => {
+    await cleanupTestUsers();
+    await cleanupTestReferenceData();
+  });
+
+  async function loginAsAdmin(page: import("@playwright/test").Page) {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(adminCreds.email);
+    await page.getByLabel("Password").fill(adminCreds.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await page.waitForURL("/admin");
+  }
+
+  test("admin fills the create form and the new doctor appears in the list without a reload", async ({
+    page,
+  }) => {
+    await loginAsAdmin(page);
+    await page.goto("/admin/doctors");
+
+    const doctorName = `UI Created Doctor ${Date.now()}`;
+    await page.getByLabel("Full name").fill(doctorName);
+    await page.getByLabel("Specialty").click();
+    await page.getByRole("option", { name: specialty.nameEn }).click();
+    await page.getByLabel("Location").click();
+    await page
+      .getByRole("option", { name: `${location.neighborhood}, ${location.city}` })
+      .click();
+    await page.getByLabel("Bio").fill("A demo doctor bio.");
+    await page.getByLabel("Photo URL").fill("https://example.com/photo.jpg");
+
+    await page.getByRole("button", { name: "Save doctor" }).click();
+
+    await expect(page.getByText(doctorName)).toBeVisible();
+  });
+
+  test("submitting an empty form surfaces the required-field error without a network call", async ({
+    page,
+  }) => {
+    await loginAsAdmin(page);
+    await page.goto("/admin/doctors");
+
+    let requestMade = false;
+    page.on("request", (request) => {
+      if (request.url().includes("/api/admin/doctors") && request.method() === "POST") {
+        requestMade = true;
+      }
+    });
+
+    await page.getByRole("button", { name: "Save doctor" }).click();
+
+    await expect(page.getByText("Full name is required.")).toBeVisible();
+    expect(requestMade).toBe(false);
+  });
+
+  test("privileged fields in the request body are ignored server-side (T-02-01)", async ({
+    page,
+  }) => {
+    await loginAsAdmin(page);
+
+    const response = await page.request.post("/api/admin/doctors", {
+      data: {
+        fullName: `Privilege Test Doctor ${Date.now()}`,
+        specialtyId: specialty.id,
+        locationId: location.id,
+        is_active: true,
+        is_demo: false,
+        profile_id: "00000000-0000-0000-0000-000000000000",
+      },
+    });
+
+    expect(response.status()).toBe(201);
+    const body = await response.json();
+    expect(body.doctor.is_active).toBe(false);
+    expect(body.doctor.is_demo).toBe(true);
+    expect(body.doctor.profile_id).toBeNull();
+  });
+
+  test("a blank fullName is rejected with 400 and no doctor row is created", async ({ page }) => {
+    await loginAsAdmin(page);
+
+    const before = await page.request.get("/api/admin/doctors");
+    const beforeCount = (await before.json()).doctors.length;
+
+    const response = await page.request.post("/api/admin/doctors", {
+      data: { fullName: "", specialtyId: specialty.id, locationId: location.id },
+    });
+
+    expect(response.status()).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBe("Full name is required.");
+
+    const after = await page.request.get("/api/admin/doctors");
+    const afterCount = (await after.json()).doctors.length;
+    expect(afterCount).toBe(beforeCount);
+  });
+
+  test("creating two doctors with identical name/specialty/location yields two distinct rows", async ({
+    page,
+  }) => {
+    await loginAsAdmin(page);
+
+    const duplicateName = `Duplicate Doctor ${Date.now()}`;
+    const first = await page.request.post("/api/admin/doctors", {
+      data: { fullName: duplicateName, specialtyId: specialty.id, locationId: location.id },
+    });
+    const second = await page.request.post("/api/admin/doctors", {
+      data: { fullName: duplicateName, specialtyId: specialty.id, locationId: location.id },
+    });
+
+    expect(first.status()).toBe(201);
+    expect(second.status()).toBe(201);
+
+    const firstBody = await first.json();
+    const secondBody = await second.json();
+    expect(firstBody.doctor.id).not.toBe(secondBody.doctor.id);
+
+    const listResponse = await page.request.get("/api/admin/doctors");
+    const { doctors } = await listResponse.json();
+    const matches = doctors.filter((doctor: { full_name: string }) => doctor.full_name === duplicateName);
+    expect(matches.length).toBe(2);
+  });
+
+  test("a non-admin session receives 403 before any database write", async ({ page }) => {
+    const patient = await createTestUser("patient");
+
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(patient.email);
+    await page.getByLabel("Password").fill(patient.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await page.waitForURL("/patient");
+
+    const before = await page.request.get("/api/admin/doctors");
+    expect(before.status()).toBe(403);
+
+    const response = await page.request.post("/api/admin/doctors", {
+      data: { fullName: "Should Not Be Created", specialtyId: specialty.id, locationId: location.id },
+    });
+    expect(response.status()).toBe(403);
+  });
+
+  test("an unauthenticated request receives 401 before any database write", async ({ page }) => {
+    const response = await page.request.post("/api/admin/doctors", {
+      data: { fullName: "Should Not Be Created", specialtyId: specialty.id, locationId: location.id },
+    });
+    expect(response.status()).toBe(401);
+  });
+});
