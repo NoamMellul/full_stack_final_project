@@ -1,7 +1,7 @@
 ---
 phase: 1
 slug: foundation-database-schema-authentication
-status: draft
+status: approved
 shadcn_initialized: true
 preset: base-nova / neutral (initialized via `npx shadcn init -d --rtl`, not a ui.shadcn.com/create preset string)
 created: 2026-08-03
@@ -139,11 +139,11 @@ No third-party registries declared for this phase.
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS (FLAG on focal point recommendation, non-blocking)
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-08-04 — human sign-off given directly on the five backstop rows (partial-fill retention on signup/login, long-text overflow handling, header collapse below 640px with 44px tap target, long display-name truncation) and the end-to-end signup/logout/login/refresh/cross-role-denial pass, on the basis that Task 1's full automated gate (45/45 Playwright tests, build/lint/typecheck, consolidated security sweep) was green and the implementation followed the UI-SPEC contract as planned.
