@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 02
 current_phase_name: admin-doctor-reference-data-management
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-08-04T17:15:59.634Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-08-04T17:35:51.297Z"
 last_activity: 2026-08-04
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 13
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 02 (admin-doctor-reference-data-management) — EXECUTING
-Plan: 2 of 7
+Plan: 3 of 7
 Status: Ready to execute
 Last activity: 2026-08-04 — Phase 02 execution started
 
-Progress: [█████░░░░░] 54%
+Progress: [██████░░░░] 62%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [█████░░░░░] 54%
 | Phase 01 P04 | 30min | 2 tasks | 7 files |
 | Phase 01 P05 | 35min | 2 tasks | 7 files |
 | Phase 02 P01 | 50min | 2 tasks | 16 files |
+| Phase 02 P02 | 35min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 02] Plan 02-01: session-bound createClient() used for every admin/doctors route RLS already authorizes; createAdminClient() reserved for routes that structurally need it (e.g. future link-account)
 - [Phase ?]: [Phase 02] Plan 02-01: validateDoctorInput() returns a single string | null message (mirrors lib/validation/auth.ts); client maps that message to a specific form field via a literal FIELD_BY_MESSAGE lookup
 - [Phase ?]: [Phase 02] Plan 02-01: doctors list loading-skeleton state only shows on the very first mount fetch; post-submit refresh and Retry reuse loadDoctors() without resetting to loading
+- [Phase ?]: [Phase 02] Plan 02-02: validateDoctorPatch/validateStatusInput only inspect keys present on the body (partial-update contract), reusing validateDoctorInput's exact message strings
+- [Phase ?]: [Phase 02] Plan 02-02: doctor_languages association updates are delete-then-insert (never append), and the status endpoint assigns the caller's explicit boolean rather than negating the stored value, so a repeated identical PATCH is a true no-op
+- [Phase ?]: [Phase 02] Plan 02-02: DoctorFormFields shared component (idPrefix-parameterized) drives both the always-mounted create form and the conditionally-open edit dialog; aria-live=polite role=status region used for activate/deactivate confirmation instead of a toast library
 
 ### Pending Todos
 
@@ -108,6 +112,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-04T17:15:59.600Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-08-04T17:35:51.269Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
