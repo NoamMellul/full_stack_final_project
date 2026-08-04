@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 02
 current_phase_name: admin-doctor-reference-data-management
 status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-08-04T18:18:36.507Z"
+stopped_at: Completed 02-05-PLAN.md
+last_updated: "2026-08-04T18:55:29.652Z"
 last_activity: 2026-08-04
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 13
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 02 (admin-doctor-reference-data-management) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 Status: Ready to execute
 Last activity: 2026-08-04 — Phase 02 execution started
 
-Progress: [████████░░] 77%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [████████░░] 77%
 | Phase 02 P02 | 35min | 3 tasks | 7 files |
 | Phase 02 P03 | 55min | 3 tasks | 10 files |
 | Phase 02 P04 | 55min | 3 tasks | 7 files |
+| Phase 02 P05 | 40min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 02] Plan 02-04: OversightTable takes columns as plain-value config objects (dot-path key + format enum), not render-prop functions, so app/admin/users/page.tsx stays a genuine Server Component while still customizing per-page columns
 - [Phase ?]: [Phase 02] Plan 02-04: app/admin/appointments/page.tsx is a Client Component (not a Server Component) because its status/doctor Select filters and date-range inputs need client-side state
 - [Phase ?]: [Phase 02] Plan 02-04: from/to date-range filter inputs convert calendar-day input to UTC via an Intl.DateTimeFormat Asia/Jerusalem offset helper (start-of-day/end-of-day), not naive Date parsing
+- [Phase ?]: [Phase 02] Plan 02-05: profiles.must_change_password locked down via column-level GRANT/REVOKE (not a WITH CHECK clause, which the existing profiles_update_own_or_admin policy lacks); the (gated) route-group holds the forced-password-change gate with app/doctor/change-password/ as a sibling outside the group to prevent a redirect loop
 
 ### Pending Todos
 
@@ -120,6 +122,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-04T18:18:36.477Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-08-04T18:55:29.629Z
+Stopped at: Completed 02-05-PLAN.md
 Resume file: None
