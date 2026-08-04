@@ -55,7 +55,17 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Admin can manage (add/edit/remove) the lists of specialties and neighborhoods used platform-wide.
   4. Admin can view all registered users and all appointments across the platform from admin views.
 
-**Plans**: TBD
+**Plans**: 7 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Tracer: admin creates a doctor end-to-end, plus the doctors list states
+- [ ] 02-02-PLAN.md — Doctor edit and activate/deactivate, proven at the RLS boundary
+- [ ] 02-03-PLAN.md — Specialties and locations CRUD with the server-enforced delete guard
+- [ ] 02-04-PLAN.md — Read-only users and appointments oversight views
+- [ ] 02-05-PLAN.md — Link doctor login account, one-time temporary password, forced password change
+- [ ] 02-06-PLAN.md — Idempotent demo-data seed script
+- [ ] 02-07-PLAN.md — Admin dashboard, section navigation, cross-cutting route protection
+
 **UI hint**: yes
 
 ### Phase 3: Doctor Discovery — Search & Public Profiles
@@ -125,7 +135,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation — Database Schema & Authentication | 6/6 | Complete    | 2026-08-04 |
-| 2. Admin — Doctor & Reference Data Management | 0/TBD | Not started | - |
+| 2. Admin — Doctor & Reference Data Management | 0/7 | Not started | - |
 | 3. Doctor Discovery — Search & Public Profiles | 0/TBD | Not started | - |
 | 4. Doctor Availability Management | 0/TBD | Not started | - |
 | 5. Appointment Booking & Lifecycle | 0/TBD | Not started | - |
