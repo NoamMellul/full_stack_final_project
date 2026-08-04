@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { testAdminClient } from "./helpers/supabase-admin";
 import { cleanupTestUsers, createTestUser } from "./helpers/test-users";
 import {
   cleanupTestReferenceData,
@@ -165,6 +166,162 @@ test.describe("ADMIN-01: admin creates a doctor", () => {
       data: { fullName: "Should Not Be Created", specialtyId: specialty.id, locationId: location.id },
     });
     expect(response.status()).toBe(401);
+  });
+});
+
+test.describe("ADMIN-02: admin edits a doctor", () => {
+  let adminCreds: { email: string; password: string };
+  let specialty: { id: string; nameEn: string };
+  let secondSpecialty: { id: string; nameEn: string };
+  let location: { id: string; city: string; neighborhood: string };
+
+  test.beforeAll(async () => {
+    const admin = await createTestUser("admin");
+    adminCreds = { email: admin.email, password: admin.password };
+    specialty = await createTestSpecialty();
+    secondSpecialty = await createTestSpecialty();
+    location = await createTestLocation();
+  });
+
+  test.afterAll(async () => {
+    await cleanupTestUsers();
+    await cleanupTestReferenceData();
+  });
+
+  async function loginAsAdmin(page: import("@playwright/test").Page) {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(adminCreds.email);
+    await page.getByLabel("Password").fill(adminCreds.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await page.waitForURL("/admin");
+  }
+
+  test("editing full name and specialty returns 200 and the re-read row carries the new values", async ({
+    page,
+  }) => {
+    await loginAsAdmin(page);
+
+    const doctor = await createTestDoctor({
+      specialtyId: specialty.id,
+      locationId: location.id,
+    });
+
+    const newName = `Edited Doctor ${Date.now()}`;
+    const response = await page.request.patch(`/api/admin/doctors/${doctor.id}`, {
+      data: { fullName: newName, specialtyId: secondSpecialty.id },
+    });
+
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body.doctor.full_name).toBe(newName);
+    expect(body.doctor.specialty.id).toBe(secondSpecialty.id);
+
+    const reread = await page.request.get("/api/admin/doctors");
+    const { doctors } = await reread.json();
+    const found = doctors.find((row: { id: string }) => row.id === doctor.id);
+    expect(found.full_name).toBe(newName);
+    expect(found.specialty.id).toBe(secondSpecialty.id);
+  });
+
+  test("the same PATCH body sent twice leaves the row and the doctor_languages count identical", async ({
+    page,
+  }) => {
+    await loginAsAdmin(page);
+
+    const doctor = await createTestDoctor({
+      specialtyId: specialty.id,
+      locationId: location.id,
+    });
+
+    const admin = testAdminClient();
+    const { data: languageRows } = await admin.from("languages").select("id").limit(2);
+    const languageIds = (languageRows ?? []).map((row: { id: string }) => row.id);
+
+    const patchBody = {
+      fullName: "Idempotent Doctor",
+      specialtyId: specialty.id,
+      languageIds,
+    };
+
+    const first = await page.request.patch(`/api/admin/doctors/${doctor.id}`, {
+      data: patchBody,
+    });
+    expect(first.status()).toBe(200);
+
+    const { count: firstCount } = await admin
+      .from("doctor_languages")
+      .select("*", { count: "exact", head: true })
+      .eq("doctor_id", doctor.id);
+
+    const second = await page.request.patch(`/api/admin/doctors/${doctor.id}`, {
+      data: patchBody,
+    });
+    expect(second.status()).toBe(200);
+
+    const { count: secondCount } = await admin
+      .from("doctor_languages")
+      .select("*", { count: "exact", head: true })
+      .eq("doctor_id", doctor.id);
+
+    expect(secondCount).toBe(firstCount);
+    expect(secondCount).toBe(languageIds.length);
+  });
+
+  test("a PATCH body carrying is_active, is_demo and profile_id leaves all three columns untouched (T-02-01)", async ({
+    page,
+  }) => {
+    await loginAsAdmin(page);
+
+    const doctor = await createTestDoctor({
+      specialtyId: specialty.id,
+      locationId: location.id,
+      isActive: false,
+    });
+
+    const response = await page.request.patch(`/api/admin/doctors/${doctor.id}`, {
+      data: {
+        fullName: "Privilege Edit Test Doctor",
+        is_active: true,
+        is_demo: false,
+        profile_id: "00000000-0000-0000-0000-000000000000",
+      },
+    });
+
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body.doctor.is_active).toBe(false);
+    expect(body.doctor.is_demo).toBe(true);
+    expect(body.doctor.profile_id).toBeNull();
+  });
+
+  test("PATCH against a random UUID returns 404", async ({ page }) => {
+    await loginAsAdmin(page);
+
+    const response = await page.request.patch(
+      "/api/admin/doctors/00000000-0000-0000-0000-000000000000",
+      { data: { fullName: "Ghost Doctor" } },
+    );
+
+    expect(response.status()).toBe(404);
+  });
+
+  test("a non-admin session receives 403 before any database write", async ({ page }) => {
+    const doctor = await createTestDoctor({
+      specialtyId: specialty.id,
+      locationId: location.id,
+    });
+
+    const patient = await createTestUser("patient");
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(patient.email);
+    await page.getByLabel("Password").fill(patient.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await page.waitForURL("/patient");
+
+    const response = await page.request.patch(`/api/admin/doctors/${doctor.id}`, {
+      data: { fullName: "Should Not Be Edited" },
+    });
+    expect(response.status()).toBe(403);
   });
 });
 
