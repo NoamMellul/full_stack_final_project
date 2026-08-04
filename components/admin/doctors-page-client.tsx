@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,10 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import InitialsAvatar from "@/components/initials-avatar";
 import { createClient } from "@/lib/supabase/client";
 import { validateDoctorInput } from "@/lib/validation/doctor";
+
+const TABLE_COLUMN_COUNT = 6;
 
 type DoctorListRow = {
   id: string;
@@ -65,13 +70,22 @@ export default function DoctorsPageClient() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // "loading" only covers the very first GET — later refreshes (post-submit,
+  // Retry) update `doctors` in place without re-showing the skeleton rows.
+  const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
+
   const loadDoctors = useCallback(async () => {
-    const response = await fetch("/api/admin/doctors");
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error ?? "Could not load doctors. Please refresh the page.");
+    try {
+      const response = await fetch("/api/admin/doctors");
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error ?? "Could not load doctors. Please refresh the page.");
+      }
+      setDoctors(data.doctors as DoctorListRow[]);
+      setListStatus("ready");
+    } catch {
+      setListStatus("error");
     }
-    setDoctors(data.doctors as DoctorListRow[]);
   }, []);
 
   useEffect(() => {
@@ -80,6 +94,11 @@ export default function DoctorsPageClient() {
     }
     void initialLoad();
   }, [loadDoctors]);
+
+  function handleRetry() {
+    setListStatus("loading");
+    void loadDoctors();
+  }
 
   useEffect(() => {
     async function loadOptions() {
@@ -280,31 +299,106 @@ export default function DoctorsPageClient() {
         </CardContent>
       </Card>
 
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Specialty</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Link status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {doctors.map((doctor) => (
-              <TableRow key={doctor.id}>
-                <TableCell className="max-w-48 truncate">{doctor.full_name}</TableCell>
-                <TableCell className="max-w-32 truncate">{doctor.specialty?.name_en ?? ""}</TableCell>
-                <TableCell className="max-w-32 truncate">
-                  {doctor.location ? `${doctor.location.neighborhood}, ${doctor.location.city}` : ""}
-                </TableCell>
-                <TableCell>{doctor.is_active ? "Active" : "Inactive"}</TableCell>
-                <TableCell>{doctor.profile_id ? "Linked" : "Not linked"}</TableCell>
+      <div className="flex flex-col gap-2">
+        {listStatus === "ready" ? (
+          <p className="text-sm text-muted-foreground">
+            {doctors.length === 1 ? "1 doctor" : `${doctors.length} doctors`}
+          </p>
+        ) : null}
+
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Specialty</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Bio</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Link status</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            {listStatus === "loading" ? (
+              <TableBody>
+                {[0, 1, 2].map((row) => (
+                  <TableRow key={row}>
+                    <TableCell colSpan={TABLE_COLUMN_COUNT}>
+                      <Skeleton className="h-6 w-full" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            ) : listStatus === "error" ? (
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={TABLE_COLUMN_COUNT}>
+                    <div className="flex flex-col items-center gap-3 py-8 text-center">
+                      <p className="text-sm text-destructive">
+                        Could not load doctors. Please refresh the page.
+                      </p>
+                      <Button variant="outline" onClick={handleRetry}>
+                        Retry
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            ) : doctors.length === 0 ? (
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={TABLE_COLUMN_COUNT}>
+                    <div className="flex flex-col items-center gap-2 py-8 text-center">
+                      <h2 className="text-lg font-semibold">No doctors yet</h2>
+                      <p className="max-w-md text-sm text-muted-foreground">
+                        Add your first doctor profile, or run the demo data seed script, to start
+                        populating the platform catalog.
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            ) : (
+              <TableBody>
+                {doctors.map((doctor) => (
+                  <TableRow key={doctor.id}>
+                    <TableCell className="max-w-48">
+                      <div className="flex items-center gap-2">
+                        {doctor.photo_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element -- external, admin-pasted URL (D-01); no next/image domain config for arbitrary hosts.
+                          <img
+                            src={doctor.photo_url}
+                            alt=""
+                            className="size-8 shrink-0 rounded-full object-cover"
+                          />
+                        ) : (
+                          <InitialsAvatar name={doctor.full_name} />
+                        )}
+                        <span className="truncate">{doctor.full_name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-32 truncate">{doctor.specialty?.name_en ?? ""}</TableCell>
+                    <TableCell className="max-w-32 truncate">
+                      {doctor.location ? `${doctor.location.neighborhood}, ${doctor.location.city}` : ""}
+                    </TableCell>
+                    <TableCell className="max-w-48 truncate">{doctor.bio ?? ""}</TableCell>
+                    <TableCell>
+                      <Badge variant={doctor.is_active ? "default" : "secondary"}>
+                        {doctor.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {doctor.profile_id ? (
+                        <Badge variant="outline">Linked</Badge>
+                      ) : (
+                        <Badge variant="secondary">Not linked</Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            )}
+          </Table>
+        </div>
       </div>
     </div>
   );

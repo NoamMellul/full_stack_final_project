@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 import { cleanupTestUsers, createTestUser } from "./helpers/test-users";
-import { cleanupTestReferenceData, createTestSpecialty, createTestLocation } from "./helpers/reference-data";
+import {
+  cleanupTestReferenceData,
+  createTestDoctor,
+  createTestLocation,
+  createTestSpecialty,
+} from "./helpers/reference-data";
 
 test.describe("ADMIN-01: admin creates a doctor", () => {
   let adminCreds: { email: string; password: string };
@@ -160,5 +165,118 @@ test.describe("ADMIN-01: admin creates a doctor", () => {
       data: { fullName: "Should Not Be Created", specialtyId: specialty.id, locationId: location.id },
     });
     expect(response.status()).toBe(401);
+  });
+});
+
+test.describe("ADMIN-01: doctors list states", () => {
+  let adminCreds: { email: string; password: string };
+  let specialty: { id: string; nameEn: string };
+  let location: { id: string; city: string; neighborhood: string };
+
+  test.beforeAll(async () => {
+    const admin = await createTestUser("admin");
+    adminCreds = { email: admin.email, password: admin.password };
+    specialty = await createTestSpecialty();
+    location = await createTestLocation();
+  });
+
+  test.afterAll(async () => {
+    await cleanupTestUsers();
+    await cleanupTestReferenceData();
+  });
+
+  async function loginAsAdmin(page: import("@playwright/test").Page) {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(adminCreds.email);
+    await page.getByLabel("Password").fill(adminCreds.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await page.waitForURL("/admin");
+  }
+
+  test("zero doctors renders the empty-state heading and body copy", async ({ page }) => {
+    await loginAsAdmin(page);
+
+    await page.route("**/api/admin/doctors", async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({ status: 200, json: { doctors: [] } });
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.goto("/admin/doctors");
+
+    await expect(page.getByText("No doctors yet")).toBeVisible();
+    await expect(
+      page.getByText(
+        "Add your first doctor profile, or run the demo data seed script, to start populating the platform catalog.",
+      ),
+    ).toBeVisible();
+  });
+
+  test("a doctor with no profile_id renders a neutral 'Not linked' badge", async ({ page }) => {
+    const doctor = await createTestDoctor({
+      fullName: `Not Linked Doctor ${Date.now()}`,
+      specialtyId: specialty.id,
+      locationId: location.id,
+    });
+
+    await loginAsAdmin(page);
+    await page.goto("/admin/doctors");
+
+    const row = page.getByRole("row").filter({ hasText: doctor.fullName });
+    await expect(row.getByText("Not linked", { exact: true })).toBeVisible();
+  });
+
+  test("a doctor with no photo URL renders the initials avatar instead of an image", async ({
+    page,
+  }) => {
+    const doctor = await createTestDoctor({
+      fullName: `Avatar Doctor ${Date.now()}`,
+      specialtyId: specialty.id,
+      locationId: location.id,
+    });
+
+    await loginAsAdmin(page);
+    await page.goto("/admin/doctors");
+
+    const row = page.getByRole("row").filter({ hasText: doctor.fullName });
+    await expect(row.locator("img")).toHaveCount(0);
+    await expect(row.locator("[aria-hidden='true']").first()).toBeVisible();
+  });
+
+  test("with exactly one doctor, the count caption reads '1 doctor'", async ({ page }) => {
+    await loginAsAdmin(page);
+
+    await page.route("**/api/admin/doctors", async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({
+          status: 200,
+          json: {
+            doctors: [
+              {
+                id: "11111111-1111-1111-1111-111111111111",
+                full_name: "Solo Doctor",
+                bio: null,
+                photo_url: null,
+                is_active: false,
+                is_demo: true,
+                profile_id: null,
+                created_at: new Date().toISOString(),
+                specialty: { id: specialty.id, name_en: specialty.nameEn, name_he: specialty.nameEn },
+                location: { id: location.id, city: location.city, neighborhood: location.neighborhood },
+                languages: [],
+              },
+            ],
+          },
+        });
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.goto("/admin/doctors");
+
+    await expect(page.getByText("1 doctor", { exact: true })).toBeVisible();
   });
 });
