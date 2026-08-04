@@ -34,12 +34,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. An unauthenticated user is redirected away from any protected patient, doctor, or admin page.
   4. A logged-in user attempting to open a page for a role they don't have (e.g. a patient opening an admin page) is denied access.
 
-**Plans**: 3/6 plans executed
+**Plans**: 4/6 plans executed
 
 - [x] 01-01-PLAN.md
 - [x] 01-02-PLAN.md
 - [x] 01-03-PLAN.md
-- [ ] 01-04-PLAN.md
+- [x] 01-04-PLAN.md
 - [ ] 01-05-PLAN.md
 - [ ] 01-06-PLAN.md
 
@@ -124,7 +124,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation — Database Schema & Authentication | 3/6 | In Progress|  |
+| 1. Foundation — Database Schema & Authentication | 4/6 | In Progress|  |
 | 2. Admin — Doctor & Reference Data Management | 0/TBD | Not started | - |
 | 3. Doctor Discovery — Search & Public Profiles | 0/TBD | Not started | - |
 | 4. Doctor Availability Management | 0/TBD | Not started | - |

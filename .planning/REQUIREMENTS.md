@@ -9,7 +9,7 @@
 
 - [x] **AUTH-01**: Patient can sign up with email and password
 - [x] **AUTH-02**: Patient can log in with email and password
-- [ ] **AUTH-03**: Patient can log out
+- [x] **AUTH-03**: Patient can log out
 - [ ] **AUTH-04**: Patient session persists across browser refresh
 - [x] **AUTH-05**: Doctor can log in with credentials created by the admin
 - [ ] **AUTH-06**: Unauthenticated user is redirected away from protected patient/doctor/admin pages
@@ -135,7 +135,7 @@ Which phases cover which requirements.
 |-------------|-------|--------|
 | AUTH-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 1 | Complete |
-| AUTH-03 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Complete |
 | AUTH-04 | Phase 1 | Pending |
 | AUTH-05 | Phase 1 | Complete |
 | AUTH-06 | Phase 1 | Pending |

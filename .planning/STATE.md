@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: foundation-database-schema-authentication
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-08-04T08:06:57.262Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-08-04T08:19:34.247Z"
 last_activity: 2026-08-04
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 01 (foundation-database-schema-authentication) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-08-04 — Phase 01 execution started
 
-Progress: [█████░░░░░] 50%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [█████░░░░░] 50%
 |------|----------|-------|-------|
 | Phase 01 P02 | 70min | 2 tasks | 30 files |
 | Phase 01 P03 | 35min | 2 tasks | 9 files |
+| Phase 01 P04 | 30min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 01] Plan 01-03: login Route Handler returns the identical generic error string as a literal in both the 400 and 401 branches (not a shared constant), so the endpoint is provably not a user-enumeration oracle at each call site
 - [Phase ?]: [Phase 01] Plan 01-03: app/login/page.tsx wraps its useSearchParams()-consuming form in a Suspense boundary so /login still statically prerenders at build time
 - [Phase ?]: [Phase 01] Plan 01-03: doctor/admin role-guard layouts are structural copies of app/patient/layout.tsx, kept as plain folders (not route groups) so Plan 05's proxy.ts matcher has real URL prefixes to key off
+- [Phase ?]: [Phase 01] Plan 01-04: logout Route Handler calls signOut() on the cookie-bound SSR server client (never the browser client) so Set-Cookie clearing headers land on the response — closes T-01-13
+- [Phase ?]: [Phase 01] Plan 01-04: components/site-header.tsx is an async Server Component that resolves getUser()+profiles.full_name itself and renders null for anonymous visitors, with the only interactive piece split into a small 'use client' components/logout-button.tsx
 
 ### Pending Todos
 
@@ -97,6 +100,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-04T08:06:57.233Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-08-04T08:19:34.229Z
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None
