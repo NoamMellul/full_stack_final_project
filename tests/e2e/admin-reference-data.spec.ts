@@ -299,3 +299,68 @@ test.describe("ADMIN-06: locations", () => {
     expect(deleteResponse.status()).toBe(403);
   });
 });
+
+test.describe("ADMIN-05/ADMIN-06: reference data admin UI", () => {
+  let adminCreds: { email: string; password: string };
+
+  test.beforeAll(async () => {
+    const admin = await createTestUser("admin");
+    adminCreds = { email: admin.email, password: admin.password };
+  });
+
+  test.afterAll(async () => {
+    await cleanupTestUsers();
+    await cleanupTestReferenceData();
+  });
+
+  test("admin adds a specialty on /admin/specialties and sees it in the table without a reload", async ({
+    page,
+  }) => {
+    await loginAsAdmin(page, adminCreds);
+    await page.goto("/admin/specialties");
+
+    const nameEn = `UI Created Specialty ${Date.now()}`;
+    await page.getByRole("button", { name: "Add specialty", exact: true }).click();
+
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Name (English)").fill(nameEn);
+    await dialog.getByLabel("Name (Hebrew)").fill("התמחות שנוצרה בבדיקה");
+    await dialog.getByRole("button", { name: "Add specialty", exact: true }).click();
+
+    await expect(page.getByText(nameEn)).toBeVisible();
+  });
+
+  test("a specialty referenced by a doctor renders a disabled Delete button with the 'used by 1 doctor' sentence", async ({
+    page,
+  }) => {
+    const specialty = await createTestSpecialty();
+    const location = await createTestLocation();
+    await createTestDoctor({ specialtyId: specialty.id, locationId: location.id });
+
+    await loginAsAdmin(page, adminCreds);
+    await page.goto("/admin/specialties");
+
+    const row = page.getByRole("row").filter({ hasText: specialty.nameEn });
+    await expect(row.getByRole("button", { name: "Delete" })).toBeDisabled();
+    await expect(row.getByText("used by 1 doctor and cannot be deleted.")).toBeVisible();
+  });
+
+  test("deleting an unreferenced location on /admin/locations goes through the confirm dialog and the row disappears", async ({
+    page,
+  }) => {
+    const location = await createTestLocation();
+
+    await loginAsAdmin(page, adminCreds);
+    await page.goto("/admin/locations");
+
+    const row = page.getByRole("row").filter({ hasText: location.neighborhood });
+    await row.getByRole("button", { name: "Delete" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText(`Delete ${location.neighborhood}, ${location.city}?`)).toBeVisible();
+    await expect(dialog.getByText("This cannot be undone.")).toBeVisible();
+    await dialog.getByRole("button", { name: "Delete", exact: true }).click();
+
+    await expect(page.getByRole("row").filter({ hasText: location.neighborhood })).toHaveCount(0);
+  });
+});
