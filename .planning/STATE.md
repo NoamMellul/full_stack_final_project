@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 02
 current_phase_name: admin-doctor-reference-data-management
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-08-04T17:35:51.297Z"
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-08-04T17:58:43.107Z"
 last_activity: 2026-08-04
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 13
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 02 (admin-doctor-reference-data-management) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-08-04 — Phase 02 execution started
 
-Progress: [██████░░░░] 62%
+Progress: [███████░░░] 69%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [██████░░░░] 62%
 | Phase 01 P05 | 35min | 2 tasks | 7 files |
 | Phase 02 P01 | 50min | 2 tasks | 16 files |
 | Phase 02 P02 | 35min | 3 tasks | 7 files |
+| Phase 02 P03 | 55min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 02] Plan 02-02: validateDoctorPatch/validateStatusInput only inspect keys present on the body (partial-update contract), reusing validateDoctorInput's exact message strings
 - [Phase ?]: [Phase 02] Plan 02-02: doctor_languages association updates are delete-then-insert (never append), and the status endpoint assigns the caller's explicit boolean rather than negating the stored value, so a repeated identical PATCH is a true no-op
 - [Phase ?]: [Phase 02] Plan 02-02: DoctorFormFields shared component (idPrefix-parameterized) drives both the always-mounted create form and the conditionally-open edit dialog; aria-live=polite role=status region used for activate/deactivate confirmation instead of a toast library
+- [Phase ?]: [Phase 02] Plan 02-03: reference-data uniqueness checkpoint resolved as option-a — unique (neighborhood, city) on locations, unique (name_en) on specialties
+- [Phase ?]: [Phase 02] Plan 02-03: specialties/locations create+edit use a Dialog form (not an always-mounted inline form) with a single resource-parameterised client component shared by both admin pages
+- [Phase ?]: [Phase 02] Plan 02-03: DELETE independently re-checks referencing doctors server-side (409 pre-check + 23503 fallback translation), proven against a direct page.request.delete bypassing the disabled button (D-06, T-02-05)
 
 ### Pending Todos
 
@@ -112,6 +116,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-04T17:35:51.269Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-08-04T17:58:43.081Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None
