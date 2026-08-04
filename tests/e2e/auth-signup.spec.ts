@@ -176,3 +176,12 @@ test.describe("AUTH-01: patient signup", () => {
     await expect(page.getByRole("button", { name: "Create account" })).toBeEnabled();
   });
 });
+
+test.describe("app/patient/layout.tsx role guard", () => {
+  test("opening /patient without a session redirects to /login", async ({ page }) => {
+    await page.context().clearCookies();
+    await page.goto("/patient");
+    await page.waitForURL("/login");
+    await expect(page).toHaveURL("/login");
+  });
+});
