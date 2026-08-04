@@ -13,7 +13,7 @@ MedRDV is built as a sequence of complete technical/domain layers, each assemble
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation — Database Schema & Authentication** - Full data model deployed with RLS, and patients/doctors can securely authenticate with role-based route protection
+- [x] **Phase 1: Foundation — Database Schema & Authentication** - Full data model deployed with RLS, and patients/doctors can securely authenticate with role-based route protection (completed 2026-08-04)
 - [ ] **Phase 2: Admin — Doctor & Reference Data Management** - Admin can populate and govern the entire platform catalog (doctors, specialties, neighborhoods, users, appointments oversight)
 - [ ] **Phase 3: Doctor Discovery — Search & Public Profiles** - Patients can find and evaluate doctors matching their criteria
 - [ ] **Phase 4: Doctor Availability Management** - Doctors control their own schedule with conflict-safe slot and block-period management
@@ -34,14 +34,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. An unauthenticated user is redirected away from any protected patient, doctor, or admin page.
   4. A logged-in user attempting to open a page for a role they don't have (e.g. a patient opening an admin page) is denied access.
 
-**Plans**: 5/6 plans executed
+**Plans**: 6/6 plans executed
 
 - [x] 01-01-PLAN.md
 - [x] 01-02-PLAN.md
 - [x] 01-03-PLAN.md
 - [x] 01-04-PLAN.md
 - [x] 01-05-PLAN.md
-- [ ] 01-06-PLAN.md
+- [x] 01-06-PLAN.md
 
 ### Phase 2: Admin — Doctor & Reference Data Management
 
@@ -124,7 +124,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation — Database Schema & Authentication | 5/6 | In Progress|  |
+| 1. Foundation — Database Schema & Authentication | 6/6 | Complete    | 2026-08-04 |
 | 2. Admin — Doctor & Reference Data Management | 0/TBD | Not started | - |
 | 3. Doctor Discovery — Search & Public Profiles | 0/TBD | Not started | - |
 | 4. Doctor Availability Management | 0/TBD | Not started | - |
