@@ -7,13 +7,13 @@
 
 ### Authentication
 
-- [ ] **AUTH-01**: Patient can sign up with email and password
-- [ ] **AUTH-02**: Patient can log in with email and password
-- [ ] **AUTH-03**: Patient can log out
-- [ ] **AUTH-04**: Patient session persists across browser refresh
-- [ ] **AUTH-05**: Doctor can log in with credentials created by the admin
-- [ ] **AUTH-06**: Unauthenticated user is redirected away from protected patient/doctor/admin pages
-- [ ] **AUTH-07**: User attempting to access a page for a role they don't have is denied access
+- [x] **AUTH-01**: Patient can sign up with email and password
+- [x] **AUTH-02**: Patient can log in with email and password
+- [x] **AUTH-03**: Patient can log out
+- [x] **AUTH-04**: Patient session persists across browser refresh
+- [x] **AUTH-05**: Doctor can log in with credentials created by the admin
+- [x] **AUTH-06**: Unauthenticated user is redirected away from protected patient/doctor/admin pages
+- [x] **AUTH-07**: User attempting to access a page for a role they don't have is denied access
 
 ### Search
 
@@ -133,13 +133,13 @@ Which phases cover which requirements.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| AUTH-05 | Phase 1 | Pending |
-| AUTH-06 | Phase 1 | Pending |
-| AUTH-07 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
+| AUTH-03 | Phase 1 | Complete |
+| AUTH-04 | Phase 1 | Complete |
+| AUTH-05 | Phase 1 | Complete |
+| AUTH-06 | Phase 1 | Complete |
+| AUTH-07 | Phase 1 | Complete |
 | ADMIN-01 | Phase 2 | Pending |
 | ADMIN-02 | Phase 2 | Pending |
 | ADMIN-03 | Phase 2 | Pending |
@@ -194,6 +194,7 @@ Which phases cover which requirements.
 | I18N-02 | Phase 6 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 59 total (10 categories: AUTH, SEARCH, PROFILE, AVAIL, APPT, PATIENT, DOCTOR, ADMIN, NOTIF, I18N)
 - Mapped to phases: 59/59 ✓
 - Unmapped: 0 ✓

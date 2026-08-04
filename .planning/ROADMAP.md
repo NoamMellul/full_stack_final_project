@@ -7,12 +7,13 @@ MedRDV is built as a sequence of complete technical/domain layers, each assemble
 ## Phases
 
 **Phase Numbering:**
+
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation — Database Schema & Authentication** - Full data model deployed with RLS, and patients/doctors can securely authenticate with role-based route protection
+- [x] **Phase 1: Foundation — Database Schema & Authentication** - Full data model deployed with RLS, and patients/doctors can securely authenticate with role-based route protection (completed 2026-08-04)
 - [ ] **Phase 2: Admin — Doctor & Reference Data Management** - Admin can populate and govern the entire platform catalog (doctors, specialties, neighborhoods, users, appointments oversight)
 - [ ] **Phase 3: Doctor Discovery — Search & Public Profiles** - Patients can find and evaluate doctors matching their criteria
 - [ ] **Phase 4: Doctor Availability Management** - Doctors control their own schedule with conflict-safe slot and block-period management
@@ -22,72 +23,97 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Phase Details
 
 ### Phase 1: Foundation — Database Schema & Authentication
+
 **Goal**: The complete database schema (all tables, constraints, and RLS policies for the entire application) is deployed and validated, and patients/doctors can securely sign up, log in, and stay authenticated, with role-based access enforced at the route level.
 **Depends on**: Nothing (first phase)
 **Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, AUTH-06, AUTH-07
 **Success Criteria** (what must be TRUE):
+
   1. Patient can sign up with email/password, log in, log out, and their session persists across a browser refresh.
   2. Doctor can log in with credentials created by the admin.
   3. An unauthenticated user is redirected away from any protected patient, doctor, or admin page.
   4. A logged-in user attempting to open a page for a role they don't have (e.g. a patient opening an admin page) is denied access.
-**Plans**: TBD
+
+**Plans**: 6/6 plans executed
+
+- [x] 01-01-PLAN.md
+- [x] 01-02-PLAN.md
+- [x] 01-03-PLAN.md
+- [x] 01-04-PLAN.md
+- [x] 01-05-PLAN.md
+- [x] 01-06-PLAN.md
 
 ### Phase 2: Admin — Doctor & Reference Data Management
+
 **Goal**: The admin has a complete management interface to populate and govern the platform — creating and maintaining doctor profiles, reference data, and oversight views — so downstream phases have real data to search, book, and display.
 **Depends on**: Phase 1
 **Requirements**: ADMIN-01, ADMIN-02, ADMIN-03, ADMIN-04, ADMIN-05, ADMIN-06, ADMIN-07, ADMIN-08
 **Success Criteria** (what must be TRUE):
+
   1. Admin can create, edit, and activate/deactivate a doctor profile with all public details from an admin interface.
   2. Admin can link a doctor profile to a login account via a temporary password, and that doctor can then log in.
   3. Admin can manage (add/edit/remove) the lists of specialties and neighborhoods used platform-wide.
   4. Admin can view all registered users and all appointments across the platform from admin views.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 3: Doctor Discovery — Search & Public Profiles
+
 **Goal**: Patients can find a doctor matching their criteria and review enough public information to decide whether to book, entirely from patient-facing pages.
 **Depends on**: Phase 2
 **Requirements**: SEARCH-01, SEARCH-02, SEARCH-03, SEARCH-04, SEARCH-05, SEARCH-06, SEARCH-07, SEARCH-08, SEARCH-09, PROFILE-01, PROFILE-02, PROFILE-03
 **Success Criteria** (what must be TRUE):
+
   1. Patient can search doctors by name and filter by specialty, spoken language, neighborhood, and availability, combining multiple filters in a single search.
   2. Search results page shows each doctor's next available slot and is sorted by soonest availability.
   3. An empty search shows a clear "no doctor found" message instead of a blank page.
   4. Patient can open a doctor's public profile page showing specialty, description, address, neighborhood, languages, photo, and a clear "demo profile" indicator.
   5. Patient can view a doctor's upcoming available slots directly from their profile page.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 4: Doctor Availability Management
+
 **Goal**: Doctors can fully control their own bookable schedule from a dedicated interface, with conflict rules enforced so the schedule they present to patients is always valid.
 **Depends on**: Phase 2
 **Requirements**: AVAIL-01, AVAIL-02, AVAIL-03, AVAIL-04, AVAIL-05, AVAIL-06, AVAIL-07
 **Success Criteria** (what must be TRUE):
+
   1. Doctor can add an available time slot from their schedule view, and cannot add a slot in the past or one that overlaps an existing slot.
   2. Doctor can delete a slot that has not been booked, but cannot delete a slot that has already been booked.
   3. Doctor can block a period of unavailability, and a blocked period cannot overlap an existing available slot.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 5: Appointment Booking & Lifecycle
+
 **Goal**: Patients can book, cancel, and reschedule appointments through a complete booking flow, with an absolute, database-enforced guarantee that two patients can never book the same slot — the core value proposition of the platform.
 **Depends on**: Phase 3, Phase 4
 **Requirements**: APPT-01, APPT-02, APPT-03, APPT-04, APPT-05, APPT-06, APPT-07, APPT-08, APPT-09, APPT-10, APPT-11, APPT-12, APPT-13
 **Success Criteria** (what must be TRUE):
+
   1. Patient can book an available future slot with a doctor, and concurrent booking attempts on the same slot never both succeed (enforced at the database level, not just in application code).
   2. Booking a slot marks it unavailable immediately, and cancelling an appointment (by patient or doctor) frees the slot for rebooking.
   3. Patient can reschedule an appointment to another available slot, with the old slot released and the new slot reserved atomically in a single transaction.
   4. Patient can view their own upcoming and past appointments, and doctor can view their own upcoming and past appointments.
+
 **Plans**: TBD
 
 ### Phase 6: Dashboards, Notifications & Localization
+
 **Goal**: Patients and doctors have a personalized home base summarizing their activity with real-time in-app updates, favorites, and the entire interface is fully usable in either Hebrew or English with correct RTL mirroring.
 **Depends on**: Phase 5
 **Requirements**: PATIENT-01, PATIENT-02, PATIENT-03, PATIENT-04, DOCTOR-01, DOCTOR-02, NOTIF-01, NOTIF-02, NOTIF-03, NOTIF-04, I18N-01, I18N-02
 **Success Criteria** (what must be TRUE):
+
   1. Patient can add a doctor to favorites, remove one, and view their full list of favorite doctors.
   2. Patient dashboard shows a summary of upcoming appointments; doctor dashboard shows a count of upcoming appointments and a count of remaining available slots.
   3. Patient receives an in-app notification when a booking is confirmed, cancelled, or rescheduled, and a doctor receives an in-app notification when a new appointment is booked.
   4. User can switch the entire interface between Hebrew and English from any page, and the layout correctly mirrors to RTL when Hebrew is selected.
+
 **Plans**: TBD
 **UI hint**: yes
 
@@ -98,7 +124,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation — Database Schema & Authentication | 0/TBD | Not started | - |
+| 1. Foundation — Database Schema & Authentication | 6/6 | Complete    | 2026-08-04 |
 | 2. Admin — Doctor & Reference Data Management | 0/TBD | Not started | - |
 | 3. Doctor Discovery — Search & Public Profiles | 0/TBD | Not started | - |
 | 4. Doctor Availability Management | 0/TBD | Not started | - |

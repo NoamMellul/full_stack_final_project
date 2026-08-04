@@ -1,0 +1,49 @@
+import { expect, test } from "@playwright/test";
+
+import { cleanupTestUsers, createTestUser } from "./helpers/test-users";
+
+test.describe("AUTH-05: doctor login", () => {
+  test.afterAll(async () => {
+    await cleanupTestUsers();
+  });
+
+  test("a doctor account created outside any signup route logs in and lands on /doctor", async ({
+    page,
+  }) => {
+    const doctor = await createTestUser("doctor");
+
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(doctor.email);
+    await page.getByLabel("Password").fill(doctor.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+
+    await page.waitForURL("/doctor");
+    await expect(page.getByText("Nothing here yet")).toBeVisible();
+  });
+
+  test("a doctor account cannot reach /patient", async ({ page }) => {
+    const doctor = await createTestUser("doctor");
+
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(doctor.email);
+    await page.getByLabel("Password").fill(doctor.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await page.waitForURL("/doctor");
+
+    await page.goto("/patient");
+    await page.waitForURL("/");
+    await expect(page).toHaveURL("/");
+  });
+
+  test("an admin account logs in and lands on /admin", async ({ page }) => {
+    const admin = await createTestUser("admin");
+
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(admin.email);
+    await page.getByLabel("Password").fill(admin.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+
+    await page.waitForURL("/admin");
+    await expect(page.getByText("Nothing here yet")).toBeVisible();
+  });
+});
