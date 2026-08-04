@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: foundation-database-schema-authentication
 status: executing
-stopped_at: Completed 01-04-PLAN.md
-last_updated: "2026-08-04T08:19:34.247Z"
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-08-04T08:35:04.906Z"
 last_activity: 2026-08-04
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 01 (foundation-database-schema-authentication) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-08-04 — Phase 01 execution started
 
-Progress: [███████░░░] 67%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [███████░░░] 67%
 | Phase 01 P02 | 70min | 2 tasks | 30 files |
 | Phase 01 P03 | 35min | 2 tasks | 9 files |
 | Phase 01 P04 | 30min | 2 tasks | 7 files |
+| Phase 01 P05 | 35min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 01] Plan 01-03: doctor/admin role-guard layouts are structural copies of app/patient/layout.tsx, kept as plain folders (not route groups) so Plan 05's proxy.ts matcher has real URL prefixes to key off
 - [Phase ?]: [Phase 01] Plan 01-04: logout Route Handler calls signOut() on the cookie-bound SSR server client (never the browser client) so Set-Cookie clearing headers land on the response — closes T-01-13
 - [Phase ?]: [Phase 01] Plan 01-04: components/site-header.tsx is an async Server Component that resolves getUser()+profiles.full_name itself and renders null for anonymous visitors, with the only interactive piece split into a small 'use client' components/logout-button.tsx
+- [Phase ?]: [Phase 01] Plan 01-05: proxy.ts (root) delegates to lib/supabase/proxy.ts's updateSession() which checks auth-presence only by path prefix (/patient, /doctor, /admin) and redirects to /login?from=<pathname>; role comparison is deliberately deferred to the role-scoped layouts to avoid a profiles DB round trip on every request
+- [Phase ?]: [Phase 01] Plan 01-05: tests/e2e/auth-signup.spec.ts's pre-existing unauthenticated-/patient redirect assertion was updated to tolerate the new ?from= query param appended by proxy.ts, since that test predates this plan's request gate
 
 ### Pending Todos
 
@@ -100,6 +103,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-04T08:19:34.229Z
-Stopped at: Completed 01-04-PLAN.md
+Last session: 2026-08-04T08:35:04.877Z
+Stopped at: Completed 01-05-PLAN.md
 Resume file: None
