@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 02
 current_phase_name: admin-doctor-reference-data-management
 status: executing
-stopped_at: Completed 02-05-PLAN.md
-last_updated: "2026-08-04T18:55:29.652Z"
+stopped_at: Completed 02-06-PLAN.md
+last_updated: "2026-08-04T20:06:29.528Z"
 last_activity: 2026-08-04
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 13
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 02 (admin-doctor-reference-data-management) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-08-04 — Phase 02 execution started
 
-Progress: [█████████░] 85%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [█████████░] 85%
 | Phase 02 P03 | 55min | 3 tasks | 10 files |
 | Phase 02 P04 | 55min | 3 tasks | 7 files |
 | Phase 02 P05 | 40min | 3 tasks | 10 files |
+| Phase 02 P06 | 35min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 02] Plan 02-04: app/admin/appointments/page.tsx is a Client Component (not a Server Component) because its status/doctor Select filters and date-range inputs need client-side state
 - [Phase ?]: [Phase 02] Plan 02-04: from/to date-range filter inputs convert calendar-day input to UTC via an Intl.DateTimeFormat Asia/Jerusalem offset helper (start-of-day/end-of-day), not naive Date parsing
 - [Phase ?]: [Phase 02] Plan 02-05: profiles.must_change_password locked down via column-level GRANT/REVOKE (not a WITH CHECK clause, which the existing profiles_update_own_or_admin policy lacks); the (gated) route-group holds the forced-password-change gate with app/doctor/change-password/ as a sibling outside the group to prevent a redirect loop
+- [Phase ?]: [Phase 02] Plan 02-06: package-legitimacy checkpoint for tsx (SUS/too-new verdict) approved by human; scripts/seed.ts is an idempotent seeder building its own service-role client (never importing server-only lib/supabase/admin.ts), guarding doctors idempotency via a full_name existence check since doctors has no natural unique key
 
 ### Pending Todos
 
@@ -111,6 +113,7 @@ None yet.
 
 - REQUIREMENTS.md's original Traceability section stated "45 total" v1 requirements, but the actual requirement list in the file contains 59 REQ-IDs across 10 categories. The roadmap maps all 59 as found in the file; the stale "45" count has been corrected in REQUIREMENTS.md.
 - RESOLVED (2026-08-04): Phase 02 Plan 01's Supabase CLI link blocker was fixed by the orchestrator (linked project-ref hyxipqnrkpjkiojrxqtl with an access token); Plan 01 re-executed from Task 1 and completed successfully. Note for later plans in this phase: `npx supabase db push` intermittently timed out on the direct-DB-connection step (IPv6-only DNS for `db.<ref>.supabase.co`) before succeeding on retry — treat a single timeout as transient, confirm via `npx supabase migration list` before assuming failure.
+- Shared remote dev database holds accumulated Playwright test residue in specialties/locations/doctors (test-created rows never cleaned up across Phase 02 plans 01-05) — not a defect in 02-06's seed script, which correctly seeded and idempotently re-ran its own 12/12/12 demo rows; a project reset or manual cleanup before final demo/grading would present a cleaner catalog
 
 ## Deferred Items
 
@@ -122,6 +125,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-04T18:55:29.629Z
-Stopped at: Completed 02-05-PLAN.md
+Last session: 2026-08-04T20:06:21.641Z
+Stopped at: Completed 02-06-PLAN.md
 Resume file: None
