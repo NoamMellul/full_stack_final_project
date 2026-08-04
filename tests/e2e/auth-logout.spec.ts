@@ -87,4 +87,35 @@ test.describe("AUTH-03: logout", () => {
     await expect(logoutButton).toBeEnabled();
     await expect(page).toHaveURL("/patient");
   });
+
+  test("the header shows the signed-in patient's full name at desktop width", async ({
+    page,
+  }) => {
+    const user = await createTestUser("patient", { fullName: "Dana Cohen" });
+
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(user.email);
+    await page.getByLabel("Password").fill(user.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await page.waitForURL("/patient");
+
+    await expect(page.getByText("Dana Cohen")).toBeVisible();
+  });
+
+  test("a doctor can log out from /doctor", async ({ page }) => {
+    const user = await createTestUser("doctor");
+
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(user.email);
+    await page.getByLabel("Password").fill(user.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await page.waitForURL("/doctor");
+
+    await page.getByRole("button", { name: "Log out" }).click();
+    await page.waitForURL("/");
+
+    await page.goto("/doctor");
+    await expect(page).toHaveURL(/\/login/);
+  });
 });
