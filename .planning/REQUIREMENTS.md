@@ -79,8 +79,8 @@
 - [ ] **ADMIN-04**: Admin can link a doctor profile to a login account (temporary password)
 - [x] **ADMIN-05**: Admin can manage the list of specialties
 - [x] **ADMIN-06**: Admin can manage the list of neighborhoods/locations
-- [ ] **ADMIN-07**: Admin can view all registered users
-- [ ] **ADMIN-08**: Admin can view all appointments across the platform
+- [x] **ADMIN-07**: Admin can view all registered users
+- [x] **ADMIN-08**: Admin can view all appointments across the platform
 
 ### Notifications
 
@@ -146,8 +146,8 @@ Which phases cover which requirements.
 | ADMIN-04 | Phase 2 | Pending |
 | ADMIN-05 | Phase 2 | Complete |
 | ADMIN-06 | Phase 2 | Complete |
-| ADMIN-07 | Phase 2 | Pending |
-| ADMIN-08 | Phase 2 | Pending |
+| ADMIN-07 | Phase 2 | Complete |
+| ADMIN-08 | Phase 2 | Complete |
 | SEARCH-01 | Phase 3 | Pending |
 | SEARCH-02 | Phase 3 | Pending |
 | SEARCH-03 | Phase 3 | Pending |
