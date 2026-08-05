@@ -55,7 +55,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Admin can manage (add/edit/remove) the lists of specialties and neighborhoods used platform-wide.
   4. Admin can view all registered users and all appointments across the platform from admin views.
 
-**Plans**: 6/7 plans executed
+**Plans**: 7/7 plans executed
 
 Plans:
 **Wave 1**
@@ -75,7 +75,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 02-07-PLAN.md — Admin dashboard, section navigation, cross-cutting route protection
+- [x] 02-07-PLAN.md — Admin dashboard, section navigation, cross-cutting route protection
 
 **UI hint**: yes
 
@@ -146,7 +146,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation — Database Schema & Authentication | 6/6 | Complete    | 2026-08-04 |
-| 2. Admin — Doctor & Reference Data Management | 6/7 | In Progress|  |
+| 2. Admin — Doctor & Reference Data Management | 7/7 | In Progress|  |
 | 3. Doctor Discovery — Search & Public Profiles | 0/TBD | Not started | - |
 | 4. Doctor Availability Management | 0/TBD | Not started | - |
 | 5. Appointment Booking & Lifecycle | 0/TBD | Not started | - |
