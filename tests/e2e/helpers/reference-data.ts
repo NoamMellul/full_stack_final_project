@@ -32,15 +32,17 @@ export async function createTestSpecialty(opts?: {
 export async function createTestLocation(opts?: {
   city?: string;
   neighborhood?: string;
-}): Promise<{ id: string; city: string; neighborhood: string }> {
+  address?: string;
+}): Promise<{ id: string; city: string; neighborhood: string; address: string | null }> {
   const admin = testAdminClient();
   const suffix = randomUUID().slice(0, 8);
   const city = opts?.city ?? "Tel Aviv";
   const neighborhood = opts?.neighborhood ?? `Test Neighborhood ${suffix}`;
+  const address = opts?.address ?? null;
 
   const { data, error } = await admin
     .from("locations")
-    .insert({ city, neighborhood })
+    .insert({ city, neighborhood, address })
     .select("id")
     .single();
 
@@ -49,7 +51,7 @@ export async function createTestLocation(opts?: {
   }
 
   createdLocationIds.push(data.id);
-  return { id: data.id, city, neighborhood };
+  return { id: data.id, city, neighborhood, address };
 }
 
 export async function createTestDoctor(opts: {

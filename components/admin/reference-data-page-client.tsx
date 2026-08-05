@@ -330,7 +330,12 @@ export default function ReferenceDataPageClient({
       const current = editValues[field.key] ?? "";
       const originalValue = original.values[field.key] ?? "";
       if (current !== originalValue) {
-        payload[field.key] = field.optional ? current || undefined : current;
+        // An optional field blanked to "" must be sent as an explicit `null`,
+        // not `undefined` — JSON.stringify drops `undefined` keys entirely,
+        // which would make the PATCH body omit the field and the server's
+        // "only touch keys present in the body" contract would silently skip
+        // clearing it (leaving the stale value in place with no error shown).
+        payload[field.key] = field.optional ? (current === "" ? null : current) : current;
       }
     }
     return payload;

@@ -345,6 +345,36 @@ test.describe("ADMIN-05/ADMIN-06: reference data admin UI", () => {
     await expect(row.getByText("used by 1 doctor and cannot be deleted.")).toBeVisible();
   });
 
+  test("clearing a location's address in the edit dialog persists the clear, not the stale value (CR-01)", async ({
+    page,
+  }) => {
+    const location = await createTestLocation({ address: "123 Dizengoff St" });
+
+    await loginAsAdmin(page, adminCreds);
+    await page.goto("/admin/locations");
+
+    const row = page.getByRole("row").filter({ hasText: location.neighborhood });
+    await row.getByRole("button", { name: `Edit ${location.neighborhood}, ${location.city}` }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByLabel("Address")).toHaveValue(location.address ?? "");
+    await dialog.getByLabel("Address").fill("");
+
+    // Save triggers the PATCH, then a background GET refetch of the list — wait
+    // for that refetch (not just the dialog closing) before reopening, so the
+    // reopened dialog reads the refreshed row rather than racing the fetch.
+    await Promise.all([
+      page.waitForResponse(
+        (r) => r.url().endsWith("/api/admin/locations") && r.request().method() === "GET",
+      ),
+      dialog.getByRole("button", { name: "Save location", exact: true }).click(),
+    ]);
+    await expect(dialog).toBeHidden();
+
+    await row.getByRole("button", { name: `Edit ${location.neighborhood}, ${location.city}` }).click();
+    await expect(dialog.getByLabel("Address")).toHaveValue("");
+  });
+
   test("deleting an unreferenced location on /admin/locations goes through the confirm dialog and the row disappears", async ({
     page,
   }) => {
