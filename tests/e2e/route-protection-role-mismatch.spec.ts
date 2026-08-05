@@ -11,7 +11,7 @@ const ROUTES: Role[] = ["patient", "doctor", "admin"];
 const HOME_BODY_COPY: Record<Role, string> = {
   patient: "This is your patient home base.",
   doctor: "This is your doctor home base.",
-  admin: "This is your admin home base.",
+  admin: "Admin dashboard",
 };
 
 test.describe("AUTH-07: role-versus-route denial matrix", () => {

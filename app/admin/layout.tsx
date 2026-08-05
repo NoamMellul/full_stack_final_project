@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import AdminNav from "@/components/admin/admin-nav";
 import SiteHeader from "@/components/site-header";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,6 +26,7 @@ export default async function AdminLayout({
   return (
     <>
       <SiteHeader />
+      <AdminNav />
       {children}
     </>
   );

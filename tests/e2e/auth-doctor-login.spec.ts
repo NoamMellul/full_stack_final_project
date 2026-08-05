@@ -44,6 +44,7 @@ test.describe("AUTH-05: doctor login", () => {
     await page.getByRole("button", { name: "Log in" }).click();
 
     await page.waitForURL("/admin");
-    await expect(page.getByText("Nothing here yet")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Admin dashboard" })).toBeVisible();
+    await expect(page.getByText("Registered users")).toBeVisible();
   });
 });

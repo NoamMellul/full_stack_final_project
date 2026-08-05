@@ -19,12 +19,13 @@ A patient must be able to find a doctor matching their criteria and book an avai
 
 ### Validated
 
-(None yet — greenfield project)
+- [x] Patient authentication (sign up, log in, log out, persistent session) — Validated in Phase 1: Foundation — Database Schema & Authentication
+- [x] Doctor accounts created and activated by the admin (no doctor self-registration) — Validated in Phase 2: Admin — Doctor & Reference Data Management
+- [x] Full doctor management by the admin (create, edit, activate/deactivate) — Validated in Phase 2: Admin — Doctor & Reference Data Management
+- [x] Reference data management by the admin (specialties, neighborhoods) — Validated in Phase 2: Admin — Doctor & Reference Data Management
 
 ### Active
 
-- [ ] Patient authentication (sign up, log in, log out, persistent session)
-- [ ] Doctor accounts created and activated by the admin (no doctor self-registration)
 - [ ] Multi-criteria doctor search: name, specialty, language, neighborhood, availability
 - [ ] Public doctor profiles (specialty, description, address, neighborhood, languages, next slots, demo status)
 - [ ] Appointment booking with guaranteed double-booking prevention
@@ -35,8 +36,6 @@ A patient must be able to find a doctor matching their criteria and book an avai
 - [ ] Favorites: patient can save favorite doctors
 - [ ] In-app notifications (confirmation, cancellation, reschedule)
 - [ ] Patient dashboard, doctor dashboard, admin dashboard
-- [ ] Full doctor management by the admin (create, edit, activate/deactivate)
-- [ ] Reference data management by the admin (specialties, neighborhoods)
 - [ ] Bilingual Hebrew/English interface with RTL support
 
 ### Out of Scope
@@ -101,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-03 after initialization*
+*Last updated: 2026-08-05 after Phase 2 completion*
