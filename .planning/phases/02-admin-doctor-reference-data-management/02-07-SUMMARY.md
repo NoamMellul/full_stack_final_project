@@ -189,3 +189,11 @@ No blockers for the next phase. The residual test-data cleanup noted above is co
 ---
 *Phase: 02-admin-doctor-reference-data-management*
 *Completed: 2026-08-05*
+
+## Self-Check: PASSED
+
+- FOUND: `.planning/phases/02-admin-doctor-reference-data-management/02-07-SUMMARY.md`
+- FOUND commit: `03cc59c` (Task 1)
+- FOUND commit: `53d6e8e` (Task 2)
+- FOUND commit: `80d618e` (SUMMARY.md commit)
+- FOUND commit: `a7449ac` (tracking files commit)
