@@ -21,7 +21,7 @@
 - [x] **SEARCH-02**: Patient can filter doctors by specialty
 - [x] **SEARCH-03**: Patient can filter doctors by spoken language (Hebrew/English)
 - [x] **SEARCH-04**: Patient can filter doctors by neighborhood/location
-- [ ] **SEARCH-05**: Patient can filter doctors by availability (e.g. available this week)
+- [x] **SEARCH-05**: Patient can filter doctors by availability (e.g. available this week)
 - [ ] **SEARCH-06**: Patient can combine multiple filters in one search
 - [x] **SEARCH-07**: Search results show each doctor's next available slot
 - [x] **SEARCH-08**: Search results are sorted by soonest availability
@@ -31,7 +31,7 @@
 
 - [ ] **PROFILE-01**: Patient can view a doctor's public profile (name, specialty, description, address, neighborhood, languages, photo)
 - [ ] **PROFILE-02**: Doctor public profile displays a clear "demo profile" indicator
-- [ ] **PROFILE-03**: Patient can view a doctor's upcoming available slots from their profile
+- [x] **PROFILE-03**: Patient can view a doctor's upcoming available slots from their profile
 
 ### Availability
 
@@ -152,14 +152,14 @@ Which phases cover which requirements.
 | SEARCH-02 | Phase 3 | Complete |
 | SEARCH-03 | Phase 3 | Complete |
 | SEARCH-04 | Phase 3 | Complete |
-| SEARCH-05 | Phase 3 | Pending |
+| SEARCH-05 | Phase 3 | Complete |
 | SEARCH-06 | Phase 3 | Pending |
 | SEARCH-07 | Phase 3 | Complete |
 | SEARCH-08 | Phase 3 | Complete |
 | SEARCH-09 | Phase 3 | Pending |
 | PROFILE-01 | Phase 3 | Pending |
 | PROFILE-02 | Phase 3 | Pending |
-| PROFILE-03 | Phase 3 | Pending |
+| PROFILE-03 | Phase 3 | Complete |
 | AVAIL-01 | Phase 4 | Pending |
 | AVAIL-02 | Phase 4 | Pending |
 | AVAIL-03 | Phase 4 | Pending |

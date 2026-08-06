@@ -92,13 +92,13 @@ Plans:
   4. Patient can open a doctor's public profile page showing specialty, description, address, neighborhood, languages, photo, and a clear "demo profile" indicator.
   5. Patient can view a doctor's upcoming available slots directly from their profile page.
 
-**Plans**: 1/6 plans executed
+**Plans**: 2/6 plans executed
 
 Plans:
 **Wave 1**
 
 - [x] 03-01-PLAN.md — `doctor_search_view` migration, blocking push, and anon-client RLS/grant proof
-- [ ] 03-02-PLAN.md — Demo availability slots (idempotent seed) plus the shared `lib/timezone.ts` extraction
+- [x] 03-02-PLAN.md — Demo availability slots (idempotent seed) plus the shared `lib/timezone.ts` extraction
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -167,7 +167,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Foundation — Database Schema & Authentication | 6/6 | Complete    | 2026-08-04 |
 | 2. Admin — Doctor & Reference Data Management | 7/7 | Complete    | 2026-08-05 |
-| 3. Doctor Discovery — Search & Public Profiles | 1/6 | In Progress|  |
+| 3. Doctor Discovery — Search & Public Profiles | 2/6 | In Progress|  |
 | 4. Doctor Availability Management | 0/TBD | Not started | - |
 | 5. Appointment Booking & Lifecycle | 0/TBD | Not started | - |
 | 6. Dashboards, Notifications & Localization | 0/TBD | Not started | - |

@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: Doctor Discovery — Search & Public Profiles
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-08-06T12:20:58.836Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-08-06T12:50:06.962Z"
 last_activity: 2026-08-05
 last_activity_desc: Phase 02 complete, transitioned to Phase 03
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 19
-  completed_plans: 14
+  completed_plans: 15
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 03 (doctor-discovery-search-public-profiles) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-08-05 — Phase 02 complete, transitioned to Phase 03
 
-Progress: [███████░░░] 74%
+Progress: [████████░░] 79%
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Progress: [███████░░░] 74%
 | Phase 02 P06 | 35min | 2 tasks | 3 files |
 | Phase 02 P07 | 45min | 3 tasks | 6 files |
 | Phase 03 P01 | 55min | 3 tasks | 2 files |
+| Phase 03 P02 | 26min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 02] Plan 02-07: Admin dashboard reads counts via four head-only count queries through the session-bound client (not the admin client), keeping RLS a real second layer behind the layout guard; admin-route-protection.spec.ts drives a 15-entry endpoint descriptor array plus a six-page matrix from persistent per-role browser contexts, re-reading fixture rows after the sweep to prove rejected requests leave no side effect
 - [Phase ?]: [Phase 03] Plan 03-01: doctor_search_view column shape locked at option-a (RESEARCH.md minimal 13-column list) — no next_available_end_at, no address/created_at
 - [Phase ?]: [Phase 03] Plan 03-01: doctor_search_view uses two LEFT JOIN LATERAL ... ON TRUE subqueries (never inner) so a doctor with no languages or no future slot still produces exactly one row (D-04); language_codes coalesces to '{}' rather than null
+- [Phase ?]: [Phase 03] Plan 03-02: lib/timezone.ts is the project's single Asia/Jerusalem conversion module (moved verbatim from app/admin/appointments/page.tsx plus 5 new exports); imported by both Client Components and the Node seed script with no server-only guard
+- [Phase ?]: [Phase 03] Plan 03-02: seedAvailabilitySlots() reads the demo doctor set back from the database (never seedDoctors()'s return value, which is empty on re-run) and idempotency-checks strictly on FUTURE availability_slots rows (D-03); Dr. Liora Segal and Dr. Amit Friedman are the DOCTORS_WITHOUT_SLOTS exclusions (D-02)
 
 ### Pending Todos
 
@@ -132,6 +135,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-06T12:20:58.808Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-08-06T12:50:06.933Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
