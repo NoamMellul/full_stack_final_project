@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: Doctor Discovery — Search & Public Profiles
 status: executing
-stopped_at: Completed 03-04-PLAN.md
-last_updated: "2026-08-06T15:46:54.168Z"
+stopped_at: Completed 03-05-PLAN.md
+last_updated: "2026-08-06T16:19:50.968Z"
 last_activity: 2026-08-05
 last_activity_desc: Phase 02 complete, transitioned to Phase 03
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 19
-  completed_plans: 17
+  completed_plans: 18
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 03 (doctor-discovery-search-public-profiles) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-08-05 — Phase 02 complete, transitioned to Phase 03
 
-Progress: [█████████░] 89%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -74,6 +74,7 @@ Progress: [█████████░] 89%
 | Phase 03 P02 | 26min | 3 tasks | 5 files |
 | Phase 03 P03 | 32min | 3 tasks | 6 files |
 | Phase 03 P04 | 55min | 3 tasks | 4 files |
+| Phase 03 P05 | 45min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -120,6 +121,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 03] Plan 03-03: DoctorSearchResult type exported from components/search/doctor-card.tsx (single source), and ParsedSearchParams from lib/validation/search.ts, both extended (never redefined) by plans 03-05/03-06
 - [Phase ?]: [Phase 03] Plan 03-04: PUBLIC_DOCTOR_SELECT is a standalone select string that omits profile_id/is_active/created_at at the query itself (not post-processed); D-06 empty-slots state renders no Select this slot control at all, not a disabled one
 - [Phase ?]: [Phase 03] Plan 03-04: fixed lib/supabase/proxy.ts ROLE_PREFIXES to a path-segment boundary match so /doctors stays public while /doctor/* role-gating is unaffected (Rule 1 bug fix)
+- [Phase ?]: [Phase 03] Plan 03-05: .contains("language_codes", [code]) confirmed to filter correctly against doctor_search_view's text[] column live against seeded data — no two-step fallback needed (RESEARCH.md Assumption A2 resolved)
+- [Phase ?]: [Phase 03] Plan 03-05: availability-range filter is a dedicated availability_slots pre-query reduced to a doctor_id list via .in(); next_available_at is used only as the .order() sort key, never as a range-filter predicate (RESEARCH.md Pitfall 3)
+- [Phase ?]: [Phase 03] Plan 03-05: Base UI Select requires an items value->label map on <Select items={...}> for Select.Value to resolve a label from a URL-derived initial value without the popup ever having opened — fixed after a reload test caught the trigger showing a raw id
 
 ### Pending Todos
 
@@ -142,6 +146,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-06T15:46:54.129Z
-Stopped at: Completed 03-04-PLAN.md
+Last session: 2026-08-06T16:19:50.929Z
+Stopped at: Completed 03-05-PLAN.md
 Resume file: None

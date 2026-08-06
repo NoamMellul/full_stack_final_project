@@ -22,7 +22,7 @@
 - [x] **SEARCH-03**: Patient can filter doctors by spoken language (Hebrew/English)
 - [x] **SEARCH-04**: Patient can filter doctors by neighborhood/location
 - [x] **SEARCH-05**: Patient can filter doctors by availability (e.g. available this week)
-- [ ] **SEARCH-06**: Patient can combine multiple filters in one search
+- [x] **SEARCH-06**: Patient can combine multiple filters in one search
 - [x] **SEARCH-07**: Search results show each doctor's next available slot
 - [x] **SEARCH-08**: Search results are sorted by soonest availability
 - [x] **SEARCH-09**: Empty search results show a clear "no doctor found" message
@@ -153,7 +153,7 @@ Which phases cover which requirements.
 | SEARCH-03 | Phase 3 | Complete |
 | SEARCH-04 | Phase 3 | Complete |
 | SEARCH-05 | Phase 3 | Complete |
-| SEARCH-06 | Phase 3 | Pending |
+| SEARCH-06 | Phase 3 | Complete |
 | SEARCH-07 | Phase 3 | Complete |
 | SEARCH-08 | Phase 3 | Complete |
 | SEARCH-09 | Phase 3 | Complete |

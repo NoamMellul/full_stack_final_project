@@ -92,7 +92,7 @@ Plans:
   4. Patient can open a doctor's public profile page showing specialty, description, address, neighborhood, languages, photo, and a clear "demo profile" indicator.
   5. Patient can view a doctor's upcoming available slots directly from their profile page.
 
-**Plans**: 4/6 plans executed
+**Plans**: 5/6 plans executed
 
 Plans:
 **Wave 1**
@@ -107,7 +107,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 03-05-PLAN.md — Specialty, language, neighborhood and availability-range filters combined with AND
+- [x] 03-05-PLAN.md — Specialty, language, neighborhood and availability-range filters combined with AND
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -167,7 +167,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Foundation — Database Schema & Authentication | 6/6 | Complete    | 2026-08-04 |
 | 2. Admin — Doctor & Reference Data Management | 7/7 | Complete    | 2026-08-05 |
-| 3. Doctor Discovery — Search & Public Profiles | 4/6 | In Progress|  |
+| 3. Doctor Discovery — Search & Public Profiles | 5/6 | In Progress|  |
 | 4. Doctor Availability Management | 0/TBD | Not started | - |
 | 5. Appointment Booking & Lifecycle | 0/TBD | Not started | - |
 | 6. Dashboards, Notifications & Localization | 0/TBD | Not started | - |
