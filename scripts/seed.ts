@@ -17,6 +17,11 @@ loadEnvConfig(process.cwd());
 
 import { createClient } from "@supabase/supabase-js";
 
+// `tsx` resolves the project's "@/" path alias in the Next.js app, but this
+// script runs standalone outside that resolution context — use a relative
+// import (verified against `npm run seed`).
+import { jerusalemDayKey, jerusalemWallClockToUtc, jerusalemWeekday } from "../lib/timezone";
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 if (!SUPABASE_URL) {
   throw new Error("Missing env var NEXT_PUBLIC_SUPABASE_URL");
@@ -185,6 +190,20 @@ const DOCTORS: DemoDoctor[] = [
 ];
 
 // ============================================================================
+// Availability slots — deliberately excludes the last two DOCTORS entries
+// (D-02) so the no-availability UI state stays reachable in demos and tests.
+// ============================================================================
+
+const DOCTORS_WITHOUT_SLOTS: string[] = ["Dr. Liora Segal", "Dr. Amit Friedman"];
+
+const SLOT_MINUTES = 30;
+const SLOTS_PER_DAY = 3;
+const DAYS_PER_DOCTOR = 3;
+const WINDOW_START_HOUR = 9;
+const WINDOW_END_HOUR = 17;
+const HORIZON_DAYS = 21;
+
+// ============================================================================
 // Demo patients — content for the /admin/users oversight view (ADMIN-01).
 // No admin account is ever created here; role is always the "patient"
 // literal below.
@@ -351,6 +370,185 @@ async function seedDoctorLanguages(
   }
 }
 
+// Returns the {year, month, day} Asia/Jerusalem calendar date `offsetDays`
+// days after `referenceNow`, reusing jerusalemDayKey's Intl-based
+// calculation rather than a second hand-rolled formatter.
+function jerusalemCalendarDateAtOffset(
+  referenceNow: Date,
+  offsetDays: number,
+): { year: number; month: number; day: number } {
+  const instant = new Date(referenceNow.getTime() + offsetDays * 24 * 60 * 60 * 1000);
+  const [year, month, day] = jerusalemDayKey(instant.toISOString()).split("-").map(Number);
+  return { year, month, day };
+}
+
+// Weekday (0 Sun .. 6 Sat) of the Asia/Jerusalem calendar date at
+// `offsetDays` from `referenceNow`. Uses a noon instant on that calendar day
+// so the lookup is stable across the DST-transition day's midnight
+// ambiguity.
+function weekdayAtOffset(referenceNow: Date, offsetDays: number): number {
+  const { year, month, day } = jerusalemCalendarDateAtOffset(referenceNow, offsetDays);
+  return jerusalemWeekday(jerusalemWallClockToUtc(year, month, day, 12, 0));
+}
+
+// Advances (or, once advancing would exceed HORIZON_DAYS, retreats) one day
+// at a time from `startOffset` until landing on a Sunday-through-Thursday
+// Israeli business day.
+function resolveBusinessDayOffset(referenceNow: Date, startOffset: number): number {
+  let offset = Math.min(startOffset, HORIZON_DAYS);
+  let direction: 1 | -1 = 1;
+
+  while (weekdayAtOffset(referenceNow, offset) >= 5) {
+    if (direction === 1 && offset + direction > HORIZON_DAYS) {
+      direction = -1;
+    }
+    offset += direction;
+  }
+
+  return offset;
+}
+
+// Resolves `rawOffsets` (day offsets from today) to distinct Sun-Thu
+// calendar dates, replacing any collision produced by the weekday-skip with
+// the next legal business day (D-01).
+function resolveDoctorSlotDays(
+  referenceNow: Date,
+  rawOffsets: number[],
+): Array<{ year: number; month: number; day: number }> {
+  const usedOffsets: number[] = [];
+  const resolvedDates: Array<{ year: number; month: number; day: number }> = [];
+
+  for (const rawOffset of rawOffsets) {
+    let offset = resolveBusinessDayOffset(referenceNow, rawOffset);
+    let guard = 0;
+    while (usedOffsets.includes(offset)) {
+      guard += 1;
+      if (guard > 30) {
+        throw new Error("Unable to resolve distinct business-day offsets for slot seeding");
+      }
+      offset = resolveBusinessDayOffset(referenceNow, offset + 1);
+    }
+    usedOffsets.push(offset);
+    resolvedDates.push(jerusalemCalendarDateAtOffset(referenceNow, offset));
+  }
+
+  return resolvedDates;
+}
+
+// Adds idempotent demo availability_slots for every active demo doctor
+// except DOCTORS_WITHOUT_SLOTS (D-02). Idempotency (D-03): a doctor is
+// skipped only if it already holds at least one FUTURE availability_slots
+// row — a doctor whose seeded slots have all expired is re-seeded, and a
+// doctor with any future slot is left untouched so the
+// availability_slots_no_overlap exclusion constraint is never challenged.
+async function seedAvailabilitySlots(): Promise<void> {
+  const doctorNames = DOCTORS.map((doctor) => doctor.full_name);
+
+  // Read the doctor set back from the database rather than from
+  // seedDoctors()'s return value: seedDoctors() returns only newly inserted
+  // rows (empty on every re-run), so keying off it would mean slots are
+  // only ever seeded on the very first run of a fresh database.
+  const { data: candidates, error: candidatesError } = await supabase
+    .from("doctors")
+    .select("id, full_name")
+    .eq("is_demo", true)
+    .in("full_name", doctorNames)
+    .order("full_name");
+
+  if (candidatesError || !candidates) {
+    throw new Error(`Failed to read demo doctors for slot seeding: ${candidatesError?.message}`);
+  }
+
+  const eligible = (candidates as Array<{ id: string; full_name: string }>).filter(
+    (doctor) => !DOCTORS_WITHOUT_SLOTS.includes(doctor.full_name),
+  );
+
+  if (eligible.length === 0) {
+    return;
+  }
+
+  const eligibleIds = eligible.map((doctor) => doctor.id);
+
+  const { data: futureSlotRows, error: futureSlotsError } = await supabase
+    .from("availability_slots")
+    .select("doctor_id")
+    .in("doctor_id", eligibleIds)
+    .gt("start_at", new Date().toISOString());
+
+  if (futureSlotsError) {
+    throw new Error(`Failed to read existing availability_slots: ${futureSlotsError.message}`);
+  }
+
+  const doctorsWithFutureSlots = new Set(
+    (futureSlotRows as Array<{ doctor_id: string }>).map((row) => row.doctor_id),
+  );
+
+  const toSeed = eligible.filter((doctor) => !doctorsWithFutureSlots.has(doctor.id));
+
+  if (toSeed.length === 0) {
+    return;
+  }
+
+  const referenceNow = new Date();
+  const rows: Array<{
+    doctor_id: string;
+    start_at: string;
+    end_at: string;
+    status: "available";
+  }> = [];
+
+  toSeed.forEach((doctor, i) => {
+    const baseOffset = 1 + (i % 7);
+    const rawOffsets = [baseOffset, baseOffset + 5, baseOffset + 11];
+    const days = resolveDoctorSlotDays(referenceNow, rawOffsets);
+
+    if (days.length !== DAYS_PER_DOCTOR) {
+      throw new Error(
+        `Expected ${DAYS_PER_DOCTOR} resolved slot days for doctor ${doctor.full_name}, got ${days.length}`,
+      );
+    }
+
+    // Stagger each doctor's first daily slot across the window so not every
+    // doctor's slots start at the exact same minute.
+    const firstSlotOffsetMinutes = (i % 6) * SLOT_MINUTES;
+
+    days.forEach(({ year, month, day }) => {
+      for (let slotIndex = 0; slotIndex < SLOTS_PER_DAY; slotIndex++) {
+        const startOffsetMinutes = firstSlotOffsetMinutes + slotIndex * SLOT_MINUTES;
+        const endOffsetMinutes = startOffsetMinutes + SLOT_MINUTES;
+        const endHour = WINDOW_START_HOUR + Math.floor(endOffsetMinutes / 60);
+        const endMinute = endOffsetMinutes % 60;
+
+        if (endHour > WINDOW_END_HOUR || (endHour === WINDOW_END_HOUR && endMinute !== 0)) {
+          throw new Error(
+            `Generated slot for doctor ${doctor.full_name} would end after the ` +
+              `${WINDOW_END_HOUR}:00 consultation window`,
+          );
+        }
+
+        const hour = WINDOW_START_HOUR + Math.floor(startOffsetMinutes / 60);
+        const minute = startOffsetMinutes % 60;
+
+        const startAt = jerusalemWallClockToUtc(year, month, day, hour, minute);
+        const endAt = new Date(startAt.getTime() + SLOT_MINUTES * 60 * 1000);
+
+        rows.push({
+          doctor_id: doctor.id,
+          start_at: startAt.toISOString(),
+          end_at: endAt.toISOString(),
+          status: "available",
+        });
+      }
+    });
+  });
+
+  const { error: insertError } = await supabase.from("availability_slots").insert(rows);
+
+  if (insertError) {
+    throw new Error(`Failed to insert availability_slots: ${insertError.message}`);
+  }
+}
+
 async function seedDemoPatients(): Promise<void> {
   for (const patient of DEMO_PATIENTS) {
     const { data: existingProfile, error: lookupError } = await supabase
@@ -415,10 +613,11 @@ async function printSummary(): Promise<void> {
   const locationsCount = await countRows("locations");
   const doctorsCount = await countRows("doctors", { is_demo: true });
   const doctorLanguagesCount = await countRows("doctor_languages");
+  const availabilitySlotsCount = await countRows("availability_slots");
   const patientsCount = await countRows("profiles", { role: "patient" });
 
   console.log(
-    `seed complete: specialties=${specialtiesCount} locations=${locationsCount} doctors=${doctorsCount} doctor_languages=${doctorLanguagesCount} patients=${patientsCount}`,
+    `seed complete: specialties=${specialtiesCount} locations=${locationsCount} doctors=${doctorsCount} doctor_languages=${doctorLanguagesCount} availability_slots=${availabilitySlotsCount} patients=${patientsCount}`,
   );
 }
 
@@ -427,6 +626,7 @@ async function main(): Promise<void> {
   const locationIdByNeighborhood = await seedLocations();
   const insertedDoctors = await seedDoctors(specialtyIdByName, locationIdByNeighborhood);
   await seedDoctorLanguages(insertedDoctors);
+  await seedAvailabilitySlots();
   await seedDemoPatients();
   await printSummary();
 }
