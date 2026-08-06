@@ -29,8 +29,8 @@
 
 ### Doctor Profiles
 
-- [ ] **PROFILE-01**: Patient can view a doctor's public profile (name, specialty, description, address, neighborhood, languages, photo)
-- [ ] **PROFILE-02**: Doctor public profile displays a clear "demo profile" indicator
+- [x] **PROFILE-01**: Patient can view a doctor's public profile (name, specialty, description, address, neighborhood, languages, photo)
+- [x] **PROFILE-02**: Doctor public profile displays a clear "demo profile" indicator
 - [x] **PROFILE-03**: Patient can view a doctor's upcoming available slots from their profile
 
 ### Availability
@@ -157,8 +157,8 @@ Which phases cover which requirements.
 | SEARCH-07 | Phase 3 | Complete |
 | SEARCH-08 | Phase 3 | Complete |
 | SEARCH-09 | Phase 3 | Complete |
-| PROFILE-01 | Phase 3 | Pending |
-| PROFILE-02 | Phase 3 | Pending |
+| PROFILE-01 | Phase 3 | Complete |
+| PROFILE-02 | Phase 3 | Complete |
 | PROFILE-03 | Phase 3 | Complete |
 | AVAIL-01 | Phase 4 | Pending |
 | AVAIL-02 | Phase 4 | Pending |
