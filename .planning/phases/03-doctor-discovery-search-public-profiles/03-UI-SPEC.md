@@ -1,7 +1,7 @@
 ---
 phase: 3
 slug: doctor-discovery-search-public-profiles
-status: draft
+status: approved
 shadcn_initialized: true
 preset: base-nova / neutral (initialized in Phase 1 via `npx shadcn init -d --rtl`; reused as-is, not re-initialized)
 created: 2026-08-06
@@ -156,11 +156,11 @@ No third-party registries declared for this phase.
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS (FLAG on missing per-screen focal-point declaration, non-blocking)
+- [x] Dimension 3 Color: PASS (FLAG on implicit vs. explicit 60/30/10 split statement, non-blocking)
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-08-06
