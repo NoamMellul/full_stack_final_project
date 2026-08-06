@@ -4,16 +4,16 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 current_phase_name: Doctor Discovery — Search & Public Profiles
-status: executing
-stopped_at: Completed 03-05-PLAN.md
-last_updated: "2026-08-06T16:19:50.968Z"
+status: verifying
+stopped_at: Completed 03-06-PLAN.md
+last_updated: "2026-08-06T16:48:22.422Z"
 last_activity: 2026-08-05
 last_activity_desc: Phase 02 complete, transitioned to Phase 03
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 19
-  completed_plans: 18
+  completed_plans: 19
 ---
 
 # Project State
@@ -29,10 +29,10 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 
 Phase: 03 (doctor-discovery-search-public-profiles) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-08-05 — Phase 02 complete, transitioned to Phase 03
 
-Progress: [██████████] 95%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -75,6 +75,7 @@ Progress: [██████████] 95%
 | Phase 03 P03 | 32min | 3 tasks | 6 files |
 | Phase 03 P04 | 55min | 3 tasks | 4 files |
 | Phase 03 P05 | 45min | 3 tasks | 5 files |
+| Phase 03 P06 | 50min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -124,6 +125,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 03] Plan 03-05: .contains("language_codes", [code]) confirmed to filter correctly against doctor_search_view's text[] column live against seeded data — no two-step fallback needed (RESEARCH.md Assumption A2 resolved)
 - [Phase ?]: [Phase 03] Plan 03-05: availability-range filter is a dedicated availability_slots pre-query reduced to a doctor_id list via .in(); next_available_at is used only as the .order() sort key, never as a range-filter predicate (RESEARCH.md Pitfall 3)
 - [Phase ?]: [Phase 03] Plan 03-05: Base UI Select requires an items value->label map on <Select items={...}> for Select.Value to resolve a label from a URL-derived initial value without the popup ever having opened — fixed after a reload test caught the trigger showing a raw id
+- [Phase ?]: [Phase 03] Plan 03-06: pageCount computed client-side from total via imported PAGE_SIZE (never a prop) so a client-supplied page size can never reach the query (T-03-04); active pagination page number rendered through a dedicated JSX branch carrying a literal aria-current="page"
+- [Phase ?]: [Phase 03] Plan 03-06: page-change scroll-to-top gated by a scrollOnNextReadyRef flag set only in handlePageChange, reusing the existing searchParams-driven loading/ready cycle without also scrolling on filter changes or initial mount
+- [Phase ?]: [Phase 03] Plan 03-06: fixed app/api/doctors/route.ts to catch PostgREST PGRST103 (416 range-not-satisfiable, raised when a page's offset exceeds the filtered result set) and return an explicit empty page instead of a 500 (Rule 1 bug, SEARCH-09)
 
 ### Pending Todos
 
@@ -146,6 +150,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-06T16:19:50.929Z
-Stopped at: Completed 03-05-PLAN.md
+Last session: 2026-08-06T16:48:22.340Z
+Stopped at: Completed 03-06-PLAN.md
 Resume file: None
