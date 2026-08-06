@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import SearchFilters from "@/components/search/search-filters";
 import SearchResults from "@/components/search/search-results";
@@ -29,6 +29,16 @@ function SearchPageInner() {
   const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
   const [doctors, setDoctors] = useState<DoctorSearchResult[]>([]);
   const [total, setTotal] = useState(0);
+
+  // page lives in the URL (D-13); MAX_PAGE/1 bounds are re-enforced server
+  // side by validateSearchParams, this parse only needs a safe fallback.
+  const page = Number(searchParams.get("page") ?? "1") || 1;
+
+  // Scrolls the results region to the top once the page-change fetch
+  // resolves, but only when the change was a page navigation — filter
+  // changes and the initial mount never trigger this scroll.
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const scrollOnNextReadyRef = useRef(false);
 
   // Clones the current URL query, applies `next`, and resets `page` to "1"
   // unless the caller's own object already sets `page` — D-14's
@@ -88,9 +98,27 @@ function SearchPageInner() {
     void runLoad();
   }, [loadDoctors]);
 
+  // Fires once the fetch triggered by a page navigation resolves — never on
+  // the initial mount or on a filter change, both of which leave
+  // scrollOnNextReadyRef false.
+  useEffect(() => {
+    if (listStatus === "ready" && scrollOnNextReadyRef.current) {
+      scrollOnNextReadyRef.current = false;
+      resultsRef.current?.scrollIntoView({ block: "start" });
+    }
+  }, [listStatus]);
+
   function handleRetry() {
     setListStatus("loading");
     void loadDoctors();
+  }
+
+  // The one call site that intentionally sets a `page` other than 1 — the
+  // object literally carries a `page` key, so updateQuery's D-14
+  // reset-to-1 branch does not fire for this call.
+  function handlePageChange(nextPage: number) {
+    scrollOnNextReadyRef.current = true;
+    updateQuery({ page: String(nextPage) });
   }
 
   return (
@@ -108,12 +136,16 @@ function SearchPageInner() {
         onFilterChange={updateQuery}
       />
 
-      <SearchResults
-        status={listStatus}
-        doctors={doctors}
-        total={total}
-        onRetry={handleRetry}
-      />
+      <div ref={resultsRef}>
+        <SearchResults
+          status={listStatus}
+          doctors={doctors}
+          total={total}
+          page={page}
+          onPageChange={handlePageChange}
+          onRetry={handleRetry}
+        />
+      </div>
     </main>
   );
 }
