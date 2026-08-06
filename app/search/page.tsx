@@ -5,22 +5,8 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-type DoctorSearchResult = {
-  id: string;
-  full_name: string;
-  bio: string | null;
-  photo_url: string | null;
-  is_demo: boolean;
-  specialty_id: string;
-  specialty_name_en: string;
-  specialty_name_he: string;
-  location_id: string;
-  city: string;
-  neighborhood: string;
-  language_codes: string[];
-  next_available_at: string | null;
-};
+import SearchResults from "@/components/search/search-results";
+import type { DoctorSearchResult } from "@/components/search/doctor-card";
 
 // Small custom debounce hook (no library — RESEARCH.md Pattern 4). Kept at
 // this page level and passed down as props by plan 03-05; do not move.
@@ -92,12 +78,21 @@ function SearchPageInner() {
     }
   }, [searchParams]);
 
+  // Every query change (not just the very first mount) re-shows the
+  // skeleton grid until the response resolves — the initial fetch and every
+  // subsequent query change render 6 Skeleton placeholder cards.
   useEffect(() => {
     async function runLoad() {
+      setListStatus("loading");
       await loadDoctors();
     }
     void runLoad();
   }, [loadDoctors]);
+
+  function handleRetry() {
+    setListStatus("loading");
+    void loadDoctors();
+  }
 
   return (
     <main className="flex flex-1 flex-col gap-6 ps-4 pe-4 py-6">
@@ -114,17 +109,12 @@ function SearchPageInner() {
         />
       </div>
 
-      {/* Card markup and the loading/error/empty branches arrive in Task 2. */}
-      <div className="flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">
-          {listStatus === "ready" ? `${total} result${total === 1 ? "" : "s"}` : ""}
-        </p>
-        <ul className="flex flex-col gap-1">
-          {doctors.map((doctor) => (
-            <li key={doctor.id}>{doctor.full_name}</li>
-          ))}
-        </ul>
-      </div>
+      <SearchResults
+        status={listStatus}
+        doctors={doctors}
+        total={total}
+        onRetry={handleRetry}
+      />
     </main>
   );
 }
