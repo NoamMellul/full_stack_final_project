@@ -22,6 +22,29 @@ export const LANGUAGE_CODES = ["he", "en"] as const;
 
 const NEIGHBORHOOD_MAX_LENGTH = 120;
 
+// Calendar-day form only (no time component) — the availability range is
+// expressed in the URL as Asia/Jerusalem calendar days, not UTC instants, so
+// a shared/refreshed URL selects the same Israeli days on both sides of a
+// DST transition (D-13).
+const CALENDAR_DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+// Round-trips `dateStr` through Date.UTC and back to reject strings that
+// match CALENDAR_DAY_PATTERN but are not real calendar dates (e.g.
+// 2026-13-01, 2026-02-30) — Date.UTC silently rolls those over rather than
+// throwing.
+function isValidCalendarDate(dateStr: string): boolean {
+  if (!CALENDAR_DAY_PATTERN.test(dateStr)) {
+    return false;
+  }
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const asDate = new Date(Date.UTC(year, month - 1, day));
+  return (
+    asDate.getUTCFullYear() === year &&
+    asDate.getUTCMonth() === month - 1 &&
+    asDate.getUTCDate() === day
+  );
+}
+
 // Widened by plans 03-05 (filters) and 03-06 (pagination controls) — keep
 // this type exported so those plans extend rather than replace it.
 export type ParsedSearchParams = {
@@ -29,6 +52,8 @@ export type ParsedSearchParams = {
   specialtyId: string | null;
   language: string | null;
   neighborhood: string | null;
+  availableFrom: string | null;
+  availableTo: string | null;
   page: number;
 };
 
@@ -69,6 +94,26 @@ export function validateSearchParams(params: URLSearchParams): string | null {
     return "Neighborhood filter is invalid.";
   }
 
+  const availableFrom = params.get("availableFrom");
+  if (availableFrom !== null && availableFrom !== "" && !isValidCalendarDate(availableFrom)) {
+    return "Dates must be in YYYY-MM-DD format.";
+  }
+
+  const availableTo = params.get("availableTo");
+  if (availableTo !== null && availableTo !== "" && !isValidCalendarDate(availableTo)) {
+    return "Dates must be in YYYY-MM-DD format.";
+  }
+
+  if (
+    availableFrom &&
+    availableTo &&
+    isValidCalendarDate(availableFrom) &&
+    isValidCalendarDate(availableTo) &&
+    availableTo < availableFrom
+  ) {
+    return "The end date must be on or after the start date.";
+  }
+
   return null;
 }
 
@@ -93,8 +138,16 @@ export function parseSearchParams(params: URLSearchParams): ParsedSearchParams {
   const neighborhood =
     rawNeighborhood !== null && rawNeighborhood.trim() ? rawNeighborhood.trim() : null;
 
+  const rawAvailableFrom = params.get("availableFrom");
+  const availableFrom =
+    rawAvailableFrom !== null && rawAvailableFrom.trim() ? rawAvailableFrom.trim() : null;
+
+  const rawAvailableTo = params.get("availableTo");
+  const availableTo =
+    rawAvailableTo !== null && rawAvailableTo.trim() ? rawAvailableTo.trim() : null;
+
   const rawPage = params.get("page");
   const page = rawPage !== null && /^[0-9]+$/.test(rawPage) ? Number(rawPage) : 1;
 
-  return { q, specialtyId, language, neighborhood, page };
+  return { q, specialtyId, language, neighborhood, availableFrom, availableTo, page };
 }
