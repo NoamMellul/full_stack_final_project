@@ -92,7 +92,27 @@ Plans:
   4. Patient can open a doctor's public profile page showing specialty, description, address, neighborhood, languages, photo, and a clear "demo profile" indicator.
   5. Patient can view a doctor's upcoming available slots directly from their profile page.
 
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 03-01-PLAN.md — `doctor_search_view` migration, blocking push, and anon-client RLS/grant proof
+- [ ] 03-02-PLAN.md — Demo availability slots (idempotent seed) plus the shared `lib/timezone.ts` extraction
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 03-03-PLAN.md — Tracer: end-to-end name search at `/search` with result card, states and sort contract
+- [ ] 03-04-PLAN.md — Public doctor profile page and endpoint, demo badge, grouped slots, inert booking CTA
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 03-05-PLAN.md — Specialty, language, neighborhood and availability-range filters combined with AND
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 03-06-PLAN.md — Numbered pagination, total count, and cross-page sort stability
+
 **UI hint**: yes
 
 ### Phase 4: Doctor Availability Management
@@ -147,7 +167,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Foundation — Database Schema & Authentication | 6/6 | Complete    | 2026-08-04 |
 | 2. Admin — Doctor & Reference Data Management | 7/7 | Complete    | 2026-08-05 |
-| 3. Doctor Discovery — Search & Public Profiles | 0/TBD | Not started | - |
+| 3. Doctor Discovery — Search & Public Profiles | 0/6 | Planned     | - |
 | 4. Doctor Availability Management | 0/TBD | Not started | - |
 | 5. Appointment Booking & Lifecycle | 0/TBD | Not started | - |
 | 6. Dashboards, Notifications & Localization | 0/TBD | Not started | - |
