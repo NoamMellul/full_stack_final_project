@@ -107,6 +107,16 @@ export async function GET(request: Request) {
     .range(offset, offset + PAGE_SIZE - 1);
 
   if (error) {
+    // PGRST103 ("Requested range not satisfiable", HTTP 416) is PostgREST's
+    // response when `offset` lands beyond the last row of the filtered
+    // result set — an in-range page number (validateSearchParams only
+    // bounds 1..MAX_PAGE) requested against a filter that now matches fewer
+    // pages than it did when the link was generated. This is an empty page,
+    // not a server failure (SEARCH-09) — every other query error still
+    // falls through to the generic 500.
+    if (error.code === "PGRST103") {
+      return NextResponse.json({ doctors: [], total: 0, page, pageSize: PAGE_SIZE });
+    }
     return NextResponse.json(
       { error: "Could not load doctors. Please try again." },
       { status: 500 },
