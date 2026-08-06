@@ -18,13 +18,13 @@
 ### Search
 
 - [ ] **SEARCH-01**: Patient can search doctors by name
-- [ ] **SEARCH-02**: Patient can filter doctors by specialty
-- [ ] **SEARCH-03**: Patient can filter doctors by spoken language (Hebrew/English)
-- [ ] **SEARCH-04**: Patient can filter doctors by neighborhood/location
+- [x] **SEARCH-02**: Patient can filter doctors by specialty
+- [x] **SEARCH-03**: Patient can filter doctors by spoken language (Hebrew/English)
+- [x] **SEARCH-04**: Patient can filter doctors by neighborhood/location
 - [ ] **SEARCH-05**: Patient can filter doctors by availability (e.g. available this week)
 - [ ] **SEARCH-06**: Patient can combine multiple filters in one search
-- [ ] **SEARCH-07**: Search results show each doctor's next available slot
-- [ ] **SEARCH-08**: Search results are sorted by soonest availability
+- [x] **SEARCH-07**: Search results show each doctor's next available slot
+- [x] **SEARCH-08**: Search results are sorted by soonest availability
 - [ ] **SEARCH-09**: Empty search results show a clear "no doctor found" message
 
 ### Doctor Profiles
@@ -149,13 +149,13 @@ Which phases cover which requirements.
 | ADMIN-07 | Phase 2 | Complete |
 | ADMIN-08 | Phase 2 | Complete |
 | SEARCH-01 | Phase 3 | Pending |
-| SEARCH-02 | Phase 3 | Pending |
-| SEARCH-03 | Phase 3 | Pending |
-| SEARCH-04 | Phase 3 | Pending |
+| SEARCH-02 | Phase 3 | Complete |
+| SEARCH-03 | Phase 3 | Complete |
+| SEARCH-04 | Phase 3 | Complete |
 | SEARCH-05 | Phase 3 | Pending |
 | SEARCH-06 | Phase 3 | Pending |
-| SEARCH-07 | Phase 3 | Pending |
-| SEARCH-08 | Phase 3 | Pending |
+| SEARCH-07 | Phase 3 | Complete |
+| SEARCH-08 | Phase 3 | Complete |
 | SEARCH-09 | Phase 3 | Pending |
 | PROFILE-01 | Phase 3 | Pending |
 | PROFILE-02 | Phase 3 | Pending |

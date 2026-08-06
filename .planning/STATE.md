@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: Doctor Discovery — Search & Public Profiles
 status: executing
-stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-08-06T09:25:44.153Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-08-06T12:20:58.836Z"
 last_activity: 2026-08-05
 last_activity_desc: Phase 02 complete, transitioned to Phase 03
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 19
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
@@ -27,12 +27,12 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 
 ## Current Position
 
-Phase: 03 — Doctor Discovery — Search & Public Profiles
-Plan: Not started
+Phase: 03 (doctor-discovery-search-public-profiles) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
 Last activity: 2026-08-05 — Phase 02 complete, transitioned to Phase 03
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 74%
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Progress: [██████████] 100%
 | Phase 02 P05 | 40min | 3 tasks | 10 files |
 | Phase 02 P06 | 35min | 2 tasks | 3 files |
 | Phase 02 P07 | 45min | 3 tasks | 6 files |
+| Phase 03 P01 | 55min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 02] Plan 02-05: profiles.must_change_password locked down via column-level GRANT/REVOKE (not a WITH CHECK clause, which the existing profiles_update_own_or_admin policy lacks); the (gated) route-group holds the forced-password-change gate with app/doctor/change-password/ as a sibling outside the group to prevent a redirect loop
 - [Phase ?]: [Phase 02] Plan 02-06: package-legitimacy checkpoint for tsx (SUS/too-new verdict) approved by human; scripts/seed.ts is an idempotent seeder building its own service-role client (never importing server-only lib/supabase/admin.ts), guarding doctors idempotency via a full_name existence check since doctors has no natural unique key
 - [Phase ?]: [Phase 02] Plan 02-07: Admin dashboard reads counts via four head-only count queries through the session-bound client (not the admin client), keeping RLS a real second layer behind the layout guard; admin-route-protection.spec.ts drives a 15-entry endpoint descriptor array plus a six-page matrix from persistent per-role browser contexts, re-reading fixture rows after the sweep to prove rejected requests leave no side effect
+- [Phase ?]: [Phase 03] Plan 03-01: doctor_search_view column shape locked at option-a (RESEARCH.md minimal 13-column list) — no next_available_end_at, no address/created_at
+- [Phase ?]: [Phase 03] Plan 03-01: doctor_search_view uses two LEFT JOIN LATERAL ... ON TRUE subqueries (never inner) so a doctor with no languages or no future slot still produces exactly one row (D-04); language_codes coalesces to '{}' rather than null
 
 ### Pending Todos
 
@@ -117,6 +120,7 @@ None yet.
 - REQUIREMENTS.md's original Traceability section stated "45 total" v1 requirements, but the actual requirement list in the file contains 59 REQ-IDs across 10 categories. The roadmap maps all 59 as found in the file; the stale "45" count has been corrected in REQUIREMENTS.md.
 - RESOLVED (2026-08-04): Phase 02 Plan 01's Supabase CLI link blocker was fixed by the orchestrator (linked project-ref hyxipqnrkpjkiojrxqtl with an access token); Plan 01 re-executed from Task 1 and completed successfully. Note for later plans in this phase: `npx supabase db push` intermittently timed out on the direct-DB-connection step (IPv6-only DNS for `db.<ref>.supabase.co`) before succeeding on retry — treat a single timeout as transient, confirm via `npx supabase migration list` before assuming failure.
 - Shared remote dev database holds accumulated Playwright test residue in specialties/locations/doctors (test-created rows never cleaned up across Phase 02 plans 01-05) — not a defect in 02-06's seed script, which correctly seeded and idempotently re-ran its own 12/12/12 demo rows; a project reset or manual cleanup before final demo/grading would present a cleaner catalog
+- Task 3 acceptance-criterion 'temporarily remove security_invoker/is_active and confirm assertion 2 fails' could not be executed: sandbox classifier blocked all npx supabase db query --linked calls (even read-only). Substituted with grep of the applied migration + a clean npx supabase db advisors --linked report. Recorded as coverage D7 (human_judgment: true) in 03-01-SUMMARY.md for optional human follow-up.
 
 ## Deferred Items
 
@@ -128,6 +132,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-06T08:49:29.148Z
-Stopped at: Phase 3 UI-SPEC approved
-Resume file: C:/Users/mellu/Desktop/full_stack_final_project/.planning/phases/03-doctor-discovery-search-public-profiles/03-UI-SPEC.md
+Last session: 2026-08-06T12:20:58.808Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
