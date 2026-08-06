@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
-  const { q, page } = parseSearchParams(searchParams);
+  const { q, specialtyId, language, neighborhood, page } = parseSearchParams(searchParams);
   const offset = (page - 1) * PAGE_SIZE;
 
   const supabase = await createClient();
@@ -48,6 +48,15 @@ export async function GET(request: Request) {
 
   if (q !== null) {
     query = query.ilike("full_name", `%${q}%`);
+  }
+  if (specialtyId) {
+    query = query.eq("specialty_id", specialtyId);
+  }
+  if (neighborhood) {
+    query = query.eq("neighborhood", neighborhood);
+  }
+  if (language) {
+    query = query.contains("language_codes", [language]);
   }
 
   const { data, count, error } = await query
