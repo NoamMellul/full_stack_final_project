@@ -1,0 +1,138 @@
+"use client";
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
+
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+type DoctorSearchResult = {
+  id: string;
+  full_name: string;
+  bio: string | null;
+  photo_url: string | null;
+  is_demo: boolean;
+  specialty_id: string;
+  specialty_name_en: string;
+  specialty_name_he: string;
+  location_id: string;
+  city: string;
+  neighborhood: string;
+  language_codes: string[];
+  next_available_at: string | null;
+};
+
+// Small custom debounce hook (no library — RESEARCH.md Pattern 4). Kept at
+// this page level and passed down as props by plan 03-05; do not move.
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
+
+function SearchPageInner() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [nameInput, setNameInput] = useState(searchParams.get("q") ?? "");
+  const debouncedName = useDebouncedValue(nameInput, 300);
+
+  const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
+  const [doctors, setDoctors] = useState<DoctorSearchResult[]>([]);
+  const [total, setTotal] = useState(0);
+
+  // Clones the current URL query, applies `next`, and resets `page` to "1"
+  // unless the caller's own object already sets `page` — D-14's
+  // reset-on-filter-change rule, established here once for every future
+  // filter this phase's later plans add.
+  const updateQuery = useCallback(
+    (next: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(next)) {
+        if (value) {
+          params.set(key, value);
+        } else {
+          params.delete(key);
+        }
+      }
+      if (!("page" in next)) {
+        params.set("page", "1");
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  useEffect(() => {
+    const currentQ = searchParams.get("q") ?? "";
+    if (debouncedName !== currentQ) {
+      updateQuery({ q: debouncedName || null });
+    }
+    // Only re-run when the debounced name value changes — updateQuery and
+    // searchParams intentionally excluded to avoid loops on every URL write.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedName]);
+
+  const loadDoctors = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/doctors?${searchParams.toString()}`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error ?? "Could not load doctors. Please try again.");
+      }
+      setDoctors(data.doctors as DoctorSearchResult[]);
+      setTotal(data.total as number);
+      setListStatus("ready");
+    } catch {
+      setListStatus("error");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    async function runLoad() {
+      await loadDoctors();
+    }
+    void runLoad();
+  }, [loadDoctors]);
+
+  return (
+    <main className="flex flex-1 flex-col gap-6 ps-4 pe-4 py-6">
+      <h1 className="text-2xl font-semibold">Find a doctor</h1>
+
+      <div className="flex flex-col gap-2 max-w-sm">
+        <Label htmlFor="search-name">Doctor name</Label>
+        <Input
+          id="search-name"
+          name="q"
+          type="text"
+          value={nameInput}
+          onChange={(e) => setNameInput(e.target.value)}
+        />
+      </div>
+
+      {/* Card markup and the loading/error/empty branches arrive in Task 2. */}
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-muted-foreground">
+          {listStatus === "ready" ? `${total} result${total === 1 ? "" : "s"}` : ""}
+        </p>
+        <ul className="flex flex-col gap-1">
+          {doctors.map((doctor) => (
+            <li key={doctor.id}>{doctor.full_name}</li>
+          ))}
+        </ul>
+      </div>
+    </main>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense>
+      <SearchPageInner />
+    </Suspense>
+  );
+}
