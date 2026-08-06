@@ -3,8 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import SearchFilters from "@/components/search/search-filters";
 import SearchResults from "@/components/search/search-results";
 import type { DoctorSearchResult } from "@/components/search/doctor-card";
 
@@ -98,16 +97,16 @@ function SearchPageInner() {
     <main className="flex flex-1 flex-col gap-6 ps-4 pe-4 py-6">
       <h1 className="text-2xl font-semibold">Find a doctor</h1>
 
-      <div className="flex flex-col gap-2 max-w-sm">
-        <Label htmlFor="search-name">Doctor name</Label>
-        <Input
-          id="search-name"
-          name="q"
-          type="text"
-          value={nameInput}
-          onChange={(e) => setNameInput(e.target.value)}
-        />
-      </div>
+      <SearchFilters
+        nameValue={nameInput}
+        onNameChange={setNameInput}
+        specialty={searchParams.get("specialty")}
+        language={searchParams.get("language")}
+        neighborhood={searchParams.get("neighborhood")}
+        availableFrom={searchParams.get("availableFrom")}
+        availableTo={searchParams.get("availableTo")}
+        onFilterChange={updateQuery}
+      />
 
       <SearchResults
         status={listStatus}

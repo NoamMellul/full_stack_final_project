@@ -9,6 +9,7 @@ import {
   createTestLocation,
   createTestSpecialty,
 } from "./helpers/reference-data";
+import { testAdminClient } from "./helpers/supabase-admin";
 
 // Every test in this spec drives the default (anonymous, no session)
 // Playwright context — /search and GET /api/doctors are the first
@@ -27,6 +28,13 @@ test.describe("SEARCH-01/07/08/09: public doctor search by name", () => {
   const sortToken = `SortToken${runSuffix}`;
   const tieToken = `TieToken${runSuffix}`;
 
+  // Plan 03-05 fixtures — specialty/language/neighborhood/availability
+  // filters and their combination.
+  const filterToken = `FilterToken${runSuffix}`;
+  const langToken = `LangToken${runSuffix}`;
+  const comboToken = `ComboToken${runSuffix}`;
+  const pitfallToken = `PitfallToken${runSuffix}`;
+
   let specialty: { id: string; nameEn: string };
   let location: { id: string; city: string; neighborhood: string };
 
@@ -43,6 +51,21 @@ test.describe("SEARCH-01/07/08/09: public doctor search by name", () => {
 
   let tieA: { id: string; fullName: string };
   let tieB: { id: string; fullName: string };
+
+  // Plan 03-05 fixtures.
+  let filterSpecialty: { id: string; nameEn: string };
+  let filterLocation: { id: string; city: string; neighborhood: string };
+  let filterDoctorA: { id: string; fullName: string };
+  let filterDoctorB: { id: string; fullName: string };
+
+  let hebrewOnlyDoctor: { id: string; fullName: string };
+  let englishOnlyDoctor: { id: string; fullName: string };
+
+  let comboSpecialty: { id: string; nameEn: string };
+  let comboHeDoctor: { id: string; fullName: string };
+  let comboEnDoctor: { id: string; fullName: string };
+
+  let pitfallDoctor: { id: string; fullName: string };
 
   test.beforeAll(async () => {
     specialty = await createTestSpecialty();
@@ -129,6 +152,104 @@ test.describe("SEARCH-01/07/08/09: public doctor search by name", () => {
     const tieEnd = new Date(tieStart.getTime() + 30 * 60 * 1000);
     await createTestSlots(tieA.id, [{ startAt: tieStart, endAt: tieEnd }]);
     await createTestSlots(tieB.id, [{ startAt: tieStart, endAt: tieEnd }]);
+
+    // Plan 03-05 fixtures — a throwaway specialty+neighborhood shared by
+    // exactly two active doctors (tests 1 and 3: specialty/neighborhood
+    // filters).
+    filterSpecialty = await createTestSpecialty();
+    filterLocation = await createTestLocation();
+    filterDoctorA = await createTestDoctor({
+      fullName: `Dr. ${filterToken} Alpha`,
+      specialtyId: filterSpecialty.id,
+      locationId: filterLocation.id,
+      isActive: true,
+    });
+    filterDoctorB = await createTestDoctor({
+      fullName: `Dr. ${filterToken} Beta`,
+      specialtyId: filterSpecialty.id,
+      locationId: filterLocation.id,
+      isActive: true,
+    });
+
+    // A Hebrew-only doctor and an English-only doctor sharing a name token
+    // (test 2: the language filter). doctor_languages rows cascade-delete
+    // with their doctor row, so no separate cleanup is needed.
+    const admin = testAdminClient();
+    const { data: languageRows, error: languageError } = await admin
+      .from("languages")
+      .select("id,code")
+      .in("code", ["he", "en"]);
+    if (languageError || !languageRows) {
+      throw new Error(`Failed to read languages fixture rows: ${languageError?.message}`);
+    }
+    const heLanguageId = (languageRows as Array<{ id: string; code: string }>).find(
+      (row) => row.code === "he",
+    )?.id;
+    const enLanguageId = (languageRows as Array<{ id: string; code: string }>).find(
+      (row) => row.code === "en",
+    )?.id;
+    if (!heLanguageId || !enLanguageId) {
+      throw new Error("Missing seeded he/en rows in languages table.");
+    }
+
+    hebrewOnlyDoctor = await createTestDoctor({
+      fullName: `Dr. ${langToken} Heb`,
+      specialtyId: specialty.id,
+      locationId: location.id,
+      isActive: true,
+    });
+    englishOnlyDoctor = await createTestDoctor({
+      fullName: `Dr. ${langToken} Eng`,
+      specialtyId: specialty.id,
+      locationId: location.id,
+      isActive: true,
+    });
+
+    // A separate specialty (distinct from filterSpecialty, so test 1's
+    // "exactly two doctors" count stays exact) shared by a Hebrew-speaking
+    // and an English-speaking doctor with a common name token (test 6:
+    // specialty + language + name combination).
+    comboSpecialty = await createTestSpecialty();
+    comboHeDoctor = await createTestDoctor({
+      fullName: `Dr. ${comboToken} HeOnly`,
+      specialtyId: comboSpecialty.id,
+      locationId: location.id,
+      isActive: true,
+    });
+    comboEnDoctor = await createTestDoctor({
+      fullName: `Dr. ${comboToken} EnOnly`,
+      specialtyId: comboSpecialty.id,
+      locationId: location.id,
+      isActive: true,
+    });
+
+    const { error: doctorLanguagesError } = await admin.from("doctor_languages").insert([
+      { doctor_id: hebrewOnlyDoctor.id, language_id: heLanguageId },
+      { doctor_id: englishOnlyDoctor.id, language_id: enLanguageId },
+      { doctor_id: comboHeDoctor.id, language_id: heLanguageId },
+      { doctor_id: comboEnDoctor.id, language_id: enLanguageId },
+    ]);
+    if (doctorLanguagesError) {
+      throw new Error(`Failed to seed doctor_languages fixture: ${doctorLanguagesError.message}`);
+    }
+
+    // A doctor whose only two future slots are 2 days out and 18 days out —
+    // the RESEARCH.md Common Pitfall 3 fixture (test 4: a range covering only
+    // the later slot must still return the doctor).
+    pitfallDoctor = await createTestDoctor({
+      fullName: `Dr. ${pitfallToken} TwoSlots`,
+      specialtyId: specialty.id,
+      locationId: location.id,
+      isActive: true,
+    });
+    const pitfallEarlyStart = new Date(Date.now() + 2 * DAY_MS);
+    const pitfallEarlyEnd = new Date(pitfallEarlyStart.getTime() + 30 * 60 * 1000);
+    const pitfallLateStart = new Date(Date.now() + 18 * DAY_MS);
+    const pitfallLateEnd = new Date(pitfallLateStart.getTime() + 30 * 60 * 1000);
+    await createTestSlots(pitfallDoctor.id, [
+      { startAt: pitfallEarlyStart, endAt: pitfallEarlyEnd },
+      { startAt: pitfallLateStart, endAt: pitfallLateEnd },
+    ]);
   });
 
   test.afterAll(async () => {
@@ -234,5 +355,183 @@ test.describe("SEARCH-01/07/08/09: public doctor search by name", () => {
 
     expect(ids1).toEqual(ids2);
     expect(ids1).toEqual([tieA.id, tieB.id].sort());
+  });
+
+  // Plan 03-05: SEARCH-02..06, D-07..09, D-13, D-14.
+
+  test("filter: selecting the fixture specialty shows only the two doctors carrying it, and the URL gains a specialty parameter", async ({
+    page,
+  }) => {
+    await page.goto("/search");
+
+    await page.getByLabel("Specialty").click();
+    await page.getByRole("option", { name: filterSpecialty.nameEn }).click();
+    await page.waitForURL((url) => url.searchParams.get("specialty") === filterSpecialty.id);
+
+    await expect(page.getByText(filterDoctorA.fullName)).toBeVisible();
+    await expect(page.getByText(filterDoctorB.fullName)).toBeVisible();
+    await expect(page.locator('[data-slot="card"]')).toHaveCount(2);
+  });
+
+  test("filter: selecting Hebrew shows the Hebrew-only doctor and hides the English-only one, and selecting English does the inverse", async ({
+    page,
+  }) => {
+    await page.goto("/search");
+
+    await page.getByLabel("Doctor name").fill(langToken);
+    await page.waitForURL((url) => url.searchParams.get("q") === langToken);
+
+    await page.getByLabel("Spoken language").click();
+    await page.getByRole("option", { name: "Hebrew" }).click();
+    await page.waitForURL((url) => url.searchParams.get("language") === "he");
+
+    await expect(page.getByText(hebrewOnlyDoctor.fullName)).toBeVisible();
+    await expect(page.getByText(englishOnlyDoctor.fullName)).not.toBeVisible();
+
+    await page.getByLabel("Spoken language").click();
+    await page.getByRole("option", { name: "English" }).click();
+    await page.waitForURL((url) => url.searchParams.get("language") === "en");
+
+    await expect(page.getByText(englishOnlyDoctor.fullName)).toBeVisible();
+    await expect(page.getByText(hebrewOnlyDoctor.fullName)).not.toBeVisible();
+  });
+
+  test("filter: selecting the fixture neighborhood narrows to the doctors in it", async ({
+    page,
+  }) => {
+    await page.goto("/search");
+
+    await page.getByLabel("Neighborhood").click();
+    await page.getByRole("option", { name: filterLocation.neighborhood }).click();
+    await page.waitForURL(
+      (url) => url.searchParams.get("neighborhood") === filterLocation.neighborhood,
+    );
+
+    await expect(page.getByText(filterDoctorA.fullName)).toBeVisible();
+    await expect(page.getByText(filterDoctorB.fullName)).toBeVisible();
+  });
+
+  test("availability: with a range covering only day 17 through day 19, the two-slot doctor is still returned even though the doctor's earliest slot is 2 days out and therefore outside the range", async ({
+    page,
+  }) => {
+    // Wide margin (day 15-21) around the day-18 slot so a difference between
+    // the test runner's local zone and Asia/Jerusalem (max 14h) can never
+    // cross a day boundary and flip which slot lands inside the range.
+    const filterFrom = new Date(Date.now() + 15 * DAY_MS).toISOString().slice(0, 10);
+    const filterTo = new Date(Date.now() + 21 * DAY_MS).toISOString().slice(0, 10);
+
+    await page.goto(
+      `/search?q=${encodeURIComponent(pitfallToken)}&availableFrom=${filterFrom}&availableTo=${filterTo}`,
+    );
+
+    await expect(page.getByText(pitfallDoctor.fullName)).toBeVisible();
+  });
+
+  test("availability: clicking Today sets both date inputs to the same Israeli calendar day, marks the chip selected, and puts both values in the URL", async ({
+    page,
+  }) => {
+    await page.goto("/search");
+
+    await page.getByRole("button", { name: "Today", exact: true }).click();
+    await page.waitForURL(
+      (url) => url.searchParams.has("availableFrom") && url.searchParams.has("availableTo"),
+    );
+
+    const url = new URL(page.url());
+    const from = url.searchParams.get("availableFrom");
+    const to = url.searchParams.get("availableTo");
+    expect(from).toBe(to);
+
+    await expect(page.getByLabel("Available from")).toHaveValue(from ?? "");
+    await expect(page.getByLabel("Available to")).toHaveValue(to ?? "");
+    await expect(page.getByRole("button", { name: "Today", exact: true })).toHaveClass(
+      /bg-primary/,
+    );
+  });
+
+  test("combination: applying specialty plus language plus name together returns only the doctor satisfying all three, and clearing the language filter widens the set", async ({
+    page,
+  }) => {
+    await page.goto("/search");
+
+    await page.getByLabel("Doctor name").fill(comboToken);
+    await page.waitForURL((url) => url.searchParams.get("q") === comboToken);
+
+    await page.getByLabel("Specialty").click();
+    await page.getByRole("option", { name: comboSpecialty.nameEn }).click();
+    await page.waitForURL((url) => url.searchParams.get("specialty") === comboSpecialty.id);
+
+    await page.getByLabel("Spoken language").click();
+    await page.getByRole("option", { name: "Hebrew" }).click();
+    await page.waitForURL((url) => url.searchParams.get("language") === "he");
+
+    await expect(page.getByText(comboHeDoctor.fullName)).toBeVisible();
+    await expect(page.getByText(comboEnDoctor.fullName)).not.toBeVisible();
+
+    // Clearing only the language filter (via direct URL navigation, the same
+    // state D-13 guarantees a reload/share reproduces) widens the set back
+    // to both doctors sharing the specialty and name token.
+    await page.goto(
+      `/search?q=${encodeURIComponent(comboToken)}&specialty=${comboSpecialty.id}`,
+    );
+
+    await expect(page.getByText(comboHeDoctor.fullName)).toBeVisible();
+    await expect(page.getByText(comboEnDoctor.fullName)).toBeVisible();
+  });
+
+  test("combination: reloading the page on a fully-filtered URL reproduces the same visible result set and the same populated filter controls", async ({
+    page,
+  }) => {
+    const filteredUrl =
+      `/search?q=${encodeURIComponent(filterToken)}&specialty=${filterSpecialty.id}` +
+      `&neighborhood=${encodeURIComponent(filterLocation.neighborhood)}`;
+
+    await page.goto(filteredUrl);
+    await expect(page.getByText(filterDoctorA.fullName)).toBeVisible();
+    await expect(page.getByText(filterDoctorB.fullName)).toBeVisible();
+    await expect(page.locator('[data-slot="card"]')).toHaveCount(2);
+
+    await page.reload();
+
+    await expect(page.getByText(filterDoctorA.fullName)).toBeVisible();
+    await expect(page.getByText(filterDoctorB.fullName)).toBeVisible();
+    await expect(page.locator('[data-slot="card"]')).toHaveCount(2);
+    await expect(page.getByLabel("Doctor name")).toHaveValue(filterToken);
+    await expect(page.getByLabel("Specialty")).toContainText(filterSpecialty.nameEn);
+    await expect(page.getByLabel("Neighborhood")).toContainText(filterLocation.neighborhood);
+  });
+
+  test("filter: landing on a URL that already carries page=3, then changing the specialty filter, results in a URL whose page value is 1", async ({
+    page,
+  }) => {
+    await page.goto("/search?page=3");
+
+    await page.getByLabel("Specialty").click();
+    await page.getByRole("option", { name: filterSpecialty.nameEn }).click();
+    await page.waitForURL((url) => url.searchParams.get("specialty") === filterSpecialty.id);
+
+    const url = new URL(page.url());
+    expect(url.searchParams.get("page")).toBe("1");
+  });
+
+  test("filter: opening /search with no query string shows every filter control in its unset state", async ({
+    page,
+  }) => {
+    await page.goto("/search");
+
+    await expect(page.getByLabel("Specialty")).toContainText("All specialties");
+    await expect(page.getByLabel("Spoken language")).toContainText("All languages");
+    await expect(page.getByLabel("Neighborhood")).toContainText("All neighborhoods");
+    await expect(page.getByLabel("Available from")).toHaveValue("");
+    await expect(page.getByLabel("Available to")).toHaveValue("");
+    await expect(page.getByRole("button", { name: "Today", exact: true })).not.toHaveClass(
+      /bg-primary/,
+    );
+    await expect(
+      page.getByRole("button", { name: "Next 7 days", exact: true }),
+    ).not.toHaveClass(/bg-primary/);
+    await expect(
+      page.getByRole("button", { name: "Next 30 days", exact: true }),
+    ).not.toHaveClass(/bg-primary/);
   });
 });
