@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: Doctor Discovery — Search & Public Profiles
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-08-06T12:50:06.962Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-08-06T13:20:55.520Z"
 last_activity: 2026-08-05
 last_activity_desc: Phase 02 complete, transitioned to Phase 03
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 19
-  completed_plans: 15
+  completed_plans: 16
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 03 (doctor-discovery-search-public-profiles) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-08-05 — Phase 02 complete, transitioned to Phase 03
 
-Progress: [████████░░] 79%
+Progress: [████████░░] 84%
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [████████░░] 79%
 | Phase 02 P07 | 45min | 3 tasks | 6 files |
 | Phase 03 P01 | 55min | 3 tasks | 2 files |
 | Phase 03 P02 | 26min | 3 tasks | 5 files |
+| Phase 03 P03 | 32min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 03] Plan 03-01: doctor_search_view uses two LEFT JOIN LATERAL ... ON TRUE subqueries (never inner) so a doctor with no languages or no future slot still produces exactly one row (D-04); language_codes coalesces to '{}' rather than null
 - [Phase ?]: [Phase 03] Plan 03-02: lib/timezone.ts is the project's single Asia/Jerusalem conversion module (moved verbatim from app/admin/appointments/page.tsx plus 5 new exports); imported by both Client Components and the Node seed script with no server-only guard
 - [Phase ?]: [Phase 03] Plan 03-02: seedAvailabilitySlots() reads the demo doctor set back from the database (never seedDoctors()'s return value, which is empty on re-run) and idempotency-checks strictly on FUTURE availability_slots rows (D-03); Dr. Liora Segal and Dr. Amit Friedman are the DOCTORS_WITHOUT_SLOTS exclusions (D-02)
+- [Phase ?]: [Phase 03] Plan 03-03: parseSearchParams strips LIKE/PostgREST metacharacters (%,_,*,\) from q rather than escaping them; confirmed q=%25 returns identical total to unfiltered request (T-03-01)
+- [Phase ?]: [Phase 03] Plan 03-03: listStatus resets to loading on every searchParams change (not just first mount), diverging from doctors-page-client.tsx's admin pattern, to satisfy the every-query-change skeleton backstop truth
+- [Phase ?]: [Phase 03] Plan 03-03: DoctorSearchResult type exported from components/search/doctor-card.tsx (single source), and ParsedSearchParams from lib/validation/search.ts, both extended (never redefined) by plans 03-05/03-06
 
 ### Pending Todos
 
@@ -135,6 +139,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-06T12:50:06.933Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-08-06T13:20:55.483Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
