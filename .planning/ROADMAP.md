@@ -92,7 +92,7 @@ Plans:
   4. Patient can open a doctor's public profile page showing specialty, description, address, neighborhood, languages, photo, and a clear "demo profile" indicator.
   5. Patient can view a doctor's upcoming available slots directly from their profile page.
 
-**Plans**: 6/6 plans executed
+**Plans**: 7 plans — 6 executed, 1 gap-closure plan pending (03-VERIFICATION.md found 1 gap)
 
 Plans:
 **Wave 1**
@@ -112,6 +112,10 @@ Plans:
 **Wave 4** *(blocked on Wave 3 completion)*
 
 - [x] 03-06-PLAN.md — Numbered pagination, total count, and cross-page sort stability
+
+**Wave 5** *(gap closure — blocked on Wave 4 completion)*
+
+- [ ] 03-07-PLAN.md — Gap closure: a wildcard-only `q` must return no doctors instead of the unfiltered directory (SEARCH-01/T-03-01)
 
 **UI hint**: yes
 
