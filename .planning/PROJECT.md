@@ -23,11 +23,11 @@ A patient must be able to find a doctor matching their criteria and book an avai
 - [x] Doctor accounts created and activated by the admin (no doctor self-registration) — Validated in Phase 2: Admin — Doctor & Reference Data Management
 - [x] Full doctor management by the admin (create, edit, activate/deactivate) — Validated in Phase 2: Admin — Doctor & Reference Data Management
 - [x] Reference data management by the admin (specialties, neighborhoods) — Validated in Phase 2: Admin — Doctor & Reference Data Management
+- [x] Multi-criteria doctor search: name, specialty, language, neighborhood, availability — Validated in Phase 3: Doctor Discovery — Search & Public Profiles
+- [x] Public doctor profiles (specialty, description, address, neighborhood, languages, next slots, demo status) — Validated in Phase 3: Doctor Discovery — Search & Public Profiles
 
 ### Active
 
-- [ ] Multi-criteria doctor search: name, specialty, language, neighborhood, availability
-- [ ] Public doctor profiles (specialty, description, address, neighborhood, languages, next slots, demo status)
 - [ ] Appointment booking with guaranteed double-booking prevention
 - [ ] Appointment cancellation (patient and doctor)
 - [ ] Rescheduling an appointment to another available slot
@@ -81,6 +81,9 @@ A patient must be able to find a doctor matching their criteria and book an avai
 | V1 city: Tel-Aviv only | Younger market, high simulated density of English-speaking private doctors, consistent with demo data | — Pending |
 | Doctor account creation via temporary password (no email invite) | Avoids setting up a real email-sending service for the demo | — Pending |
 | Project language: English | Standard for software artifacts and code, even though the user chats in French | — Pending |
+| Search and public profiles are fully unauthenticated (no login required to browse) | Patients should be able to evaluate doctors before creating an account | Validated Phase 3 — confirmed live via anon-client tests, no auth guard on `GET /api/doctors` or `GET /api/doctors/[id]` |
+| Every search filter must fail closed on an unmatchable value (never fall through to an unfiltered result) | A filter parameter that normalizes to "nothing" must return zero rows, not silently degrade to "no filter" | Validated Phase 3 — established for the availability filter in 03-05, generalized to the name filter in 03-07 after a verification gap; now a standing invariant for any future filter on this route |
+| Booking is out of scope for Phase 3 — profile shows upcoming slots but "Select this slot" is inert | Search & discovery ships independently of the booking flow, which is a later phase | Validated Phase 3 — control carries the native `disabled` attribute, no click handler, no booking endpoint exists yet |
 
 ## Evolution
 
@@ -100,4 +103,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-05 after Phase 2 completion*
+*Last updated: 2026-08-08 after Phase 3 completion*
