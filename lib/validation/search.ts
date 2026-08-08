@@ -55,6 +55,13 @@ export type ParsedSearchParams = {
   availableFrom: string | null;
   availableTo: string | null;
   page: number;
+  // True only when the patient supplied a non-whitespace q that stripped
+  // down to nothing (a lone %, _, * or \, or any combination of only those
+  // characters) — deliberately distinct from q being null, which means no
+  // search term was supplied at all. A patient search that matches nothing
+  // must fail closed rather than fall through to an unfiltered view query
+  // (T-03-16, mirrors the availability filter's T-03-13 short circuit).
+  qMatchesNothing: boolean;
 };
 
 // LIKE/PostgREST pattern metacharacters stripped from `q` before it is used
@@ -120,11 +127,18 @@ export function validateSearchParams(params: URLSearchParams): string | null {
 export function parseSearchParams(params: URLSearchParams): ParsedSearchParams {
   const rawQ = params.get("q");
   let q: string | null = null;
+  let qMatchesNothing = false;
   if (rawQ !== null) {
     const trimmed = rawQ.trim();
     if (trimmed) {
       const stripped = trimmed.replace(LIKE_METACHARACTERS_RE, "");
-      q = stripped ? stripped : null;
+      if (stripped) {
+        q = stripped;
+      } else {
+        // A non-whitespace term stripped down to nothing — this is a filter
+        // that matches nothing, not the same as no filter at all.
+        qMatchesNothing = true;
+      }
     }
   }
 
@@ -149,5 +163,14 @@ export function parseSearchParams(params: URLSearchParams): ParsedSearchParams {
   const rawPage = params.get("page");
   const page = rawPage !== null && /^[0-9]+$/.test(rawPage) ? Number(rawPage) : 1;
 
-  return { q, specialtyId, language, neighborhood, availableFrom, availableTo, page };
+  return {
+    q,
+    specialtyId,
+    language,
+    neighborhood,
+    availableFrom,
+    availableTo,
+    page,
+    qMatchesNothing,
+  };
 }

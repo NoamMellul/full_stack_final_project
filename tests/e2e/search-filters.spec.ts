@@ -341,6 +341,57 @@ test.describe("SEARCH-01/07/08/09: public doctor search by name", () => {
     expect(texts[2]).toContain("No upcoming availability");
   });
 
+  test("name: a q consisting only of LIKE/PostgREST metacharacters matches nothing, never the unfiltered directory", async ({
+    request,
+  }) => {
+    const baselineResponse = await request.get("/api/doctors");
+    expect(baselineResponse.ok()).toBe(true);
+    const baselineBody = await baselineResponse.json();
+    expect(baselineBody.total).toBeGreaterThan(0);
+
+    const whitespaceResponse = await request.get(`/api/doctors?q=${encodeURIComponent("  ")}`);
+    expect(whitespaceResponse.ok()).toBe(true);
+    const whitespaceBody = await whitespaceResponse.json();
+    expect(whitespaceBody.total).toBe(baselineBody.total);
+
+    for (const metacharacter of ["%", "_", "*", "\\"]) {
+      const response = await request.get(`/api/doctors?q=${encodeURIComponent(metacharacter)}`);
+      expect(response.ok()).toBe(true);
+      const body = await response.json();
+      expect(body.total).toBe(0);
+      expect(body.doctors).toHaveLength(0);
+    }
+
+    const combinedMetacharactersResponse = await request.get(
+      `/api/doctors?q=${encodeURIComponent("%_*")}`,
+    );
+    expect(combinedMetacharactersResponse.ok()).toBe(true);
+    const combinedMetacharactersBody = await combinedMetacharactersResponse.json();
+    expect(combinedMetacharactersBody.total).toBe(0);
+    expect(combinedMetacharactersBody.doctors).toHaveLength(0);
+
+    const mixedTermResponse = await request.get(
+      `/api/doctors?q=${encodeURIComponent(`%${sharedToken}`)}`,
+    );
+    expect(mixedTermResponse.ok()).toBe(true);
+    const mixedTermBody = await mixedTermResponse.json();
+    expect(mixedTermBody.total).toBe(2);
+  });
+
+  test("name: navigating to /search?q=%25 shows the locked empty state, not the unfiltered directory", async ({
+    page,
+  }) => {
+    await page.goto("/search?q=%25");
+
+    await expect(page.getByRole("heading", { name: "No doctors found" })).toBeVisible();
+    await expect(
+      page.getByText(
+        "Try adjusting your filters — search a different name, specialty, language, or neighborhood.",
+      ),
+    ).toBeVisible();
+    await expect(page.locator('[data-slot="card"]')).toHaveCount(0);
+  });
+
   test("sort: tie-break by id is deterministic across repeated requests", async ({ request }) => {
     const response1 = await request.get(`/api/doctors?q=${encodeURIComponent(tieToken)}`);
     expect(response1.ok()).toBe(true);

@@ -38,9 +38,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
-  const { q, specialtyId, language, neighborhood, availableFrom, availableTo, page } =
+  const { q, specialtyId, language, neighborhood, availableFrom, availableTo, page, qMatchesNothing } =
     parseSearchParams(searchParams);
   const offset = (page - 1) * PAGE_SIZE;
+
+  // Short circuit: the patient supplied a search term that strips down to
+  // nothing (a lone %, _, * or \, or a combination of only those
+  // characters). Letting q stay null and falling through to the unfiltered
+  // view query would silently return the full directory as though it were
+  // the search result — the T-03-01 "match every row" outcome this
+  // normalization is supposed to prevent (03-VERIFICATION.md gap,
+  // 03-REVIEW.md WR-01). Mirrors the availability short circuit below: an
+  // active filter that cannot match anything returns the empty page rather
+  // than falling through unfiltered (T-03-13/T-03-16).
+  if (qMatchesNothing) {
+    return NextResponse.json({ doctors: [], total: 0, page, pageSize: PAGE_SIZE });
+  }
 
   const supabase = await createClient();
 
