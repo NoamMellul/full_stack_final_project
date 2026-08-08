@@ -40,7 +40,14 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const matchedPrefix = Object.keys(ROLE_PREFIXES).find((p) => pathname.startsWith(p));
+  // Path-segment boundary match, not a raw string prefix: a naive
+  // `pathname.startsWith(p)` would match the public "/doctors" (plural,
+  // patient-facing search/profile pages added in Phase 3) against the
+  // "/doctor" (singular, doctor-role-gated) prefix, wrongly redirecting
+  // anonymous visitors to /login on a route that must stay public.
+  const matchedPrefix = Object.keys(ROLE_PREFIXES).find(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
 
   if (matchedPrefix && !user) {
     const loginUrl = new URL("/login", request.url);

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
+import { JERUSALEM_TIME_ZONE, jerusalemBoundaryToUtcIso } from "@/lib/timezone";
 
 // Mirrors the appointments check constraint
 // (supabase/migrations/20260803230000_initial_schema.sql).
@@ -25,8 +26,6 @@ const STATUS_OPTIONS = [
   "completed",
   "no_show",
 ];
-
-const JERUSALEM_TIME_ZONE = "Asia/Jerusalem";
 
 const COLUMNS: OversightColumn[] = [
   {
@@ -43,47 +42,6 @@ const COLUMNS: OversightColumn[] = [
 ];
 
 type DoctorOption = { id: string; label: string };
-
-// Returns the UTC offset (ms) of `timeZone` at `date` — used to convert an
-// admin-entered calendar date, which is meant as an Asia/Jerusalem local day
-// per the project timezone constraint, into the correct UTC instant rather
-// than assuming the browser's ambient zone.
-function getTimeZoneOffsetMs(timeZone: string, date: Date): number {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    hourCycle: "h23",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-  const parts = formatter.formatToParts(date).reduce<Record<string, string>>((acc, part) => {
-    acc[part.type] = part.value;
-    return acc;
-  }, {});
-  const asUtc = Date.UTC(
-    Number(parts.year),
-    Number(parts.month) - 1,
-    Number(parts.day),
-    Number(parts.hour),
-    Number(parts.minute),
-    Number(parts.second),
-  );
-  return asUtc - date.getTime();
-}
-
-function jerusalemBoundaryToUtcIso(dateStr: string, boundary: "start" | "end"): string {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const naiveUtc =
-    boundary === "start"
-      ? Date.UTC(year, month - 1, day, 0, 0, 0, 0)
-      : Date.UTC(year, month - 1, day, 23, 59, 59, 999);
-  const guess = new Date(naiveUtc);
-  const offsetMs = getTimeZoneOffsetMs(JERUSALEM_TIME_ZONE, guess);
-  return new Date(naiveUtc - offsetMs).toISOString();
-}
 
 export default function AdminAppointmentsPage() {
   const [status, setStatus] = useState("");

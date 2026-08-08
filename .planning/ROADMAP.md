@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation — Database Schema & Authentication** - Full data model deployed with RLS, and patients/doctors can securely authenticate with role-based route protection (completed 2026-08-04)
 - [x] **Phase 2: Admin — Doctor & Reference Data Management** - Admin can populate and govern the entire platform catalog (doctors, specialties, neighborhoods, users, appointments oversight) (completed 2026-08-05)
-- [ ] **Phase 3: Doctor Discovery — Search & Public Profiles** - Patients can find and evaluate doctors matching their criteria
+- [x] **Phase 3: Doctor Discovery — Search & Public Profiles** - Patients can find and evaluate doctors matching their criteria (completed 2026-08-08)
 - [ ] **Phase 4: Doctor Availability Management** - Doctors control their own schedule with conflict-safe slot and block-period management
 - [ ] **Phase 5: Appointment Booking & Lifecycle** - Patients can book, cancel, and reschedule appointments with a guaranteed anti-double-booking constraint
 - [ ] **Phase 6: Dashboards, Notifications & Localization** - Patients and doctors get a personalized home base with real-time updates, in a fully bilingual (Hebrew/English, RTL) interface
@@ -92,7 +92,31 @@ Plans:
   4. Patient can open a doctor's public profile page showing specialty, description, address, neighborhood, languages, photo, and a clear "demo profile" indicator.
   5. Patient can view a doctor's upcoming available slots directly from their profile page.
 
-**Plans**: TBD
+**Plans**: 7/7 plans executed
+
+Plans:
+**Wave 1**
+
+- [x] 03-01-PLAN.md — `doctor_search_view` migration, blocking push, and anon-client RLS/grant proof
+- [x] 03-02-PLAN.md — Demo availability slots (idempotent seed) plus the shared `lib/timezone.ts` extraction
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 03-03-PLAN.md — Tracer: end-to-end name search at `/search` with result card, states and sort contract
+- [x] 03-04-PLAN.md — Public doctor profile page and endpoint, demo badge, grouped slots, inert booking CTA
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [x] 03-05-PLAN.md — Specialty, language, neighborhood and availability-range filters combined with AND
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [x] 03-06-PLAN.md — Numbered pagination, total count, and cross-page sort stability
+
+**Wave 5** *(gap closure — blocked on Wave 4 completion)*
+
+- [x] 03-07-PLAN.md — Gap closure: a wildcard-only `q` must return no doctors instead of the unfiltered directory (SEARCH-01/T-03-01)
+
 **UI hint**: yes
 
 ### Phase 4: Doctor Availability Management
@@ -147,7 +171,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Foundation — Database Schema & Authentication | 6/6 | Complete    | 2026-08-04 |
 | 2. Admin — Doctor & Reference Data Management | 7/7 | Complete    | 2026-08-05 |
-| 3. Doctor Discovery — Search & Public Profiles | 0/TBD | Not started | - |
+| 3. Doctor Discovery — Search & Public Profiles | 7/7 | Complete    | 2026-08-08 |
 | 4. Doctor Availability Management | 0/TBD | Not started | - |
 | 5. Appointment Booking & Lifecycle | 0/TBD | Not started | - |
 | 6. Dashboards, Notifications & Localization | 0/TBD | Not started | - |
