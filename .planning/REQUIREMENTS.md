@@ -17,7 +17,7 @@
 
 ### Search
 
-- [ ] **SEARCH-01**: Patient can search doctors by name
+- [x] **SEARCH-01**: Patient can search doctors by name
 - [ ] **SEARCH-02**: Patient can filter doctors by specialty
 - [ ] **SEARCH-03**: Patient can filter doctors by spoken language (Hebrew/English)
 - [ ] **SEARCH-04**: Patient can filter doctors by neighborhood/location
@@ -25,7 +25,7 @@
 - [ ] **SEARCH-06**: Patient can combine multiple filters in one search
 - [ ] **SEARCH-07**: Search results show each doctor's next available slot
 - [ ] **SEARCH-08**: Search results are sorted by soonest availability
-- [ ] **SEARCH-09**: Empty search results show a clear "no doctor found" message
+- [x] **SEARCH-09**: Empty search results show a clear "no doctor found" message
 
 ### Doctor Profiles
 
@@ -148,7 +148,7 @@ Which phases cover which requirements.
 | ADMIN-06 | Phase 2 | Complete |
 | ADMIN-07 | Phase 2 | Complete |
 | ADMIN-08 | Phase 2 | Complete |
-| SEARCH-01 | Phase 3 | Gaps Found |
+| SEARCH-01 | Phase 3 | Complete |
 | SEARCH-02 | Phase 3 | Gaps Found |
 | SEARCH-03 | Phase 3 | Gaps Found |
 | SEARCH-04 | Phase 3 | Gaps Found |
@@ -156,7 +156,7 @@ Which phases cover which requirements.
 | SEARCH-06 | Phase 3 | Gaps Found |
 | SEARCH-07 | Phase 3 | Gaps Found |
 | SEARCH-08 | Phase 3 | Gaps Found |
-| SEARCH-09 | Phase 3 | Gaps Found |
+| SEARCH-09 | Phase 3 | Complete |
 | PROFILE-01 | Phase 3 | Gaps Found |
 | PROFILE-02 | Phase 3 | Gaps Found |
 | PROFILE-03 | Phase 3 | Gaps Found |

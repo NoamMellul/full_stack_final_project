@@ -92,7 +92,7 @@ Plans:
   4. Patient can open a doctor's public profile page showing specialty, description, address, neighborhood, languages, photo, and a clear "demo profile" indicator.
   5. Patient can view a doctor's upcoming available slots directly from their profile page.
 
-**Plans**: 7 plans — 6 executed, 1 gap-closure plan pending (03-VERIFICATION.md found 1 gap)
+**Plans**: 7/7 plans executed
 
 Plans:
 **Wave 1**
@@ -115,7 +115,7 @@ Plans:
 
 **Wave 5** *(gap closure — blocked on Wave 4 completion)*
 
-- [ ] 03-07-PLAN.md — Gap closure: a wildcard-only `q` must return no doctors instead of the unfiltered directory (SEARCH-01/T-03-01)
+- [x] 03-07-PLAN.md — Gap closure: a wildcard-only `q` must return no doctors instead of the unfiltered directory (SEARCH-01/T-03-01)
 
 **UI hint**: yes
 
@@ -171,7 +171,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Foundation — Database Schema & Authentication | 6/6 | Complete    | 2026-08-04 |
 | 2. Admin — Doctor & Reference Data Management | 7/7 | Complete    | 2026-08-05 |
-| 3. Doctor Discovery — Search & Public Profiles | 6/6 | In Progress|  |
+| 3. Doctor Discovery — Search & Public Profiles | 7/7 | In Progress|  |
 | 4. Doctor Availability Management | 0/TBD | Not started | - |
 | 5. Appointment Booking & Lifecycle | 0/TBD | Not started | - |
 | 6. Dashboards, Notifications & Localization | 0/TBD | Not started | - |
