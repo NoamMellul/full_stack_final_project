@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 04
 current_phase_name: Doctor Availability Management
 status: executing
-stopped_at: Phase 4 UI-SPEC approved
-last_updated: "2026-08-09T08:54:08.159Z"
-last_activity: 2026-08-08
-last_activity_desc: Phase 3 complete, transitioned to Phase 04
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-08-09T09:36:31.213Z"
+last_activity: 2026-08-09
+last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 24
-  completed_plans: 20
+  completed_plans: 21
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-08)
 
 **Core value:** A patient must be able to find a doctor matching their criteria and book an available slot in a few clicks, with an absolute guarantee that two patients never book the same slot.
-**Current focus:** Phase 04 — doctor-availability-management
+**Current focus:** Phase 04 — Doctor Availability Management
 
 ## Current Position
 
-Phase: 04 — Doctor Availability Management
-Plan: Not started
+Phase: 04 (Doctor Availability Management) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-08-08 — Phase 3 complete, transitioned to Phase 04
+Last activity: 2026-08-09 — Phase 04 execution started
 
-Progress: [██████████] 100%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -78,6 +78,7 @@ Progress: [██████████] 100%
 | Phase 03 P05 | 45min | 3 tasks | 5 files |
 | Phase 03 P06 | 50min | 3 tasks | 4 files |
 | Phase 03 P07 | 40min | 2 tasks | 3 files |
+| Phase 04 P01 | 55min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 03] Plan 03-06: page-change scroll-to-top gated by a scrollOnNextReadyRef flag set only in handlePageChange, reusing the existing searchParams-driven loading/ready cycle without also scrolling on filter changes or initial mount
 - [Phase ?]: [Phase 03] Plan 03-06: fixed app/api/doctors/route.ts to catch PostgREST PGRST103 (416 range-not-satisfiable, raised when a page's offset exceeds the filtered result set) and return an explicit empty page instead of a 500 (Rule 1 bug, SEARCH-09)
 - [Phase ?]: [Phase 03] Plan 03-07: parseSearchParams gained qMatchesNothing: boolean discriminator; GET /api/doctors short-circuits to the empty page when a non-whitespace q strips to nothing, mirroring the existing availability fail-closed pattern (T-03-13/T-03-16), closing the 03-VERIFICATION.md wildcard-only-search gap
+- [Phase ?]: [Phase 04] Plan 04-01: availability_slots.reason locked at option-a (plain nullable text, no constraint, no length cap) — Task 1 checkpoint auto-selected under workflow.auto_advance
+- [Phase ?]: [Phase 04] Plan 04-01: requireDoctor() resolves doctorId from doctors.profile_id = auth.uid(), mirroring requireAdmin(); GET/POST /api/doctor/slots use guard.doctorId only (client-supplied doctorId inert), filter GET on end_at (not start_at) so in-progress multi-day blocked rows stay listed (D-15), and branch strictly on Postgres error.code (23P01 -> 409 generic overlap string, 23514 -> 400 range message)
 
 ### Pending Todos
 
@@ -152,6 +155,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-08T20:29:30.814Z
-Stopped at: Phase 4 UI-SPEC approved
-Resume file: .planning/phases/04-doctor-availability-management/04-UI-SPEC.md
+Last session: 2026-08-09T09:36:31.182Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None
