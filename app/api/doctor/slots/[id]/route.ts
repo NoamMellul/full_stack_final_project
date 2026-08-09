@@ -25,6 +25,15 @@ const NOT_FOUND_MESSAGE = "This entry no longer exists.";
 const BOOKED_MESSAGE = "This slot has already been booked and can't be deleted.";
 const GENERIC_FAILURE_MESSAGE = "Could not delete this entry. Please try again.";
 
+// A malformed (non-UUID) id is a client input error, not a server failure —
+// every other input-shape problem in this phase is surfaced as a 4xx, so a
+// bad id is rejected here (before it ever reaches Postgres, which would
+// otherwise reject it as an "invalid input syntax for type uuid" error and
+// get mapped to a generic 500). Answered with the same 404 as a
+// genuinely-missing id, never 400, to avoid giving a caller an oracle for
+// "this looks like a real id" vs. "this is garbage".
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -33,6 +42,10 @@ export async function DELETE(
   if (!guard.ok) return guard.response;
 
   const { id } = await params;
+
+  if (!UUID_RE.test(id)) {
+    return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 404 });
+  }
 
   // The `status` guard must be enforced atomically inside the delete's own
   // `WHERE` clause (`.neq("status", "booked")`), not via a separate lookup
