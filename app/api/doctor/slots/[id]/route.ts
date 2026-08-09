@@ -34,42 +34,40 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const { data: existing, error: lookupError } = await guard.supabase
-    .from("availability_slots")
-    .select("id, status")
-    .eq("id", id)
-    .eq("doctor_id", guard.doctorId)
-    .maybeSingle();
-
-  if (lookupError) {
-    return NextResponse.json({ error: GENERIC_FAILURE_MESSAGE }, { status: 500 });
-  }
-  if (!existing) {
-    return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 404 });
-  }
-
-  if (existing.status === "booked") {
-    return NextResponse.json({ error: BOOKED_MESSAGE }, { status: 409 });
-  }
-
-  // `.select("id")` on the delete is deliberate: a plain `.delete()` with no
-  // matching row does not error, it just affects zero rows, which would
-  // silently report success to a request that lost a concurrency race
-  // against another delete of the same id (both requests would otherwise
-  // pass the lookup above before either delete runs). Returning the deleted
-  // row lets this handler tell "I deleted it" from "someone else already
-  // did" and answer the latter with the same 404 used everywhere else.
+  // The `status` guard must be enforced atomically inside the delete's own
+  // `WHERE` clause (`.neq("status", "booked")`), not via a separate lookup
+  // beforehand — a lookup-then-delete pair is two round-trips, and a booking
+  // request can flip this row from `available`/`blocked` to `booked` in the
+  // window between them (TOCTOU). Zero rows affected is therefore ambiguous
+  // between "never existed / not owned" and "just became booked", so it is
+  // disambiguated below with a single re-read, never by trusting the earlier
+  // snapshot.
   const { data: deleted, error: deleteError } = await guard.supabase
     .from("availability_slots")
     .delete()
     .eq("id", id)
     .eq("doctor_id", guard.doctorId)
+    .neq("status", "booked")
     .select("id");
 
   if (deleteError) {
     return NextResponse.json({ error: GENERIC_FAILURE_MESSAGE }, { status: 500 });
   }
+
   if (!deleted || deleted.length === 0) {
+    const { data: nowExisting, error: recheckError } = await guard.supabase
+      .from("availability_slots")
+      .select("status")
+      .eq("id", id)
+      .eq("doctor_id", guard.doctorId)
+      .maybeSingle();
+
+    if (recheckError) {
+      return NextResponse.json({ error: GENERIC_FAILURE_MESSAGE }, { status: 500 });
+    }
+    if (nowExisting?.status === "booked") {
+      return NextResponse.json({ error: BOOKED_MESSAGE }, { status: 409 });
+    }
     return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 404 });
   }
 
