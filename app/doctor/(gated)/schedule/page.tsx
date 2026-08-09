@@ -78,6 +78,10 @@ export default function DoctorSchedulePage() {
   const [addApiError, setAddApiError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
+  const [deletingEntry, setDeletingEntry] = useState<ScheduleEntry | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
   const loadEntries = useCallback(async () => {
     try {
       const response = await fetch("/api/doctor/slots");
@@ -163,6 +167,46 @@ export default function DoctorSchedulePage() {
     }
   }
 
+  function openDeleteDialog(entry: ScheduleEntry) {
+    setDeletingEntry(entry);
+  }
+
+  function closeDeleteDialog() {
+    setDeletingEntry(null);
+  }
+
+  async function handleConfirmDelete() {
+    if (!deletingEntry) return;
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/doctor/slots/${deletingEntry.id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        // The row's deletability may have changed between list-load and this
+        // click (e.g. a patient just booked it) — surface the server's
+        // message verbatim and refresh so the list catches up on screen.
+        setStatusMessage(data.error ?? "Could not delete this entry. Please try again.");
+        closeDeleteDialog();
+        await loadEntries();
+        return;
+      }
+
+      setStatusMessage(
+        deletingEntry.status === "blocked" ? "Block removed." : "Slot deleted.",
+      );
+      closeDeleteDialog();
+      await loadEntries();
+    } catch {
+      setStatusMessage("Could not delete this entry. Please try again.");
+      closeDeleteDialog();
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   const groups = groupEntriesByJerusalemDay(entries);
 
   return (
@@ -223,6 +267,43 @@ export default function DoctorSchedulePage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={deletingEntry !== null}
+        onOpenChange={(open) => {
+          if (!open) closeDeleteDialog();
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {deletingEntry?.status === "blocked" ? "Remove this block?" : "Delete this slot?"}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {deletingEntry?.status === "blocked"
+              ? "This cannot be undone. Availability from before the block won't be restored automatically."
+              : "This cannot be undone."}
+          </p>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={closeDeleteDialog} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting…" : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <p role="status" aria-live="polite" className="min-h-5 text-sm text-muted-foreground">
+        {statusMessage}
+      </p>
+
       {listStatus === "loading" ? (
         <ScheduleListSkeleton />
       ) : listStatus === "error" ? (
@@ -255,6 +336,18 @@ export default function DoctorSchedulePage() {
                       {formatJerusalemTime(entry.start_at)} – {formatJerusalemTime(entry.end_at)}
                     </span>
                     {statusBadge(entry.status)}
+                    {entry.status !== "booked" ? (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="min-h-11"
+                        aria-label={`Delete ${formatJerusalemTime(entry.start_at)} – ${formatJerusalemTime(entry.end_at)}`}
+                        onClick={() => openDeleteDialog(entry)}
+                      >
+                        Delete
+                      </Button>
+                    ) : null}
                   </div>
                 ))}
               </div>
