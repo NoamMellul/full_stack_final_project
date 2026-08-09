@@ -130,7 +130,25 @@ Plans:
   2. Doctor can delete a slot that has not been booked, but cannot delete a slot that has already been booked.
   3. Doctor can block a period of unavailability, and a blocked period cannot overlap an existing available slot.
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 04-01-PLAN.md — `availability_slots.reason` migration (blocking push) plus the tracer: a doctor adds one available slot end to end
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 04-02-PLAN.md — Delete an unbooked slot or un-block a period, with the booked-slot guard enforced server-side
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 04-03-PLAN.md — Block a period of unavailability as one continuous row, with its optional reason
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 04-04-PLAN.md — Overlap enforcement proven at the database under concurrency, plus the cross-doctor visibility sweep
+
 **UI hint**: yes
 
 ### Phase 5: Appointment Booking & Lifecycle
