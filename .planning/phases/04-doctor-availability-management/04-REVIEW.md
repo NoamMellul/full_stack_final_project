@@ -18,9 +18,9 @@ files_reviewed_list:
   - tests/e2e/doctor-schedule-overlap.spec.ts
   - tests/e2e/doctor-schedule-visibility.spec.ts
 findings:
-  critical: 0
+  critical: 1
   warning: 4
-  info: 2
+  info: 1
   total: 6
 status: issues_found
 ---
@@ -32,42 +32,21 @@ status: issues_found
 **Files Reviewed:** 13
 **Status:** issues_found
 
+## Narrative Findings (AI reviewer)
+
 ## Summary
 
-Reviewed the doctor availability management surface: the two write routes (`POST /api/doctor/slots`, `POST /api/doctor/blocked-periods`), the delete/un-block route (`DELETE /api/doctor/slots/[id]`), the `requireDoctor` guard, the shared start/end validator, the `reason` column migration, the schedule page UI, and the five e2e specs covering AVAIL-01 through AVAIL-07.
+Reviewed the doctor availability management API routes, the schedule page, the guard/validation helpers, the reason-column migration, and all five e2e spec files added/changed for this phase. The overlap-enforcement design (atomic GiST exclusion constraint instead of select-then-insert pre-checks) is sound and well tested. However, the delete path for un-booking/un-blocking a slot (`app/api/doctor/slots/[id]/route.ts`) has a check-then-act race: the "never delete a booked row" guarantee is enforced only against a snapshot read, not against the row state at delete time, so a slot that gets booked in the (small) window between the lookup and the delete statement can still be deleted — the exact class of bug the rest of this phase went out of its way to avoid via atomic constraints. Several lower-severity robustness and error-handling gaps round out the findings below.
 
-No critical/blocker-level defects were found — the ownership boundary (`requireDoctor` + RLS), the atomic overlap guarantee (GiST exclusion constraint, never a select-then-insert race), and the generic-error-message discipline (never leaking `error.message`/`error.details`, never distinguishing 403 from 404 on a foreign id) are all implemented correctly and are well covered by the test suite (including real concurrency cases run with `Promise.all`).
+## Critical Issues
 
-Four warnings and two info-level findings were found, mostly around a delete-time TOCTOU gap, a UI ambiguity for multi-day blocks, and a couple of defense-in-depth/robustness gaps. None of these are exploitable today given the phase's current scope (no booking flow yet, `reason` is only ever written by one route), but they are real latent bugs worth fixing before the next phase (booking) lands on top of this code.
-
-## Warnings
-
-### WR-01: Delete route reads booked-status live, but not atomically with the delete — a TOCTOU window contradicts the handler's own stated guarantee
+### CR-01: DELETE /api/doctor/slots/[id] can delete a slot that becomes "booked" between the lookup and the delete (TOCTOU)
 
 **File:** `app/api/doctor/slots/[id]/route.ts:37-67`
-**Issue:** The handler's header comment explicitly states the `status` guard "reads live database state inside this same request" so that AVAIL-05/T-04-04 ("deletable only while not booked") can never be violated by a stale read. In practice the implementation is two separate statements, not one atomic operation:
 
-```ts
-const { data: existing } = await guard.supabase
-  .from("availability_slots")
-  .select("id, status")
-  .eq("id", id)
-  .eq("doctor_id", guard.doctorId)
-  .maybeSingle();
-...
-if (existing.status === "booked") { return 409; }
-...
-const { data: deleted, error: deleteError } = await guard.supabase
-  .from("availability_slots")
-  .delete()
-  .eq("id", id)
-  .eq("doctor_id", guard.doctorId)
-  .select("id");
-```
+**Issue:** The handler enforces "never delete a booked row" (AVAIL-05) by reading `status` in a `SELECT` (lines 37-42), branching on it in application code (line 51), and only then issuing a separate `DELETE` (lines 62-67). The `DELETE` statement's own `WHERE` clause only filters on `id` and `doctor_id` — it does **not** re-check `status`. If a patient's booking request updates this same row from `available` to `booked` in the interval between the `SELECT` and the `DELETE` (both are separate round-trips, not one transaction), the `DELETE` will still succeed and silently remove the row backing an active appointment. This directly contradicts the code's own comment ("the `status` guard... reads live database state inside this same request"), which is true only at `SELECT` time, not at `DELETE` time. This is the same TOCTOU class of bug that the overlap-enforcement design elsewhere in this phase deliberately avoids by relying on an atomic exclusion constraint instead of a select-then-insert pre-check (see the comments in `lib/validation/availability.ts`); the delete path does not apply the same discipline. No existing test exercises this interleaving (the concurrency tests in `doctor-schedule-delete-slot.spec.ts` only cover two concurrent deletes of the same id, not a concurrent booking).
 
-If the row's status transitions from non-booked to `booked` *between* the `select` and the `delete` (e.g. once a booking flow lands in a later phase), this handler will proceed to attempt the delete anyway. `appointments.slot_id` has `on delete restrict`, so the delete itself will fail with a Postgres FK-violation error — no data is lost — but `deleteError` is non-null and falls through to the generic branch, returning **500 "Could not delete this entry. Please try again."** instead of the correct **409 "This slot has already been booked and can't be deleted."** This silently breaks the exact invariant the code comments claim to guarantee, and there's no test exercising this transition (the delete-slot spec's "race" test, `#11`, only covers a row deleted out from under the page, not a status flip to `booked`).
-
-**Fix:** Make the "not booked" condition part of the delete's own `WHERE` clause instead of a separate pre-check, so the check and the write are the same statement:
+**Fix:** Push the `status` check into the `DELETE`'s own `WHERE` clause so the guarantee is atomic, then disambiguate "already gone" from "now booked" only if needed:
 
 ```ts
 const { data: deleted, error: deleteError } = await guard.supabase
@@ -76,32 +55,62 @@ const { data: deleted, error: deleteError } = await guard.supabase
   .eq("id", id)
   .eq("doctor_id", guard.doctorId)
   .neq("status", "booked")
-  .select("id, status");
+  .select("id");
 
-if (deleteError) { ... }
+if (deleteError) {
+  return NextResponse.json({ error: GENERIC_FAILURE_MESSAGE }, { status: 500 });
+}
+
 if (!deleted || deleted.length === 0) {
-  // re-select to distinguish "not found" from "now booked" for the response message
-  const { data: current } = await guard.supabase
+  // Zero rows affected: either the row never existed/belonged to another
+  // doctor, or it just became booked. Re-read to report the right message.
+  const { data: nowExisting } = await guard.supabase
     .from("availability_slots")
     .select("status")
     .eq("id", id)
     .eq("doctor_id", guard.doctorId)
     .maybeSingle();
-  if (current?.status === "booked") return NextResponse.json({ error: BOOKED_MESSAGE }, { status: 409 });
+
+  if (nowExisting?.status === "booked") {
+    return NextResponse.json({ error: BOOKED_MESSAGE }, { status: 409 });
+  }
   return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 404 });
 }
 ```
 
-### WR-02: Multi-day blocked periods render identically to same-day entries — the day component of the end time is silently dropped
+## Warnings
 
-**File:** `app/doctor/(gated)/schedule/page.tsx:486-495`
-**Issue:** Entries are grouped by the Jerusalem day of `start_at` only (`groupEntriesByJerusalemDay`, line 41-53), and each row displays `formatJerusalemTime(entry.start_at)} – {formatJerusalemTime(entry.end_at)}` (line 493-495), which is an `HH:MM` string with no date component. A 3-day block (e.g. Monday 09:00 → Wednesday 18:00 — exactly the shape asserted as "exactly ONE row" by `doctor-schedule-block-period.spec.ts` test 3) renders as `09:00 – 18:00` under the "Monday" heading only, visually indistinguishable from a same-day 09:00-18:00 block. A doctor has no way to tell from the list that the block continues for two more days. This is untested: test 3 only asserts the DB row count is 1, never that the UI communicates the multi-day span.
-**Fix:** When `jerusalemDayKey(entry.start_at) !== jerusalemDayKey(entry.end_at)`, include the end date in the displayed range (e.g. `formatJerusalemDayHeading(entry.end_at)` alongside the time), or add a distinct "multi-day" indicator/badge.
+### WR-01: `requireDoctor()` maps any `doctors` lookup error to "Not authorized" (403), masking real failures
 
-### WR-03: `request.json()` is not wrapped in try/catch on either write route — malformed JSON throws instead of returning a clean 400
+**File:** `lib/auth/require-doctor.ts:31-42`
 
-**File:** `app/api/doctor/blocked-periods/route.ts:18`, `app/api/doctor/slots/route.ts:37`
-**Issue:** Both `POST` handlers call `const body = await request.json();` directly. Any request whose body is not valid JSON (empty body, truncated body, wrong `Content-Type`) throws a `SyntaxError` that is never caught inside the handler, so Next.js's default error handling takes over and returns a generic 500 instead of going through this route's own `{ error: "..." }` JSON contract that every other failure path in the file follows. The route is reachable directly (not only through the app's own fetch calls, which always send well-formed JSON), so this is attacker/tool-reachable, e.g. via `curl -X POST .../api/doctor/blocked-periods -d 'not json'`. (Note: this pattern is pre-existing elsewhere in the codebase too, e.g. `app/api/auth/login/route.ts`, so it isn't unique to this phase, but it is present in both files newly added/modified here.)
+**Issue:** `const { data: doctor } = await supabase.from("doctors").select("id").eq("profile_id", user.id).maybeSingle();` discards the `error` half of the response. If this query fails for an infrastructure reason (network blip, RLS misconfiguration, DB outage) rather than because the user genuinely has no linked doctor row, `doctor` is `undefined` either way and the caller receives an indistinguishable 403 "Not authorized." A legitimate doctor experiencing a transient backend error is told they lack permission instead of seeing a retryable 500, and real outages are invisible in logs/monitoring as authorization failures.
+
+**Fix:**
+```ts
+const { data: doctor, error: doctorError } = await supabase
+  .from("doctors")
+  .select("id")
+  .eq("profile_id", user.id)
+  .maybeSingle();
+
+if (doctorError) {
+  return {
+    ok: false,
+    response: NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 }),
+  };
+}
+if (!doctor) {
+  return { ok: false, response: NextResponse.json({ error: "Not authorized." }, { status: 403 }) };
+}
+```
+
+### WR-02: Unguarded `request.json()` can throw on a malformed body, bypassing the app's consistent 400-not-500 contract
+
+**File:** `app/api/doctor/slots/route.ts:37`, `app/api/doctor/blocked-periods/route.ts:18`
+
+**Issue:** Both POST handlers call `const body = await request.json();` with no `try/catch`. `Request.json()` rejects when the body isn't valid JSON (e.g. an empty body, truncated body, or non-JSON content). Every other malformed-input case in this phase is deliberately tested and guaranteed to return a clean 400 (see `doctor-schedule-overlap.spec.ts` test 10, "never 500"), but literally-malformed JSON is not covered by any test and, unlike the other cases, isn't caught by `validateSlotInput`/`validateBlockedPeriodInput` at all — the throw happens before validation runs, so it propagates out of the handler and is handled by Next's default (uncontrolled) error path instead of the app's own error-response shape.
+
 **Fix:**
 ```ts
 let body: unknown;
@@ -112,30 +121,42 @@ try {
 }
 ```
 
-### WR-04: No database-level constraint stops `reason` from being set on a publicly-readable `available` row
+### WR-03: `reason` free-text field has no length limit at any layer
 
-**File:** `supabase/migrations/20260809120000_add_availability_slots_reason.sql:10`
-**Issue:** The migration adds `reason text` with no constraint, and the file's own comment says the "not applicable to available/booked rows" rule is "a convention enforced by the route handlers ..., not a database constraint." Today only `POST /api/doctor/blocked-periods` ever writes `reason`, and it always pairs it with `status: "blocked"`, so the convention holds in practice. But `availability_slots_select_available_or_owner_or_admin` makes any row with `status = 'available'` publicly readable to anonymous and patient users (confirmed by `doctor-schedule-visibility.spec.ts` tests 4-5, which read `reason` directly via the anon/patient Supabase client). If any future write path (an admin edit tool, a bulk-update script, a bug in a later phase) ever sets `reason` on an `available` row, that free-text note — which the same migration's comment says "must never be treated as a place for patient-identifying or clinical information," precisely because doctors *can* type such things — becomes visible to any unauthenticated visitor with no additional safeguard catching the mistake before it ships.
-**Fix:** Add a defense-in-depth check constraint:
-```sql
-alter table public.availability_slots
-  add constraint availability_slots_reason_only_when_blocked
-  check (reason is null or status = 'blocked');
+**File:** `lib/validation/availability.ts:71-74`, `supabase/migrations/20260809120000_add_availability_slots_reason.sql:10`
+
+**Issue:** `validateBlockedPeriodInput` only checks that `reason` is `string | null | undefined` — there is no maximum length. The column is `text` with no `check` constraint. A caller hitting `POST /api/doctor/blocked-periods` directly (bypassing the UI's `Textarea`, which also has no `maxLength`) can submit an arbitrarily large `reason` string in a single insert, which is stored verbatim and returned verbatim on every subsequent `GET`. This is an unbounded-input acceptance gap: nothing in the stack prevents a multi-megabyte value from being persisted and repeatedly re-served. The in-repo comments frame the absence of a cap as a deliberate content-validation decision ("no length cap, no character filtering"), but that decision doesn't address the separate concern of bounding *size* for abuse resistance — those are independent axes.
+
+**Fix:** Add a reasonable upper bound in the shared validator (e.g. 2,000 characters), independent of the "no content filtering" decision:
+```ts
+if (typeof reason === "string" && reason.length > 2000) {
+  return "Reason is too long.";
+}
+```
+
+### WR-04: A malformed (non-UUID) slot id on DELETE surfaces as a generic 500 instead of 400
+
+**File:** `app/api/doctor/slots/[id]/route.ts:37-46`
+
+**Issue:** `id` from the route param is passed straight into `.eq("id", id)` against a `uuid` column with no format check first. Postgres rejects a non-UUID string with an `invalid input syntax for type uuid` error, which lands in `lookupError` and is mapped to the generic 500 `GENERIC_FAILURE_MESSAGE` (line 44-46). Every other input-shape problem in this phase is deliberately surfaced as a 400; a malformed id is effectively a client input error too, but currently reads to the caller (and to logs/monitoring) as a server failure.
+
+**Fix:** Validate the id shape before querying:
+```ts
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+if (!UUID_RE.test(id)) {
+  return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 404 });
+}
 ```
 
 ## Info
 
-### IN-01: `SLOT_SELECT` is duplicated verbatim across two route files
+### IN-01: Near-duplicate POST handlers and `SLOT_SELECT` constant across the two write routes
 
-**File:** `app/api/doctor/blocked-periods/route.ts:12`, `app/api/doctor/slots/route.ts:6`
-**Issue:** Both files independently define `const SLOT_SELECT = "id, start_at, end_at, status, reason";`. The blocked-periods route's own header comment states the explicit goal is that "a blocked period and an available slot can never drift apart in behaviour" — but a literal string duplicated in two places can drift silently (e.g. one file gets a new column added to its select and the other doesn't) with no compiler error to catch it.
-**Fix:** Hoist `SLOT_SELECT` into a shared module (e.g. `lib/validation/availability.ts` or a new `lib/db/availability-slots.ts`) and import it from both routes.
+**File:** `app/api/doctor/slots/route.ts:6,59-83`, `app/api/doctor/blocked-periods/route.ts:12,52-79`
 
-### IN-02: A malformed (non-UUID) `id` in `DELETE /api/doctor/slots/:id` returns 500 instead of a clean 4xx
+**Issue:** The `SLOT_SELECT` string and the entire `error?.code === "23P01"` / `"23514"` / generic-fallback branching block are duplicated near-verbatim between the two POST handlers. The in-code comments acknowledge this is intentional ("so a blocked period and an available slot can never drift apart in behaviour") but duplicated logic is still a maintenance risk: a future edit to one branch (e.g. adding a new Postgres error code to handle, or changing the generic message) can easily be applied to only one file, silently reintroducing the exact drift the comments say must never happen.
 
-**File:** `app/api/doctor/slots/[id]/route.ts:37-45`
-**Issue:** `id` is taken from the route param and passed straight into `.eq("id", id)` against a `uuid` column with no format validation first. A non-UUID string (e.g. `/api/doctor/slots/not-a-uuid`) causes Postgres/PostgREST to return an "invalid input syntax for type uuid" error, which is treated by the handler as `lookupError` and answered with the generic 500 `GENERIC_FAILURE_MESSAGE`. This doesn't create an ownership oracle (T-04-03's actual concern, which is correctly handled — a foreign-but-well-formed id gets the same 404 as a nonexistent one), but it is a minor robustness/consistency gap: a client typo produces a 500 rather than a 400/404.
-**Fix:** Validate `id` against a UUID regex before querying, and return 404 (to stay consistent with the "no info leak" posture already used elsewhere in this file) for anything that doesn't match, without touching the database.
+**Fix:** Extract a shared helper, e.g. `lib/api/availability-slot-errors.ts` exporting `mapSlotInsertError(error): NextResponse`, and call it from both routes so the two paths are structurally guaranteed to stay identical rather than guaranteed only by convention/comments.
 
 ---
 
