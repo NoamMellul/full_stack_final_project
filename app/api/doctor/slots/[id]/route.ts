@@ -52,14 +52,25 @@ export async function DELETE(
     return NextResponse.json({ error: BOOKED_MESSAGE }, { status: 409 });
   }
 
-  const { error: deleteError } = await guard.supabase
+  // `.select("id")` on the delete is deliberate: a plain `.delete()` with no
+  // matching row does not error, it just affects zero rows, which would
+  // silently report success to a request that lost a concurrency race
+  // against another delete of the same id (both requests would otherwise
+  // pass the lookup above before either delete runs). Returning the deleted
+  // row lets this handler tell "I deleted it" from "someone else already
+  // did" and answer the latter with the same 404 used everywhere else.
+  const { data: deleted, error: deleteError } = await guard.supabase
     .from("availability_slots")
     .delete()
     .eq("id", id)
-    .eq("doctor_id", guard.doctorId);
+    .eq("doctor_id", guard.doctorId)
+    .select("id");
 
   if (deleteError) {
     return NextResponse.json({ error: GENERIC_FAILURE_MESSAGE }, { status: 500 });
+  }
+  if (!deleted || deleted.length === 0) {
+    return NextResponse.json({ error: NOT_FOUND_MESSAGE }, { status: 404 });
   }
 
   return NextResponse.json({ success: true });
