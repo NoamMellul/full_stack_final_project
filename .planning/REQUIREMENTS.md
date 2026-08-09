@@ -41,7 +41,7 @@
 - [x] **AVAIL-04**: Doctor can delete a slot that has not been booked
 - [x] **AVAIL-05**: Doctor cannot delete a slot that has been booked
 - [x] **AVAIL-06**: Doctor can block a period of unavailability
-- [ ] **AVAIL-07**: A blocked period cannot overlap an existing available slot
+- [x] **AVAIL-07**: A blocked period cannot overlap an existing available slot
 
 ### Appointments
 
@@ -166,7 +166,7 @@ Which phases cover which requirements.
 | AVAIL-04 | Phase 4 | Complete |
 | AVAIL-05 | Phase 4 | Complete |
 | AVAIL-06 | Phase 4 | Complete |
-| AVAIL-07 | Phase 4 | Pending |
+| AVAIL-07 | Phase 4 | Complete |
 | APPT-01 | Phase 5 | Pending |
 | APPT-02 | Phase 5 | Pending |
 | APPT-03 | Phase 5 | Pending |

@@ -130,7 +130,7 @@ Plans:
   2. Doctor can delete a slot that has not been booked, but cannot delete a slot that has already been booked.
   3. Doctor can block a period of unavailability, and a blocked period cannot overlap an existing available slot.
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans executed
 
 Plans:
 **Wave 1**
@@ -147,7 +147,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 04-04-PLAN.md — Overlap enforcement proven at the database under concurrency, plus the cross-doctor visibility sweep
+- [x] 04-04-PLAN.md — Overlap enforcement proven at the database under concurrency, plus the cross-doctor visibility sweep
 
 **UI hint**: yes
 
@@ -190,6 +190,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Foundation — Database Schema & Authentication | 6/6 | Complete    | 2026-08-04 |
 | 2. Admin — Doctor & Reference Data Management | 7/7 | Complete    | 2026-08-05 |
 | 3. Doctor Discovery — Search & Public Profiles | 7/7 | Complete    | 2026-08-08 |
-| 4. Doctor Availability Management | 3/4 | In Progress|  |
+| 4. Doctor Availability Management | 4/4 | In Progress|  |
 | 5. Appointment Booking & Lifecycle | 0/TBD | Not started | - |
 | 6. Dashboards, Notifications & Localization | 0/TBD | Not started | - |
