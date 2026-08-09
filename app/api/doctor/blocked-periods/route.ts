@@ -28,10 +28,11 @@ export async function POST(request: Request) {
   };
 
   // A blank textarea (or an absent/null key) must store null, not an empty
-  // string (D-04). Trim first so a whitespace-only reason is also treated as
-  // absent.
-  const trimmedReason = typeof reason === "string" ? reason.trim() : "";
-  const reasonToStore = trimmedReason.length > 0 ? trimmedReason : null;
+  // string (D-04). Trimming is used only to decide blankness — the stored
+  // value is the reason exactly as sent, never a trimmed copy, so the reason
+  // round-trips byte-identical to what was submitted.
+  const isBlankReason = typeof reason !== "string" || reason.trim().length === 0;
+  const reasonToStore = isBlankReason ? null : (reason as string);
 
   // `doctor_id` comes only from the guard — a `doctorId` key present in the
   // request body is inert (D-06, T-04-01). One row, one continuous range: no

@@ -215,11 +215,13 @@ export default function DoctorSchedulePage() {
       startMinute,
     ).toISOString();
     const endAt = jerusalemWallClockToUtc(endYear, endMonth, endDay, endHour, endMinute).toISOString();
-    const trimmedReason = blockReason.trim();
+    // Sent verbatim (not trimmed) when non-blank, matching the route's own
+    // trim-to-check-blankness-only behaviour (D-04) — the reason must round
+    // trip byte-identical to what the doctor typed.
     const body = {
       startAt,
       endAt,
-      reason: trimmedReason.length > 0 ? trimmedReason : null,
+      reason: blockReason.trim().length > 0 ? blockReason : null,
     };
 
     const validationError = validateBlockedPeriodInput(body);
