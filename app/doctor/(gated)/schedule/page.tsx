@@ -15,7 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { validateSlotInput } from "@/lib/validation/availability";
+import { Textarea } from "@/components/ui/textarea";
+import { validateBlockedPeriodInput, validateSlotInput } from "@/lib/validation/availability";
 import {
   formatJerusalemDayHeading,
   formatJerusalemTime,
@@ -77,6 +78,15 @@ export default function DoctorSchedulePage() {
   const [endTime, setEndTime] = useState("");
   const [addApiError, setAddApiError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockStartDate, setBlockStartDate] = useState("");
+  const [blockStartTime, setBlockStartTime] = useState("");
+  const [blockEndDate, setBlockEndDate] = useState("");
+  const [blockEndTime, setBlockEndTime] = useState("");
+  const [blockReason, setBlockReason] = useState("");
+  const [blockApiError, setBlockApiError] = useState<string | null>(null);
+  const [isBlocking, setIsBlocking] = useState(false);
 
   const [deletingEntry, setDeletingEntry] = useState<ScheduleEntry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -167,6 +177,80 @@ export default function DoctorSchedulePage() {
     }
   }
 
+  function openBlockDialog() {
+    setBlockStartDate("");
+    setBlockStartTime("");
+    setBlockEndDate("");
+    setBlockEndTime("");
+    setBlockReason("");
+    setBlockApiError(null);
+    setBlockOpen(true);
+  }
+
+  function closeBlockDialog() {
+    setBlockOpen(false);
+  }
+
+  async function handleBlockSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBlockApiError(null);
+
+    if (!blockStartDate || !blockStartTime || !blockEndDate || !blockEndTime) {
+      setBlockApiError("Start and end time are required.");
+      return;
+    }
+
+    const [startYear, startMonth, startDay] = blockStartDate.split("-").map(Number);
+    const [startHour, startMinute] = blockStartTime.split(":").map(Number);
+    const [endYear, endMonth, endDay] = blockEndDate.split("-").map(Number);
+    const [endHour, endMinute] = blockEndTime.split(":").map(Number);
+
+    // Four inputs producing one continuous range — this is what makes a
+    // multi-day block a single row (D-03).
+    const startAt = jerusalemWallClockToUtc(
+      startYear,
+      startMonth,
+      startDay,
+      startHour,
+      startMinute,
+    ).toISOString();
+    const endAt = jerusalemWallClockToUtc(endYear, endMonth, endDay, endHour, endMinute).toISOString();
+    const trimmedReason = blockReason.trim();
+    const body = {
+      startAt,
+      endAt,
+      reason: trimmedReason.length > 0 ? trimmedReason : null,
+    };
+
+    const validationError = validateBlockedPeriodInput(body);
+    if (validationError) {
+      setBlockApiError(validationError);
+      return;
+    }
+
+    setIsBlocking(true);
+    try {
+      const response = await fetch("/api/doctor/blocked-periods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setBlockApiError(data.error ?? "Could not save this time slot. Please try again.");
+        return;
+      }
+
+      closeBlockDialog();
+      await loadEntries();
+    } catch {
+      setBlockApiError("Could not save this time slot. Please try again.");
+    } finally {
+      setIsBlocking(false);
+    }
+  }
+
   function openDeleteDialog(entry: ScheduleEntry) {
     setDeletingEntry(entry);
   }
@@ -213,9 +297,14 @@ export default function DoctorSchedulePage() {
     <main className="flex flex-1 flex-col gap-6 ps-4 pe-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">My schedule</h1>
-        <Button type="button" onClick={openAddDialog}>
-          Add slot
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" onClick={openBlockDialog}>
+            Block period
+          </Button>
+          <Button type="button" onClick={openAddDialog}>
+            Add slot
+          </Button>
+        </div>
       </div>
 
       <Dialog open={addOpen} onOpenChange={(open) => (!open ? closeAddDialog() : undefined)}>
@@ -261,6 +350,73 @@ export default function DoctorSchedulePage() {
             <DialogFooter>
               <Button type="submit" disabled={isAdding}>
                 {isAdding ? "Adding…" : "Add slot"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={blockOpen} onOpenChange={(open) => (!open ? closeBlockDialog() : undefined)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Block a period</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleBlockSubmit} noValidate className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="block-start-date">Start date</Label>
+              <Input
+                id="block-start-date"
+                type="date"
+                value={blockStartDate}
+                onChange={(e) => setBlockStartDate(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="block-start-time">Start time</Label>
+              <Input
+                id="block-start-time"
+                type="time"
+                value={blockStartTime}
+                onChange={(e) => setBlockStartTime(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="block-end-date">End date</Label>
+              <Input
+                id="block-end-date"
+                type="date"
+                value={blockEndDate}
+                onChange={(e) => setBlockEndDate(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="block-end-time">End time</Label>
+              <Input
+                id="block-end-time"
+                type="time"
+                value={blockEndTime}
+                onChange={(e) => setBlockEndTime(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="block-reason">Reason (optional)</Label>
+              <Textarea
+                id="block-reason"
+                placeholder="e.g. Vacation, Conference"
+                value={blockReason}
+                onChange={(e) => setBlockReason(e.target.value)}
+              />
+            </div>
+
+            {blockApiError ? (
+              <Alert variant="destructive">
+                <AlertDescription>{blockApiError}</AlertDescription>
+              </Alert>
+            ) : null}
+
+            <DialogFooter>
+              <Button type="submit" disabled={isBlocking}>
+                {isBlocking ? "Blocking…" : "Block period"}
               </Button>
             </DialogFooter>
           </form>
@@ -336,6 +492,11 @@ export default function DoctorSchedulePage() {
                       {formatJerusalemTime(entry.start_at)} – {formatJerusalemTime(entry.end_at)}
                     </span>
                     {statusBadge(entry.status)}
+                    {entry.status === "blocked" && entry.reason ? (
+                      <span className="min-w-0 flex-1 text-sm break-words text-muted-foreground">
+                        {entry.reason}
+                      </span>
+                    ) : null}
                     {entry.status !== "booked" ? (
                       <Button
                         type="button"
