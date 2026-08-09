@@ -28,12 +28,21 @@ export async function requireDoctor(): Promise<DoctorGuardResult> {
     };
   }
 
-  const { data: doctor } = await supabase
+  const { data: doctor, error: doctorError } = await supabase
     .from("doctors")
     .select("id")
     .eq("profile_id", user.id)
     .maybeSingle();
 
+  if (doctorError) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Something went wrong. Please try again." },
+        { status: 500 },
+      ),
+    };
+  }
   if (!doctor) {
     return {
       ok: false,
