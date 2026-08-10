@@ -166,11 +166,23 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 05-01-PLAN.md — Appointment RPC migration + booking tracer (patient books end to end, sees their own appointment list)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 05-02-PLAN.md — Patient cancellation: cancel route, confirmation dialog, slot release and re-booking proof
 - [ ] 05-03-PLAN.md — Doctor appointment history: doctor-scoped read endpoint and `/doctor/appointments` page
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 05-04-PLAN.md — Patient reschedule: reschedule route, day-grouped slot picker, atomicity under concurrency
 - [ ] 05-05-PLAN.md — Doctor cancellation on `/doctor/appointments` and the phase's full-suite gate
+
+**Cross-cutting constraints:**
+
+- Every layout and spacing class added by this plan uses logical properties (`ps-`, `pe-`, `ms-`, `me-`, `text-start`, `text-end`) and no physical direction class (UI-SPEC RTL note)
 
 ### Phase 6: Dashboards, Notifications & Localization
 
