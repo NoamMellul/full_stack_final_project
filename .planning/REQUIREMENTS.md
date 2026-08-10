@@ -35,13 +35,13 @@
 
 ### Availability
 
-- [ ] **AVAIL-01**: Doctor can add an available time slot
-- [ ] **AVAIL-02**: Doctor cannot add a slot in the past
-- [ ] **AVAIL-03**: Doctor cannot create overlapping slots
-- [ ] **AVAIL-04**: Doctor can delete a slot that has not been booked
-- [ ] **AVAIL-05**: Doctor cannot delete a slot that has been booked
-- [ ] **AVAIL-06**: Doctor can block a period of unavailability
-- [ ] **AVAIL-07**: A blocked period cannot overlap an existing available slot
+- [x] **AVAIL-01**: Doctor can add an available time slot
+- [x] **AVAIL-02**: Doctor cannot add a slot in the past
+- [x] **AVAIL-03**: Doctor cannot create overlapping slots
+- [x] **AVAIL-04**: Doctor can delete a slot that has not been booked
+- [x] **AVAIL-05**: Doctor cannot delete a slot that has been booked
+- [x] **AVAIL-06**: Doctor can block a period of unavailability
+- [x] **AVAIL-07**: A blocked period cannot overlap an existing available slot
 
 ### Appointments
 
@@ -160,13 +160,13 @@ Which phases cover which requirements.
 | PROFILE-01 | Phase 3 | Complete |
 | PROFILE-02 | Phase 3 | Complete |
 | PROFILE-03 | Phase 3 | Complete |
-| AVAIL-01 | Phase 4 | Pending |
-| AVAIL-02 | Phase 4 | Pending |
-| AVAIL-03 | Phase 4 | Pending |
-| AVAIL-04 | Phase 4 | Pending |
-| AVAIL-05 | Phase 4 | Pending |
-| AVAIL-06 | Phase 4 | Pending |
-| AVAIL-07 | Phase 4 | Pending |
+| AVAIL-01 | Phase 4 | Complete |
+| AVAIL-02 | Phase 4 | Complete |
+| AVAIL-03 | Phase 4 | Complete |
+| AVAIL-04 | Phase 4 | Complete |
+| AVAIL-05 | Phase 4 | Complete |
+| AVAIL-06 | Phase 4 | Complete |
+| AVAIL-07 | Phase 4 | Complete |
 | APPT-01 | Phase 5 | Pending |
 | APPT-02 | Phase 5 | Pending |
 | APPT-03 | Phase 5 | Pending |

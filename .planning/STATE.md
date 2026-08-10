@@ -4,16 +4,16 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 04
 current_phase_name: Doctor Availability Management
-status: planning
-stopped_at: Completed 03-07-PLAN.md
-last_updated: "2026-08-08T19:50:40.738Z"
-last_activity: 2026-08-08
-last_activity_desc: Phase 3 complete, transitioned to Phase 04
+status: verifying
+stopped_at: Completed 04-04-PLAN.md — Phase 04 complete
+last_updated: "2026-08-09T15:08:34.967Z"
+last_activity: 2026-08-09
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 20
-  completed_plans: 20
+  completed_phases: 4
+  total_plans: 24
+  completed_plans: 24
+last_activity_desc: Phase 04 execution started
 ---
 
 # Project State
@@ -23,14 +23,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-08)
 
 **Core value:** A patient must be able to find a doctor matching their criteria and book an available slot in a few clicks, with an absolute guarantee that two patients never book the same slot.
-**Current focus:** Phase 04 — doctor-availability-management
+**Current focus:** Phase 04 — Doctor Availability Management
 
 ## Current Position
 
-Phase: 04 — Doctor Availability Management
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-08-08 — Phase 3 complete, transitioned to Phase 04
+Phase: 04 (Doctor Availability Management) — EXECUTING
+Plan: 4 of 4
+Status: Phase complete — ready for verification
+Last activity: 2026-08-09
 
 Progress: [██████████] 100%
 
@@ -78,6 +78,10 @@ Progress: [██████████] 100%
 | Phase 03 P05 | 45min | 3 tasks | 5 files |
 | Phase 03 P06 | 50min | 3 tasks | 4 files |
 | Phase 03 P07 | 40min | 2 tasks | 3 files |
+| Phase 04 P01 | 55min | 3 tasks | 8 files |
+| Phase 04 P02 | 65min | 3 tasks | 3 files |
+| Phase 04 P03 | 120min | 3 tasks | 4 files |
+| Phase 04 P04 | 20min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -131,6 +135,12 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 03] Plan 03-06: page-change scroll-to-top gated by a scrollOnNextReadyRef flag set only in handlePageChange, reusing the existing searchParams-driven loading/ready cycle without also scrolling on filter changes or initial mount
 - [Phase ?]: [Phase 03] Plan 03-06: fixed app/api/doctors/route.ts to catch PostgREST PGRST103 (416 range-not-satisfiable, raised when a page's offset exceeds the filtered result set) and return an explicit empty page instead of a 500 (Rule 1 bug, SEARCH-09)
 - [Phase ?]: [Phase 03] Plan 03-07: parseSearchParams gained qMatchesNothing: boolean discriminator; GET /api/doctors short-circuits to the empty page when a non-whitespace q strips to nothing, mirroring the existing availability fail-closed pattern (T-03-13/T-03-16), closing the 03-VERIFICATION.md wildcard-only-search gap
+- [Phase ?]: [Phase 04] Plan 04-01: availability_slots.reason locked at option-a (plain nullable text, no constraint, no length cap) — Task 1 checkpoint auto-selected under workflow.auto_advance
+- [Phase ?]: [Phase 04] Plan 04-01: requireDoctor() resolves doctorId from doctors.profile_id = auth.uid(), mirroring requireAdmin(); GET/POST /api/doctor/slots use guard.doctorId only (client-supplied doctorId inert), filter GET on end_at (not start_at) so in-progress multi-day blocked rows stay listed (D-15), and branch strictly on Postgres error.code (23P01 -> 409 generic overlap string, 23514 -> 400 range message)
+- [Phase ?]: [Phase 04] Plan 04-02: DELETE /api/doctor/slots/[id] chains .select("id") on the delete and treats zero affected rows as 404 — a plain PostgREST delete against zero matching rows does not error, so without this two concurrent deletes of the same id both silently reported 200 (Rule 1 fix found by the concurrency test case)
+- [Phase ?]: [Phase 04] Plan 04-02: DELETE /api/doctor/slots/[id] shares one 404 message across missing/already-deleted/foreign-doctor ids (never 403 for a foreign id) so the response can never confirm another doctor's slot id is real (T-04-03); booked-row rejection reads status from the same-request lookup, never client-supplied or list-cached (T-04-04)
+- [Phase 04]: [Phase 04] Plan 04-03: reason is sent/stored exactly as submitted, never trimmed — trim() is used only to test blankness (Rule 1 fix, found by Task 3 case 6, so a reason's meaningful leading/trailing whitespace round-trips byte-identical per D-04) — The original implementation trimmed the reason before both the client fetch body and the route's insert, which would have silently altered a reason with meaningful whitespace and broken D-04's byte-identical round-trip requirement.
+- [Phase 04]: [Phase 04] Plan 04-04: doctor-schedule-overlap.spec.ts and doctor-schedule-visibility.spec.ts required zero production code changes — both passed against the routes exactly as plans 04-01 through 04-03 left them — This is the plan's central finding: the database-level guarantee (one exclusion constraint, one generic message, one RLS policy) held under real Promise.all concurrency and across the full status/ownership/visibility matrix with no application-layer patching needed, closing AVAIL-03 and AVAIL-07 and completing Phase 04.
 
 ### Pending Todos
 
@@ -152,6 +162,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-08T19:50:40.738Z
-Stopped at: Phase 3 complete, ready to plan Phase 4
+Last session: 2026-08-09T15:08:34.940Z
+Stopped at: Completed 04-04-PLAN.md — Phase 04 complete
 Resume file: None
