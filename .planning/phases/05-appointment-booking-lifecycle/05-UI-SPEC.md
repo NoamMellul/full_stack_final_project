@@ -1,7 +1,7 @@
 ---
 phase: 05
 slug: appointment-booking-lifecycle
-status: draft
+status: approved
 shadcn_initialized: true
 preset: base-nova / neutral / cssVariables / rtl:true
 created: 2026-08-10
@@ -155,6 +155,9 @@ any list-load error is `variant="outline"`, matching every prior phase's Retry p
 
 ## Layout — Booking flow (D-01/D-02/D-03/D-04/D-05)
 
+**Focal point:** the "Select this slot" button (entry to the booking confirmation modal, reserved
+accent color per Color).
+
 On `/doctors/[id]`, the existing (now-enabled) "Select this slot" `<Button>` per slot row:
 
 1. **Auth check on click, not on mount:** the click handler checks the current session via the
@@ -177,6 +180,9 @@ On `/doctors/[id]`, the existing (now-enabled) "Select this slot" `<Button>` per
    Copywriting Contract message; the dialog stays open so the patient can retry or cancel.
 
 ## Layout — `/patient/appointments` and `/doctor/appointments` (D-16/D-17/D-18)
+
+**Focal point:** the upcoming appointments section, or — when there are no appointments at all —
+the page-level empty-state CTA.
 
 Single-column page, `<h1>My appointments</h1>` (Display role) at the top, directly followed by the
 `role="status" aria-live="polite"` message line (booking/reschedule/cancel success, or the list-load
@@ -241,12 +247,17 @@ doctor", action buttons disappear), and the status region shows "Appointment can
 > (list-collection, shared shape across `/patient/appointments` and `/doctor/appointments`),
 > `status-badge` (static-content).
 
-Applicable state considerations resolved: 13 covered, 1 backstop, 0 unresolved.
+Applicable state considerations resolved: 18 covered, 2 backstop, 7 dismissed, 0 unresolved
+(27 total — 26 from the deterministic probe run over this phase's 5 elements at their locked
+kinds, `booking-confirmation-modal`/`cancellation-modal`=form, `reschedule-picker`/`appointment-list`=
+list-collection, `status-badge`=static-content, plus 1 supplementary item).
 
 | Category | Element(s) | Status | Resolution / Reason |
 |----------|------------|--------|---------------------|
 | empty | appointment-list | ✅ covered | Zero appointments at all renders the page-level empty state (heading + body + role-specific CTA); zero-in-one-section-only omits just that section's heading (Layout) |
 | empty | reschedule-picker | ✅ covered | "No other upcoming availability" heading + body when the same doctor has no other available future slots (Copywriting Contract) |
+| empty | booking-confirmation-modal | 🚫 dismissed | Modal only opens after a patient clicks an already-rendered "Select this slot" button for a specific slot — doctor/date/time/location always come from that slot's already-fetched data; no reachable state opens the modal with no data |
+| empty | cancellation-modal | 🚫 dismissed | Modal only opens from an existing, already-rendered appointment row — the appointment being cancelled is always present |
 | loading | appointment-list | ✅ covered | 3 `Skeleton` rows on first-mount fetch, reusing the exact pattern from `app/doctors/[id]/page.tsx`'s `DoctorProfileSkeleton` / Phase 4's `ScheduleListSkeleton` |
 | loading | booking-confirmation-modal, reschedule-picker, cancellation-modal | ✅ covered | Submit/confirm buttons disable and swap label to "Booking…" / "Rescheduling…" / "Cancelling…" while in flight, reusing Phase 4's `isAdding`/`isBlocking`/`isDeleting` pattern |
 | error | appointment-list | ✅ covered | "Could not load your appointments. Please try again." + outline Retry button (Copywriting Contract) |
@@ -255,10 +266,19 @@ Applicable state considerations resolved: 13 covered, 1 backstop, 0 unresolved.
 | error | cancellation-modal | ✅ covered | Inline rejection copy ("This appointment can no longer be cancelled." / generic) shown the same way as the other two dialogs |
 | populated | appointment-list | ✅ covered | Day/date-labeled rows with counterpart name, status badge, and role-appropriate actions, per Layout's per-row format |
 | populated | status-badge | ✅ covered | Four worked variants locked in Copywriting Contract (Confirmed / Past / Cancelled by patient / Cancelled by doctor), each mapped to a specific Badge variant in Color |
+| populated | reschedule-picker | ✅ covered | Exact visual reuse of `app/doctors/[id]/page.tsx`'s day-grouped slot-list rendering at typical demo-data volume (Layout — Reschedule picker) |
 | partial | reschedule-picker | ✅ covered | Only the clicked slot's button enters its in-flight label; every other slot button disables (not hides) so the picker's shape doesn't jump mid-request |
+| partial | booking-confirmation-modal | 🚫 dismissed | All summary fields (doctor, specialty, date, time, location) come from the single already-fetched doctor-profile response that rendered the slot list — no independent fetch that could partially fail after the modal opens |
+| partial | cancellation-modal | 🚫 dismissed | The only input is the optional reason `Textarea` — no multi-field form state that could be partially populated by a fetch |
+| partial | appointment-list | 🚫 dismissed | `patient_id`/`doctor_id` are `NOT NULL` foreign keys on `appointments` [per schema read in 05-RESEARCH.md] — a row can never render with a missing counterpart party; no partial-join state is reachable |
 | zero-one-many | appointment-list | ✅ covered | Zero → page-level empty state; one/many → identical row rendering per section, no singular/plural-sensitive copy; sections independently omitted when empty (Layout) |
+| zero-one-many | reschedule-picker | ✅ covered | Identical per-slot row rendering regardless of count, no singular/plural-sensitive copy (matches appointment-list's treatment); zero slots renders the dedicated empty state instead (Copywriting Contract) |
 | long-text | cancellation-modal (reason echo, if ever displayed back) | ✅ covered | This phase does not display a stored `cancelled_reason` back on the list rows (out of the locked scope — D-13 only requires capturing it); if a later phase surfaces it, apply the same no-truncation `break-words` treatment Phase 4 uses for blocked-slot `reason` text |
+| long-text | booking-confirmation-modal | ✅ covered | The location line (`address, neighborhood, city`) uses the same wrapping treatment as `/doctors/[id]`'s existing location display — no truncation, natural wrap (`break-words`), matching Phase 3's precedent |
+| long-text | status-badge | 🚫 dismissed | Badge text is one of exactly 4 fixed short strings (Copywriting Contract) — never user-generated or variable-length content, so a long-text path is not reachable |
 | overflow | appointment-list | 🧪 backstop | Page scrolls naturally with no fixed-height clipping container at typical demo-data volume; not explicitly tested at a large row count — verify visually during executor pass (same backstop Phase 4 carried for its schedule list) |
+| overflow | reschedule-picker | 🧪 backstop | Same natural-scroll, no-fixed-height-clipping treatment as the appointment-list backstop above; not explicitly tested at a large available-slot count — verify visually during executor pass |
+| overflow | status-badge | 🚫 dismissed | Same reasoning as long-text above — fixed enum of short strings, never variable-length, so container overflow is not reachable |
 
 ---
 
@@ -275,11 +295,11 @@ configured project-wide.
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS (FLAG resolved — explicit focal-point lines added to both Layout sections above)
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-08-10
