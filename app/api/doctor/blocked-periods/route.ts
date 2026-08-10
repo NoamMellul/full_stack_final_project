@@ -15,8 +15,14 @@ export async function POST(request: Request) {
   const guard = await requireDoctor();
   if (!guard.ok) return guard.response;
 
-  const body = await request.json();
-  const validationError = validateBlockedPeriodInput(body);
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  const validationError = validateBlockedPeriodInput(body as Record<string, unknown>);
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }

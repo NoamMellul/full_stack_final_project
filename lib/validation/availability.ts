@@ -73,5 +73,14 @@ export function validateBlockedPeriodInput(body: Record<string, unknown>): strin
     return "Reason must be text.";
   }
 
+  // Content is deliberately unvalidated (no character filtering, no required
+  // value — see module comment), but size still needs a bound independent of
+  // that decision: without one, an arbitrarily large string can be persisted
+  // verbatim and re-served on every GET (abuse-resistance, not content
+  // policy).
+  if (typeof reason === "string" && reason.length > 2000) {
+    return "Reason is too long.";
+  }
+
   return null;
 }
