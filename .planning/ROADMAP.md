@@ -163,7 +163,14 @@ Plans:
   3. Patient can reschedule an appointment to another available slot, with the old slot released and the new slot reserved atomically in a single transaction.
   4. Patient can view their own upcoming and past appointments, and doctor can view their own upcoming and past appointments.
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Appointment RPC migration + booking tracer (patient books end to end, sees their own appointment list)
+- [ ] 05-02-PLAN.md — Patient cancellation: cancel route, confirmation dialog, slot release and re-booking proof
+- [ ] 05-03-PLAN.md — Doctor appointment history: doctor-scoped read endpoint and `/doctor/appointments` page
+- [ ] 05-04-PLAN.md — Patient reschedule: reschedule route, day-grouped slot picker, atomicity under concurrency
+- [ ] 05-05-PLAN.md — Doctor cancellation on `/doctor/appointments` and the phase's full-suite gate
 
 ### Phase 6: Dashboards, Notifications & Localization
 
