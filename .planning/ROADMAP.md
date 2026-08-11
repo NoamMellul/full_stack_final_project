@@ -163,7 +163,7 @@ Plans:
   3. Patient can reschedule an appointment to another available slot, with the old slot released and the new slot reserved atomically in a single transaction.
   4. Patient can view their own upcoming and past appointments, and doctor can view their own upcoming and past appointments.
 
-**Plans**: 1/5 plans executed
+**Plans**: 2/5 plans executed
 
 Plans:
 **Wave 1**
@@ -172,7 +172,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 05-02-PLAN.md — Patient cancellation: cancel route, confirmation dialog, slot release and re-booking proof
+- [x] 05-02-PLAN.md — Patient cancellation: cancel route, confirmation dialog, slot release and re-booking proof
 - [ ] 05-03-PLAN.md — Doctor appointment history: doctor-scoped read endpoint and `/doctor/appointments` page
 
 **Wave 3** *(blocked on Wave 2 completion)*
@@ -210,5 +210,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Admin — Doctor & Reference Data Management | 7/7 | Complete    | 2026-08-05 |
 | 3. Doctor Discovery — Search & Public Profiles | 7/7 | Complete    | 2026-08-08 |
 | 4. Doctor Availability Management | 4/4 | In Progress|  |
-| 5. Appointment Booking & Lifecycle | 1/5 | In Progress|  |
+| 5. Appointment Booking & Lifecycle | 2/5 | In Progress|  |
 | 6. Dashboards, Notifications & Localization | 0/TBD | Not started | - |

@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 05
 current_phase_name: Appointment Booking & Lifecycle
 status: executing
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-08-11T07:34:22.951Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-08-11T08:40:03.595Z"
 last_activity: 2026-08-10
 last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 29
-  completed_plans: 25
+  completed_plans: 26
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-08)
 ## Current Position
 
 Phase: 05 (Appointment Booking & Lifecycle) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-08-10 — Phase 05 execution started
 
-Progress: [█████████░] 86%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -83,6 +83,7 @@ Progress: [█████████░] 86%
 | Phase 04 P03 | 120min | 3 tasks | 4 files |
 | Phase 04 P04 | 20min | 2 tasks | 2 files |
 | Phase 05 P01 | 90min | 3 tasks | 12 files |
+| Phase 05 P02 | 64min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -146,6 +147,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 05] Plan 05-01: book_appointment()/reschedule_appointment()/cancel_appointment() SECURITY DEFINER functions locked with five custom SQLSTATE codes (MR001-MR005); route layer branches strictly on error.code, never error.message
 - [Phase ?]: [Phase 05] Plan 05-01: lib/appointments.ts is the single shared source for the derived Confirmed/Past/Cancelled badge and the Upcoming/Past split, consumed by both the patient page (this plan) and the doctor page (05-03)
 - [Phase ?]: [Phase 05] Plan 05-01: Rule 1 fix — added migration 20260811070000 granting a patient SELECT on the availability_slots row backing their own appointment regardless of status; the original policy only allowed reading a slot while status='available', silently breaking the post-booking read and the entire /patient/appointments list once a slot flipped to booked
+- [Phase ?]: [Phase 5] Plan 05-02: cancel route uses session-only guard (no requirePatient()/requireDoctor()) since D-12 lets both the patient and the owning doctor cancel; cancel_appointment()'s own auth.uid()-scoped filter is the real authorization boundary
+- [Phase ?]: [Phase 5] Plan 05-02: cancel eligibility on /patient/appointments read from appointmentBadge().label === "Confirmed" plus isCancelledStatus(), not a direct Date.now() comparison in the row render body, to satisfy eslint react-hooks/purity
 
 ### Pending Todos
 
@@ -167,6 +170,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-11T07:34:22.918Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-08-11T08:40:03.552Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None

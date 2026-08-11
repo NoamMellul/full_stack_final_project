@@ -49,9 +49,9 @@
 - [x] **APPT-02**: The system prevents two patients from ever booking the same slot
 - [x] **APPT-03**: Patient cannot book a slot in the past
 - [x] **APPT-04**: Booking a slot marks it unavailable immediately
-- [ ] **APPT-05**: Patient can cancel their own upcoming appointment
+- [x] **APPT-05**: Patient can cancel their own upcoming appointment
 - [ ] **APPT-06**: Doctor can cancel a patient's appointment
-- [ ] **APPT-07**: Cancelling an appointment frees the slot for rebooking
+- [x] **APPT-07**: Cancelling an appointment frees the slot for rebooking
 - [ ] **APPT-08**: Patient can reschedule an appointment to another available slot
 - [ ] **APPT-09**: Rescheduling releases the old slot and reserves the new one atomically
 - [x] **APPT-10**: Patient can view their upcoming appointments
@@ -171,9 +171,9 @@ Which phases cover which requirements.
 | APPT-02 | Phase 5 | Complete |
 | APPT-03 | Phase 5 | Complete |
 | APPT-04 | Phase 5 | Complete |
-| APPT-05 | Phase 5 | Pending |
+| APPT-05 | Phase 5 | Complete |
 | APPT-06 | Phase 5 | Pending |
-| APPT-07 | Phase 5 | Pending |
+| APPT-07 | Phase 5 | Complete |
 | APPT-08 | Phase 5 | Pending |
 | APPT-09 | Phase 5 | Pending |
 | APPT-10 | Phase 5 | Complete |
