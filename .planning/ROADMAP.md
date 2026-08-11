@@ -163,7 +163,7 @@ Plans:
   3. Patient can reschedule an appointment to another available slot, with the old slot released and the new slot reserved atomically in a single transaction.
   4. Patient can view their own upcoming and past appointments, and doctor can view their own upcoming and past appointments.
 
-**Plans**: 4/5 plans executed
+**Plans**: 5/5 plans executed
 
 Plans:
 **Wave 1**
@@ -178,7 +178,7 @@ Plans:
 **Wave 3** *(blocked on Wave 2 completion)*
 
 - [x] 05-04-PLAN.md — Patient reschedule: reschedule route, day-grouped slot picker, atomicity under concurrency
-- [ ] 05-05-PLAN.md — Doctor cancellation on `/doctor/appointments` and the phase's full-suite gate
+- [x] 05-05-PLAN.md — Doctor cancellation on `/doctor/appointments` and the phase's full-suite gate
 
 **Cross-cutting constraints:**
 
@@ -210,5 +210,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Admin — Doctor & Reference Data Management | 7/7 | Complete    | 2026-08-05 |
 | 3. Doctor Discovery — Search & Public Profiles | 7/7 | Complete    | 2026-08-08 |
 | 4. Doctor Availability Management | 4/4 | In Progress|  |
-| 5. Appointment Booking & Lifecycle | 4/5 | In Progress|  |
+| 5. Appointment Booking & Lifecycle | 5/5 | In Progress|  |
 | 6. Dashboards, Notifications & Localization | 0/TBD | Not started | - |
