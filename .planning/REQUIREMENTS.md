@@ -52,8 +52,8 @@
 - [x] **APPT-05**: Patient can cancel their own upcoming appointment
 - [ ] **APPT-06**: Doctor can cancel a patient's appointment
 - [x] **APPT-07**: Cancelling an appointment frees the slot for rebooking
-- [ ] **APPT-08**: Patient can reschedule an appointment to another available slot
-- [ ] **APPT-09**: Rescheduling releases the old slot and reserves the new one atomically
+- [x] **APPT-08**: Patient can reschedule an appointment to another available slot
+- [x] **APPT-09**: Rescheduling releases the old slot and reserves the new one atomically
 - [x] **APPT-10**: Patient can view their upcoming appointments
 - [x] **APPT-11**: Patient can view their past appointments
 - [x] **APPT-12**: Doctor can view their upcoming appointments
@@ -174,8 +174,8 @@ Which phases cover which requirements.
 | APPT-05 | Phase 5 | Complete |
 | APPT-06 | Phase 5 | Pending |
 | APPT-07 | Phase 5 | Complete |
-| APPT-08 | Phase 5 | Pending |
-| APPT-09 | Phase 5 | Pending |
+| APPT-08 | Phase 5 | Complete |
+| APPT-09 | Phase 5 | Complete |
 | APPT-10 | Phase 5 | Complete |
 | APPT-11 | Phase 5 | Complete |
 | APPT-12 | Phase 5 | Complete |
