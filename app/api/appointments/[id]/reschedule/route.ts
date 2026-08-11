@@ -93,6 +93,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       // fall through to the generic 500 branch below.
       return NextResponse.json({ error: RETRY_MESSAGE }, { status: 409 });
     }
+    if (error?.code === "MR005") {
+      // Mirrors the cancel route's MR005 branch (code review WR-02): a
+      // session that expires in the narrow window between requirePatient()'s
+      // check and this .rpc() call reports the accurate 401 instead of
+      // falling through to the generic 500 branch below.
+      return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+    }
     return NextResponse.json({ error: GENERIC_FAILURE_MESSAGE }, { status: 500 });
   }
 
