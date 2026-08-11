@@ -4,11 +4,22 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { appointmentBadge, splitAppointments, type AppointmentStatus } from "@/lib/appointments";
+import { Textarea } from "@/components/ui/textarea";
+import { appointmentBadge, isCancelledStatus, splitAppointments, type AppointmentStatus } from "@/lib/appointments";
 import { formatJerusalemDayHeading, formatJerusalemTime } from "@/lib/timezone";
+import { validateCancelInput } from "@/lib/validation/appointments";
 
 // Exported so plans 05-02 and 05-04 extend rather than redefine this shape.
 export type PatientAppointment = {
@@ -30,9 +41,28 @@ function AppointmentListSkeleton() {
   );
 }
 
-function AppointmentRow({ appointment }: { appointment: PatientAppointment }) {
+function AppointmentRow({
+  appointment,
+  onCancel,
+}: {
+  appointment: PatientAppointment;
+  onCancel: (appointment: PatientAppointment) => void;
+}) {
   const slot = appointment.slot;
   const badge = slot ? appointmentBadge(appointment.status, slot.start_at) : null;
+
+  // Eligible for cancellation only while the slot has not yet started and
+  // the appointment is not already cancelled. `badge.label === "Confirmed"`
+  // already encodes exactly that "start_at >= now and not cancelled" test
+  // (appointmentBadge()'s own derivation), so eligibility is read from the
+  // already-computed badge rather than a second, impure `Date.now()` call in
+  // this render body; isCancelledStatus() is applied directly too, so
+  // eligibility is decided by the shared helper, never a locally
+  // reimplemented status list. Ineligible rows omit the control entirely
+  // rather than rendering it disabled (Phase 3's established "omit rather
+  // than disable" precedent).
+  const canCancel =
+    slot !== null && badge?.label === "Confirmed" && !isCancelledStatus(appointment.status);
 
   return (
     <div className="flex items-center gap-3">
@@ -50,6 +80,17 @@ function AppointmentRow({ appointment }: { appointment: PatientAppointment }) {
         </span>
       </div>
       {badge ? <Badge variant={badge.variant}>{badge.label}</Badge> : null}
+      {canCancel && slot ? (
+        <Button
+          type="button"
+          variant="destructive"
+          className="min-h-11"
+          aria-label={`Cancel appointment ${formatJerusalemDayHeading(slot.start_at)}, ${formatJerusalemTime(slot.start_at)}–${formatJerusalemTime(slot.end_at)}`}
+          onClick={() => onCancel(appointment)}
+        >
+          Cancel appointment
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -60,10 +101,18 @@ function PatientAppointmentsPageInner() {
   const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
   const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
   // Lazy initializer: read the `booked` search param exactly once, as a seed
-  // value for the mount-time render — not a continuously synced effect.
-  const [statusMessage] = useState<string | null>(() =>
+  // value for the mount-time render — not a continuously synced effect. The
+  // setter is also used by the cancellation success path below.
+  const [statusMessage, setStatusMessage] = useState<string | null>(() =>
     searchParams.get("booked") === "1" ? "Your appointment has been booked successfully." : null,
   );
+
+  const [cancellingAppointment, setCancellingAppointment] = useState<PatientAppointment | null>(
+    null,
+  );
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const loadAppointments = useCallback(async () => {
     try {
@@ -92,12 +141,116 @@ function PatientAppointmentsPageInner() {
     void loadAppointments();
   }
 
+  function openCancelDialog(appointment: PatientAppointment) {
+    setCancelReason("");
+    setCancelError(null);
+    setCancellingAppointment(appointment);
+  }
+
+  function closeCancelDialog() {
+    setCancellingAppointment(null);
+  }
+
+  async function handleConfirmCancel() {
+    if (!cancellingAppointment) return;
+    setCancelError(null);
+
+    // Untrimmed original when non-blank, null otherwise — trim() is used
+    // only to test blankness, matching Phase 4's D-04 reason round-trip rule.
+    const body = {
+      reason: cancelReason.trim().length > 0 ? cancelReason : null,
+    };
+
+    const validationError = validateCancelInput(body);
+    if (validationError) {
+      setCancelError(validationError);
+      return;
+    }
+
+    setIsCancelling(true);
+    try {
+      const response = await fetch(`/api/appointments/${cancellingAppointment.id}/cancel`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Leave the dialog open so the patient can read the rejection and
+        // dismiss deliberately — no list refresh from inside this path.
+        setCancelError(data.error ?? "Could not cancel this appointment. Please try again.");
+        return;
+      }
+
+      closeCancelDialog();
+      setStatusMessage("Appointment cancelled.");
+      await loadAppointments();
+    } catch {
+      setCancelError("Could not cancel this appointment. Please try again.");
+    } finally {
+      setIsCancelling(false);
+    }
+  }
+
   const { upcoming, past } = splitAppointments(appointments);
   const isEmpty = listStatus === "ready" && upcoming.length === 0 && past.length === 0;
 
   return (
     <main className="flex flex-1 flex-col gap-6 ps-4 pe-4 py-6">
       <h1 className="text-2xl font-semibold">My appointments</h1>
+
+      <Dialog
+        open={cancellingAppointment !== null}
+        onOpenChange={(open) => {
+          if (!open) closeCancelDialog();
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancel this appointment?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This will cancel the appointment for both you and the other party. This cannot be undone.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="cancel-reason">Reason (optional)</Label>
+            <Textarea
+              id="cancel-reason"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+            />
+          </div>
+
+          {cancelError ? (
+            <Alert variant="destructive">
+              <AlertDescription>{cancelError}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={closeCancelDialog}
+              disabled={isCancelling}
+              className="min-h-11"
+            >
+              Keep appointment
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmCancel}
+              disabled={isCancelling}
+              className="min-h-11"
+            >
+              {isCancelling ? "Cancelling…" : "Cancel appointment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <p role="status" aria-live="polite" className="min-h-5 text-sm text-muted-foreground">
         {statusMessage}
       </p>
@@ -130,7 +283,11 @@ function PatientAppointmentsPageInner() {
               <h2 className="text-lg font-semibold">Upcoming</h2>
               <div className="flex flex-col gap-3">
                 {upcoming.map((appointment) => (
-                  <AppointmentRow key={appointment.id} appointment={appointment} />
+                  <AppointmentRow
+                    key={appointment.id}
+                    appointment={appointment}
+                    onCancel={openCancelDialog}
+                  />
                 ))}
               </div>
             </div>
@@ -141,7 +298,11 @@ function PatientAppointmentsPageInner() {
               <h2 className="text-lg font-semibold">Past</h2>
               <div className="flex flex-col gap-3">
                 {past.map((appointment) => (
-                  <AppointmentRow key={appointment.id} appointment={appointment} />
+                  <AppointmentRow
+                    key={appointment.id}
+                    appointment={appointment}
+                    onCancel={openCancelDialog}
+                  />
                 ))}
               </div>
             </div>
