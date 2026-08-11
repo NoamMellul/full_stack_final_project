@@ -1,0 +1,28 @@
+-- Phase 5 code review CR-01 fix: `appointments` UPDATE was never locked down,
+-- letting a patient or doctor bypass reschedule_appointment()/cancel_appointment()
+-- via a direct table write.
+--
+-- 20260810120000 revoked direct INSERT on public.appointments so every new
+-- row must go through book_appointment(), but left UPDATE untouched. The
+-- pre-existing appointments_update_own_or_admin policy (initial schema) has
+-- no WITH CHECK clause, so its USING expression governs the check too — it
+-- only constrains patient_id/doctor_id ownership, saying nothing about
+-- slot_id/status/cancelled_reason. Combined with Supabase's default
+-- table-level UPDATE grant (never revoked for this table), any authenticated
+-- patient or doctor could update their own appointment row's slot_id,
+-- status, or cancelled_reason directly from the browser client, entirely
+-- bypassing reschedule_appointment()'s/cancel_appointment()'s atomic
+-- guarantees (D-08/D-09/D-10/D-12) and availability_slots synchronization.
+--
+-- Mirrors the INSERT hardening already done in 20260810120000: revoking
+-- table-level UPDATE forces every legitimate status/slot change through the
+-- SECURITY DEFINER functions, which already exist for this purpose and are
+-- unaffected by this revoke (they run as their definer). The e2e test
+-- suite's service-role fixtures (tests/e2e/helpers/appointments.ts) bypass
+-- grants entirely and are also unaffected.
+--
+-- appointments_update_own_or_admin (initial schema) is deliberately left in
+-- place as documentation of intent, matching how appointments_insert_patient
+-- was handled in 20260810120000 — the policy is simply no longer reachable
+-- by anon/authenticated callers once the table-level grant is gone.
+revoke update on public.appointments from anon, authenticated;
