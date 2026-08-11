@@ -5,8 +5,8 @@ milestone_name: milestone
 current_phase: 05
 current_phase_name: Appointment Booking & Lifecycle
 status: verifying
-stopped_at: Completed 05-05-PLAN.md
-last_updated: "2026-08-11T13:06:28.126Z"
+stopped_at: Completed 05-05-PLAN.md (Phase 5 complete, 5/5 plans)
+last_updated: "2026-08-11T13:08:21.378Z"
 last_activity: 2026-08-10
 last_activity_desc: Phase 05 execution started
 progress:
@@ -86,7 +86,7 @@ Progress: [██████████] 100%
 | Phase 05 P02 | 64min | 3 tasks | 3 files |
 | Phase 05 P03 | 45min | 3 tasks | 5 files |
 | Phase 05 P04 | 40min | 3 tasks | 3 files |
-| Phase 05 P05 | 48min | 2 tasks | 2 files |
+| Phase 05 P05 | 35min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -156,8 +156,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 5] Plan 05-04: reschedule route uses requirePatient() (unlike the session-only cancel route) since D-06/D-07 scope rescheduling to the patient alone; SQLSTATE mapping locked at MR001->409 slot message (byte-identical to booking's MR001 copy), MR002->409 appointment message, MR004->404, 40P01->409 retry message
 - [Phase ?]: [Phase 5] Plan 05-04: RESEARCH Open Question 1 resolved for consistency with D-19 — the reschedule target inherits the same is_active doctor guard as booking, inside reschedule_appointment() itself, proven by Task 3 case 7; still flagged for end-of-phase confirmation
 - [Phase ?]: [Phase 5] Plan 05-04: fixed leftover no-op debug assertions in a prior interrupted session's appointment-reschedule.spec.ts (Rule 1) and widened the D-10 rejection matrix test's timeout to 90s for its six sequential fixture+login sub-cases (Rule 3) — full 282-test suite green afterward
-- [Phase ?]: [Phase 5] Plan 05-05: doctor cancellation submits to the exact same PATCH /api/appointments/[id]/cancel route the patient page calls (no new endpoint, no migration, no change to cancel_appointment()); row eligibility reads appointmentBadge().label === "Confirmed" plus isCancelledStatus(), mirroring the patient page's pattern
-- [Phase ?]: [Phase 5] Plan 05-05: full 290-test Playwright suite green in one pass, closing Phase 5 (Appointment Booking & Lifecycle) — booking, cancellation, doctor history and rescheduling all delegate to the three SECURITY DEFINER RPCs deployed in 05-01
+- [Phase ?]: [Phase 5] Plan 05-05: doctor page's Cancel appointment button submits to the identical shared PATCH /api/appointments/[id]/cancel route the patient page already uses (no doctor-specific endpoint, no migration, no change to cancel_appointment()) — cancel_appointment() derives cancelled_by_doctor purely from auth.uid() vs patient_id, client never sends an actor field, proven in both directions (T-05-02); row eligibility reads appointmentBadge().label === "Confirmed" plus isCancelledStatus(), mirroring the patient page's pattern
+- [Phase ?]: [Phase 5] Plan 05-05: doctor dialog state/handler names (cancellingAppointment/cancelReason/cancelError/isCancelling, openCancelDialog/closeCancelDialog/handleConfirmCancel) mirror the patient page's plan-05-02 naming exactly, per that plan's explicit contract, even though they are separate files
+- [Phase ?]: [Phase 5] Plan 05-05 closes the phase: all 13 APPT requirements complete, full 290-test Playwright suite green across 28 spec files, zero regressions; RESEARCH Open Question 1 (is_active guard on reschedule, flagged by plan 05-04 for end-of-phase confirmation) confirmed standing, not overturned
 
 ### Pending Todos
 
@@ -179,6 +180,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-11T13:06:28.087Z
-Stopped at: Completed 05-05-PLAN.md
+Last session: 2026-08-11T13:08:21.333Z
+Stopped at: Completed 05-05-PLAN.md (Phase 5 complete, 5/5 plans)
 Resume file: None
