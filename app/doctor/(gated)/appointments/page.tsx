@@ -2,11 +2,27 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { appointmentBadge, splitAppointments, type AppointmentStatus } from "@/lib/appointments";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  appointmentBadge,
+  isCancelledStatus,
+  splitAppointments,
+  type AppointmentStatus,
+} from "@/lib/appointments";
 import { formatJerusalemDayHeading, formatJerusalemTime } from "@/lib/timezone";
+import { validateCancelInput } from "@/lib/validation/appointments";
 
 // Exported so plan 05-05 extends rather than redefines this shape.
 export type DoctorAppointment = {
@@ -28,9 +44,25 @@ function AppointmentListSkeleton() {
   );
 }
 
-function AppointmentRow({ appointment }: { appointment: DoctorAppointment }) {
+function AppointmentRow({
+  appointment,
+  onCancel,
+}: {
+  appointment: DoctorAppointment;
+  onCancel: (appointment: DoctorAppointment) => void;
+}) {
   const slot = appointment.slot;
   const badge = slot ? appointmentBadge(appointment.status, slot.start_at) : null;
+
+  // Eligible for cancellation only while the slot has not yet started and
+  // the appointment is not already cancelled — same "start_at >= now and not
+  // cancelled" test as the patient page's canManage, read from the
+  // already-computed badge rather than a second impure Date.now() call in
+  // this render body (react-hooks/purity). No reschedule control exists on
+  // this page by design (D-06, D-07); ineligible rows omit the control
+  // entirely rather than rendering it disabled.
+  const canCancel =
+    slot !== null && badge?.label === "Confirmed" && !isCancelledStatus(appointment.status);
 
   return (
     <div className="flex items-center gap-3">
@@ -48,6 +80,17 @@ function AppointmentRow({ appointment }: { appointment: DoctorAppointment }) {
         </span>
       </div>
       {badge ? <Badge variant={badge.variant}>{badge.label}</Badge> : null}
+      {canCancel && slot ? (
+        <Button
+          type="button"
+          variant="destructive"
+          className="min-h-11"
+          aria-label={`Cancel appointment ${formatJerusalemDayHeading(slot.start_at)}, ${formatJerusalemTime(slot.start_at)}–${formatJerusalemTime(slot.end_at)}`}
+          onClick={() => onCancel(appointment)}
+        >
+          Cancel appointment
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -55,10 +98,17 @@ function AppointmentRow({ appointment }: { appointment: DoctorAppointment }) {
 export default function DoctorAppointmentsPage() {
   const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
   const [appointments, setAppointments] = useState<DoctorAppointment[]>([]);
-  // Nothing sets this in this plan — it exists so plan 05-05 can announce a
-  // cancellation without restructuring the page.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- setter is consumed by plan 05-05's cancellation flow, not this plan
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Mirrors app/patient/appointments/page.tsx's cancellation dialog state
+  // exactly, down to the variable names, so the two implementations read as
+  // one pattern (05-02-SUMMARY.md).
+  const [cancellingAppointment, setCancellingAppointment] = useState<DoctorAppointment | null>(
+    null,
+  );
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const loadAppointments = useCallback(async () => {
     try {
@@ -87,12 +137,120 @@ export default function DoctorAppointmentsPage() {
     void loadAppointments();
   }
 
+  function openCancelDialog(appointment: DoctorAppointment) {
+    setCancelReason("");
+    setCancelError(null);
+    setCancellingAppointment(appointment);
+  }
+
+  function closeCancelDialog() {
+    setCancellingAppointment(null);
+  }
+
+  async function handleConfirmCancel() {
+    if (!cancellingAppointment) return;
+    setCancelError(null);
+
+    // Untrimmed original when non-blank, null otherwise — trim() is used
+    // only to test blankness, matching the patient page's D-13 reason
+    // round-trip rule. This is the same PATCH /api/appointments/[id]/cancel
+    // route the patient page calls — no doctor-specific cancel endpoint
+    // exists. The client sends no field naming the acting party;
+    // cancel_appointment() derives cancelled_by_doctor from auth.uid()
+    // compared against the appointment's patient_id.
+    const body = {
+      reason: cancelReason.trim().length > 0 ? cancelReason : null,
+    };
+
+    const validationError = validateCancelInput(body);
+    if (validationError) {
+      setCancelError(validationError);
+      return;
+    }
+
+    setIsCancelling(true);
+    try {
+      const response = await fetch(`/api/appointments/${cancellingAppointment.id}/cancel`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Leave the dialog open so the doctor can read the rejection and
+        // dismiss deliberately — no list refresh from inside this path.
+        setCancelError(data.error ?? "Could not cancel this appointment. Please try again.");
+        return;
+      }
+
+      closeCancelDialog();
+      setStatusMessage("Appointment cancelled.");
+      await loadAppointments();
+    } catch {
+      setCancelError("Could not cancel this appointment. Please try again.");
+    } finally {
+      setIsCancelling(false);
+    }
+  }
+
   const { upcoming, past } = splitAppointments(appointments);
   const isEmpty = listStatus === "ready" && upcoming.length === 0 && past.length === 0;
 
   return (
     <main className="flex flex-1 flex-col gap-6 ps-4 pe-4 py-6">
       <h1 className="text-2xl font-semibold">My appointments</h1>
+
+      <Dialog
+        open={cancellingAppointment !== null}
+        onOpenChange={(open) => {
+          if (!open) closeCancelDialog();
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancel this appointment?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This will cancel the appointment for both you and the other party. This cannot be undone.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="cancel-reason">Reason (optional)</Label>
+            <Textarea
+              id="cancel-reason"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+            />
+          </div>
+
+          {cancelError ? (
+            <Alert variant="destructive">
+              <AlertDescription>{cancelError}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={closeCancelDialog}
+              disabled={isCancelling}
+              className="min-h-11"
+            >
+              Keep appointment
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmCancel}
+              disabled={isCancelling}
+              className="min-h-11"
+            >
+              {isCancelling ? "Cancelling…" : "Cancel appointment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <p role="status" aria-live="polite" className="min-h-5 text-sm text-muted-foreground">
         {statusMessage}
@@ -123,7 +281,11 @@ export default function DoctorAppointmentsPage() {
               <h2 className="text-lg font-semibold">Upcoming</h2>
               <div className="flex flex-col gap-3">
                 {upcoming.map((appointment) => (
-                  <AppointmentRow key={appointment.id} appointment={appointment} />
+                  <AppointmentRow
+                    key={appointment.id}
+                    appointment={appointment}
+                    onCancel={openCancelDialog}
+                  />
                 ))}
               </div>
             </div>
@@ -134,7 +296,11 @@ export default function DoctorAppointmentsPage() {
               <h2 className="text-lg font-semibold">Past</h2>
               <div className="flex flex-col gap-3">
                 {past.map((appointment) => (
-                  <AppointmentRow key={appointment.id} appointment={appointment} />
+                  <AppointmentRow
+                    key={appointment.id}
+                    appointment={appointment}
+                    onCancel={openCancelDialog}
+                  />
                 ))}
               </div>
             </div>
