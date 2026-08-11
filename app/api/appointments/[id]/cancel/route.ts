@@ -43,6 +43,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  // A body of the literal 4 bytes `null` parses successfully above (no
+  // exception -- `null` is valid JSON), so without this normalization
+  // `body` could reach the `{ reason: rawReason } = body` destructure below
+  // as `null`, which throws (code review WR-01). validateCancelInput treats
+  // a bodyless request as "no reason provided" (reason is optional), so
+  // normalizing to `{}` here keeps that behaviour while making the later
+  // destructure safe.
+  if (typeof body !== "object" || body === null) {
+    body = {};
+  }
+
   const validationError = validateCancelInput(body as Record<string, unknown>);
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 });

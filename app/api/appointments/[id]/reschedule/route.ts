@@ -38,6 +38,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  // A body of the literal 4 bytes `null` parses successfully above (no
+  // exception -- `null` is valid JSON), so without this normalization a
+  // null `body` would reach validateRescheduleInput and, if not for its own
+  // null guard, the `{ newSlotId } = body` destructure below (code review
+  // WR-01). Normalizing here keeps both call sites safe regardless of
+  // future changes to either.
+  if (typeof body !== "object" || body === null) {
+    body = {};
+  }
+
   const validationError = validateRescheduleInput(body as Record<string, unknown>);
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 });

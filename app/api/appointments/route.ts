@@ -23,6 +23,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  // A body of the literal 4 bytes `null` parses successfully above (no
+  // exception -- `null` is valid JSON), so without this normalization a
+  // null `body` would reach validateBookingInput and, if not for its own
+  // null guard, the `{ slotId } = body` destructure below (code review
+  // WR-01). Normalizing here keeps both call sites safe regardless of
+  // future changes to either.
+  if (typeof body !== "object" || body === null) {
+    body = {};
+  }
+
   const validationError = validateBookingInput(body as Record<string, unknown>);
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 });

@@ -17,6 +17,14 @@
 export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function validateBookingInput(body: Record<string, unknown>): string | null {
+  // A request body of the literal 4 bytes `null` parses successfully via
+  // JSON.parse (no exception -- `null` is valid JSON), so the call sites'
+  // try/catch around JSON parsing never triggers for it. Without this guard,
+  // `body.slotId` below would throw on a null body, surfacing as an
+  // unhandled 500 instead of this function's normal 400 (code review WR-01).
+  if (typeof body !== "object" || body === null) {
+    return "Slot is required.";
+  }
   const slotId = body.slotId;
   if (typeof slotId !== "string" || !UUID_PATTERN.test(slotId)) {
     return "Slot is required.";
@@ -26,6 +34,11 @@ export function validateBookingInput(body: Record<string, unknown>): string | nu
 
 // Consumed by plan 05-04.
 export function validateRescheduleInput(body: Record<string, unknown>): string | null {
+  // See validateBookingInput's comment: guards the same literal-`null`-body
+  // case (code review WR-01).
+  if (typeof body !== "object" || body === null) {
+    return "A new slot is required.";
+  }
   const newSlotId = body.newSlotId;
   if (typeof newSlotId !== "string" || !UUID_PATTERN.test(newSlotId)) {
     return "A new slot is required.";
@@ -37,6 +50,13 @@ export function validateRescheduleInput(body: Record<string, unknown>): string |
 // copied verbatim from validateBlockedPeriodInput so the two free-text
 // fields in this project cannot drift apart.
 export function validateCancelInput(body: Record<string, unknown>): string | null {
+  // See validateBookingInput's comment: guards the same literal-`null`-body
+  // case (code review WR-01). Unlike the other two validators, a null/absent
+  // reason is itself valid input here (the reason is optional), so this
+  // guard returns null (no error) rather than a message.
+  if (typeof body !== "object" || body === null) {
+    return null;
+  }
   const reason = body.reason;
   if (reason !== undefined && reason !== null && typeof reason !== "string") {
     return "Reason must be text.";
