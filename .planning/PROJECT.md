@@ -25,14 +25,14 @@ A patient must be able to find a doctor matching their criteria and book an avai
 - [x] Reference data management by the admin (specialties, neighborhoods) — Validated in Phase 2: Admin — Doctor & Reference Data Management
 - [x] Multi-criteria doctor search: name, specialty, language, neighborhood, availability — Validated in Phase 3: Doctor Discovery — Search & Public Profiles
 - [x] Public doctor profiles (specialty, description, address, neighborhood, languages, next slots, demo status) — Validated in Phase 3: Doctor Discovery — Search & Public Profiles
+- [x] Doctor availability management (add/remove slots, block periods) — Validated in Phase 4: Doctor Availability Management
+- [x] Appointment booking with guaranteed double-booking prevention — Validated in Phase 5: Appointment Booking & Lifecycle
+- [x] Appointment cancellation (patient and doctor) — Validated in Phase 5: Appointment Booking & Lifecycle
+- [x] Rescheduling an appointment to another available slot — Validated in Phase 5: Appointment Booking & Lifecycle
+- [x] Appointment history (upcoming/past) for patient and doctor — Validated in Phase 5: Appointment Booking & Lifecycle
 
 ### Active
 
-- [ ] Appointment booking with guaranteed double-booking prevention
-- [ ] Appointment cancellation (patient and doctor)
-- [ ] Rescheduling an appointment to another available slot
-- [ ] Appointment history (upcoming/past) for patient and doctor
-- [ ] Doctor availability management (add/remove slots, block periods)
 - [ ] Favorites: patient can save favorite doctors
 - [ ] In-app notifications (confirmation, cancellation, reschedule)
 - [ ] Patient dashboard, doctor dashboard, admin dashboard
@@ -74,8 +74,9 @@ A patient must be able to find a doctor matching their criteria and book an avai
 | Classic REST API routes instead of Server Actions | More standard, easier to explain/defend, less Next.js-specific "magic" | — Pending |
 | Manual validation instead of Zod | Simplicity, no extra dependency, explicit logic readable by anyone | — Pending |
 | Playwright only, no Vitest/React Testing Library | E2E tests cover everything that matters (flows, permissions, double-booking); isolated component tests add little value here | — Pending |
-| Merge `blocked_periods` into `availability_slots` (status `blocked`) | Single table to query for the doctor's schedule, same overlap-detection logic applies | — Pending |
-| DB-level guaranteed anti-double-booking (partial unique constraint + transaction) | Strong guarantee against concurrent bookings, not just an application-level check | — Pending |
+| Merge `blocked_periods` into `availability_slots` (status `blocked`) | Single table to query for the doctor's schedule, same overlap-detection logic applies | Validated Phase 4 — one table, one overlap-detection exclusion constraint for both booked and doctor-blocked time |
+| DB-level guaranteed anti-double-booking (partial unique constraint + transaction) | Strong guarantee against concurrent bookings, not just an application-level check | Validated Phase 5 — `book_appointment`/`reschedule_appointment` use a single atomic conditional `UPDATE` plus a partial unique index as backstop; proven under real `Promise.all` concurrency in `appointment-booking.spec.ts`/`appointment-reschedule.spec.ts` and independently re-run live by the phase verifier |
+| Every `appointments` write goes through a `SECURITY DEFINER` RPC function, never a direct table write | Table-level `INSERT`/`UPDATE` revoked from `anon`/`authenticated` on `appointments` so `book_appointment()`/`reschedule_appointment()`/`cancel_appointment()` are the only path, closing an RLS bypass a code review found mid-phase (CR-01) | Validated Phase 5 — re-verified live: a direct `supabase.from("appointments").update(...)` from an authenticated patient session returns `42501 permission denied` |
 | Tailwind CSS + shadcn/ui | Lightweight, customizable, good RTL support, more idiomatic with Server Components than MUI/Ant Design | — Pending |
 | Custom i18n (no next-intl) | Only 2 static languages, no locale routing needed | — Pending |
 | V1 city: Tel-Aviv only | Younger market, high simulated density of English-speaking private doctors, consistent with demo data | — Pending |
@@ -103,4 +104,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-08 after Phase 3 completion*
+*Last updated: 2026-08-11 after Phase 5 completion*

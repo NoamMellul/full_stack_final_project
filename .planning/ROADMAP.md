@@ -16,8 +16,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation — Database Schema & Authentication** - Full data model deployed with RLS, and patients/doctors can securely authenticate with role-based route protection (completed 2026-08-04)
 - [x] **Phase 2: Admin — Doctor & Reference Data Management** - Admin can populate and govern the entire platform catalog (doctors, specialties, neighborhoods, users, appointments oversight) (completed 2026-08-05)
 - [x] **Phase 3: Doctor Discovery — Search & Public Profiles** - Patients can find and evaluate doctors matching their criteria (completed 2026-08-08)
-- [ ] **Phase 4: Doctor Availability Management** - Doctors control their own schedule with conflict-safe slot and block-period management
-- [ ] **Phase 5: Appointment Booking & Lifecycle** - Patients can book, cancel, and reschedule appointments with a guaranteed anti-double-booking constraint
+- [x] **Phase 4: Doctor Availability Management** - Doctors control their own schedule with conflict-safe slot and block-period management (completed 2026-08-09)
+- [x] **Phase 5: Appointment Booking & Lifecycle** - Patients can book, cancel, and reschedule appointments with a guaranteed anti-double-booking constraint (completed 2026-08-11)
 - [ ] **Phase 6: Dashboards, Notifications & Localization** - Patients and doctors get a personalized home base with real-time updates, in a fully bilingual (Hebrew/English, RTL) interface
 
 ## Phase Details
@@ -210,5 +210,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Admin — Doctor & Reference Data Management | 7/7 | Complete    | 2026-08-05 |
 | 3. Doctor Discovery — Search & Public Profiles | 7/7 | Complete    | 2026-08-08 |
 | 4. Doctor Availability Management | 4/4 | In Progress|  |
-| 5. Appointment Booking & Lifecycle | 5/5 | In Progress|  |
+| 5. Appointment Booking & Lifecycle | 5/5 | Complete    | 2026-08-11 |
 | 6. Dashboards, Notifications & Localization | 0/TBD | Not started | - |

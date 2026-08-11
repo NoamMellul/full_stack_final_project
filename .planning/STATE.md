@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 05
-current_phase_name: Appointment Booking & Lifecycle
-status: verifying
+current_phase: 06
+current_phase_name: Dashboards, Notifications & Localization
+status: planning
 stopped_at: Completed 05-05-PLAN.md (Phase 5 complete, 5/5 plans)
-last_updated: "2026-08-11T13:08:21.378Z"
-last_activity: 2026-08-10
-last_activity_desc: Phase 05 execution started
+last_updated: "2026-08-11T16:32:22.693Z"
+last_activity: 2026-08-11
+last_activity_desc: Phase 05 complete, transitioned to Phase 06
 progress:
   total_phases: 6
   completed_phases: 5
@@ -20,17 +20,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-08)
+See: .planning/PROJECT.md (updated 2026-08-11)
 
 **Core value:** A patient must be able to find a doctor matching their criteria and book an available slot in a few clicks, with an absolute guarantee that two patients never book the same slot.
-**Current focus:** Phase 05 — Appointment Booking & Lifecycle
+**Current focus:** Phase 06 — Dashboards, Notifications & Localization
 
 ## Current Position
 
-Phase: 05 (Appointment Booking & Lifecycle) — EXECUTING
-Plan: 5 of 5
-Status: Phase complete — ready for verification
-Last activity: 2026-08-10 — Phase 05 execution started
+Phase: 06 — Dashboards, Notifications & Localization
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-08-11 — Phase 05 complete, transitioned to Phase 06
 
 Progress: [██████████] 100%
 
@@ -38,7 +38,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 20
+- Total plans completed: 25
 - Average duration: - min
 - Total execution time: 0 hours
 
@@ -49,6 +49,7 @@ Progress: [██████████] 100%
 | 01 | 6 | - | - |
 | 02 | 7 | - | - |
 | 3 | 7 | - | - |
+| 05 | 5 | - | - |
 
 **Recent Trend:**
 
@@ -159,6 +160,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 5] Plan 05-05: doctor page's Cancel appointment button submits to the identical shared PATCH /api/appointments/[id]/cancel route the patient page already uses (no doctor-specific endpoint, no migration, no change to cancel_appointment()) — cancel_appointment() derives cancelled_by_doctor purely from auth.uid() vs patient_id, client never sends an actor field, proven in both directions (T-05-02); row eligibility reads appointmentBadge().label === "Confirmed" plus isCancelledStatus(), mirroring the patient page's pattern
 - [Phase ?]: [Phase 5] Plan 05-05: doctor dialog state/handler names (cancellingAppointment/cancelReason/cancelError/isCancelling, openCancelDialog/closeCancelDialog/handleConfirmCancel) mirror the patient page's plan-05-02 naming exactly, per that plan's explicit contract, even though they are separate files
 - [Phase ?]: [Phase 5] Plan 05-05 closes the phase: all 13 APPT requirements complete, full 290-test Playwright suite green across 28 spec files, zero regressions; RESEARCH Open Question 1 (is_active guard on reschedule, flagged by plan 05-04 for end-of-phase confirmation) confirmed standing, not overturned
+- [Phase 5] Post-execution closure: code review found 2 critical (CR-01 direct UPDATE bypass on `appointments`, CR-02 patient email leak to doctors via `profiles` RLS) + 2 warning findings, all 4 fixed and committed (`ab3c498`, `0359be3`, `ddb9c73`, `1fb3f63`); UAT 37/37 passed (05-UAT.md); security threat verification closed 19/19 threats (05-SECURITY.md, threats_open: 0); goal-backward phase verification passed with live re-run evidence including standalone Playwright specs independently re-proving both CR-01 and CR-02 fixes hold (05-VERIFICATION.md)
+- [Housekeeping] Discovered Phase 4's ROADMAP.md summary line was never checked off (`[ ]` instead of `[x]`) despite 4/4 plans executed and complete since ~2026-08-09 — corrected to `[x] ... (completed 2026-08-09)`; the per-phase detail section already showed 4/4 complete, so this was a synthesis-line-only omission, not missing work
 
 ### Pending Todos
 
@@ -169,6 +172,7 @@ None yet.
 - Shared remote dev database holds accumulated Playwright test residue in specialties/locations/doctors (test-created rows never cleaned up across Phase 02 plans 01-05) — not a defect in 02-06's seed script, which correctly seeded and idempotently re-ran its own 12/12/12 demo rows; a project reset or manual cleanup before final demo/grading would present a cleaner catalog
 - ⚠️ [Phase 3] Task 3 acceptance-criterion 'temporarily remove security_invoker/is_active and confirm assertion 2 fails' could not be executed: sandbox classifier blocked all npx supabase db query --linked calls (even read-only). Substituted with grep of the applied migration + a clean npx supabase db advisors --linked report. Recorded as coverage D7 (human_judgment: true) in 03-01-SUMMARY.md for optional human follow-up.
 - ⚠️ [Phase 3] Two non-blocking code-review warnings left unfixed by design (03-REVIEW.md WR-02, WR-03; confirmed still open in 03-VERIFICATION.md's re-verification): out-of-range search pages report a fabricated `total: 0` instead of the real count, and the doctor-profile upcoming-slots query has no `.limit()`. Neither violates a locked must-have; worth a look if a later phase touches either endpoint.
+- ⚠️ [Phase 4] Phase 4 has no `04-VERIFICATION.md`, `04-SECURITY.md`, or `04-UAT.md` — it was executed and its ROADMAP checkbox is now corrected to complete, but it never went through the same closing gates (goal-backward verification, security threat sign-off, UAT) that Phase 5 just did. Not a known defect — Phase 5's own booking flow exercises the availability infrastructure Phase 4 built, and its concurrency tests passed — but the formal artifacts don't exist. Worth backfilling via `/gsd-secure-phase 04` + a Phase 4 verifier pass before the defense if time allows.
 
 ## Deferred Items
 
@@ -180,6 +184,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-11T13:08:21.333Z
-Stopped at: Completed 05-05-PLAN.md (Phase 5 complete, 5/5 plans)
+Last session: 2026-08-11T16:32:22.693Z
+Stopped at: Phase 5 complete (UAT + security + goal-backward verification all passed), transitioned to Phase 6
 Resume file: None
