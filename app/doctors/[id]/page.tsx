@@ -1,14 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import InitialsAvatar from "@/components/initials-avatar";
+import { createClient } from "@/lib/supabase/client";
 import { formatJerusalemDayHeading, formatJerusalemTime, jerusalemDayKey } from "@/lib/timezone";
 
 const LANGUAGE_LABELS: Record<string, string> = { he: "Hebrew", en: "English" };
@@ -72,11 +81,16 @@ function DoctorProfileSkeleton() {
 function DoctorProfilePageInner() {
   const params = useParams<{ id: string }>();
   const id = params.id;
+  const router = useRouter();
 
   const [status, setStatus] = useState<"loading" | "notFound" | "error" | "ready">("loading");
   const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
   const [upcomingSlots, setUpcomingSlots] = useState<UpcomingSlot[]>([]);
   const [photoFailed, setPhotoFailed] = useState(false);
+
+  const [selectedSlot, setSelectedSlot] = useState<UpcomingSlot | null>(null);
+  const [bookingApiError, setBookingApiError] = useState<string | null>(null);
+  const [isBooking, setIsBooking] = useState(false);
 
   const loadDoctor = useCallback(async () => {
     setStatus("loading");
@@ -106,6 +120,55 @@ function DoctorProfilePageInner() {
     }
     void runLoad();
   }, [loadDoctor]);
+
+  // Session check happens client-side because /doctors/[id] is a public
+  // page that never passes through proxy.ts's request gate (D-04). An
+  // unauthenticated visitor is sent straight to /login?from= with no dialog
+  // ever opening.
+  async function handleSelectSlot(slot: UpcomingSlot) {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push(`/login?from=${encodeURIComponent(`/doctors/${id}`)}`);
+      return;
+    }
+
+    setBookingApiError(null);
+    setSelectedSlot(slot);
+  }
+
+  function closeBookingDialog() {
+    setSelectedSlot(null);
+    setBookingApiError(null);
+  }
+
+  async function handleConfirmBooking() {
+    if (!selectedSlot) return;
+    setIsBooking(true);
+    setBookingApiError(null);
+    try {
+      const response = await fetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slotId: selectedSlot.id }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setBookingApiError(data.error ?? "Could not book this appointment. Please try again.");
+        return;
+      }
+
+      router.push("/patient/appointments?booked=1");
+    } catch {
+      setBookingApiError("Could not book this appointment. Please try again.");
+    } finally {
+      setIsBooking(false);
+    }
+  }
 
   if (status === "loading") {
     return (
@@ -209,7 +272,10 @@ function DoctorProfilePageInner() {
                       <span className="text-sm">
                         {formatJerusalemTime(slot.start_at)} - {formatJerusalemTime(slot.end_at)}
                       </span>
-                      <Button className="min-h-11 px-4" disabled>
+                      <Button
+                        className="min-h-11 px-4"
+                        onClick={() => void handleSelectSlot(slot)}
+                      >
                         Select this slot
                       </Button>
                     </div>
@@ -217,13 +283,64 @@ function DoctorProfilePageInner() {
                 </div>
               </div>
             ))}
-            <p className="text-sm text-muted-foreground">
-              Online booking isn&apos;t available yet in this demo — it arrives in a later phase of
-              the project.
-            </p>
           </div>
         )}
       </div>
+
+      <Dialog
+        open={selectedSlot !== null}
+        onOpenChange={(open) => {
+          if (!open) closeBookingDialog();
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm your appointment</DialogTitle>
+          </DialogHeader>
+          {selectedSlot ? (
+            <div className="flex flex-col gap-2 text-sm">
+              <span className="font-semibold">{doctor.full_name}</span>
+              {doctor.specialty ? <span>{doctor.specialty.name_en}</span> : null}
+              <span>
+                {formatJerusalemDayHeading(selectedSlot.start_at)},{" "}
+                {formatJerusalemTime(selectedSlot.start_at)}–
+                {formatJerusalemTime(selectedSlot.end_at)}
+              </span>
+              {addressParts.length > 0 ? (
+                <span className="break-words text-muted-foreground">
+                  {addressParts.join(", ")}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
+          {bookingApiError ? (
+            <Alert variant="destructive">
+              <AlertDescription>{bookingApiError}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11"
+              onClick={closeBookingDialog}
+              disabled={isBooking}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="min-h-11"
+              onClick={() => void handleConfirmBooking()}
+              disabled={isBooking}
+            >
+              {isBooking ? "Booking…" : "Confirm booking"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
