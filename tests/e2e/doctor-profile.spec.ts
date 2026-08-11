@@ -201,7 +201,13 @@ test.describe("PROFILE-01/02/03, D-06, D-18: public doctor profile", () => {
     }
   });
 
-  test("disabled: every Select this slot control is disabled and force-clicking issues no request", async ({
+  // Superseded by Phase 5 (05-01, D-01): booking is now wired, so the
+  // control is enabled and the "not available yet" paragraph is gone.
+  // D-04 covers the actual behavior for an anonymous click — a redirect to
+  // /login, never a request to /api/appointments and never a dialog — which
+  // is asserted here (and, end to end, in
+  // tests/e2e/appointment-booking.spec.ts case 10).
+  test("D-01/D-04: every Select this slot control is enabled, and an anonymous click redirects to /login with no /api/appointments request and no dialog", async ({
     page,
   }) => {
     await page.goto(`/doctors/${richDoctor.id}`);
@@ -209,26 +215,28 @@ test.describe("PROFILE-01/02/03, D-06, D-18: public doctor profile", () => {
     const selectButtons = page.getByRole("button", { name: "Select this slot" });
     await expect(selectButtons).toHaveCount(3);
     for (let i = 0; i < 3; i++) {
-      await expect(selectButtons.nth(i)).toBeDisabled();
+      await expect(selectButtons.nth(i)).toBeEnabled();
     }
 
     await expect(
       page.getByText(
         "Online booking isn't available yet in this demo — it arrives in a later phase of the project.",
       ),
-    ).toBeVisible();
+    ).toHaveCount(0);
 
-    let apiRequestSeen = false;
+    let appointmentsRequestSeen = false;
     page.on("request", (request) => {
-      if (request.url().includes("/api/")) apiRequestSeen = true;
+      if (request.url().includes("/api/appointments")) appointmentsRequestSeen = true;
     });
 
-    const urlBefore = page.url();
-    await selectButtons.first().click({ force: true });
-    await page.waitForTimeout(500);
+    await selectButtons.first().click();
 
-    expect(apiRequestSeen).toBe(false);
-    expect(page.url()).toBe(urlBefore);
+    await page.waitForURL(/\/login/);
+    const url = new URL(page.url());
+    expect(url.pathname).toBe("/login");
+    expect(url.searchParams.get("from")).toBe(`/doctors/${richDoctor.id}`);
+    expect(appointmentsRequestSeen).toBe(false);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 
   test("D-06: a doctor with zero future slots shows the no-availability indicator and no slot control", async ({
