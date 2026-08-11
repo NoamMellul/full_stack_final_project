@@ -61,6 +61,14 @@ async function loginAsPatient(page: Page, creds: { email: string; password: stri
   await page.waitForURL("/patient");
 }
 
+async function loginAsDoctor(page: Page, creds: { email: string; password: string }) {
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(creds.email);
+  await page.getByLabel("Password").fill(creds.password);
+  await page.getByRole("button", { name: "Log in" }).click();
+  await page.waitForURL("/doctor");
+}
+
 async function createFixtureDoctor(): Promise<{ id: string; fullName: string }> {
   const specialty = await createTestSpecialty();
   const location = await createTestLocation();
@@ -468,5 +476,408 @@ test.describe("APPT-05/APPT-07: patient cancellation, slot release and re-bookin
     await expect(
       page.getByTestId("past-section").getByRole("button", { name: /^Cancel appointment/ }),
     ).toHaveCount(0);
+  });
+});
+
+// APPT-06: doctor-initiated cancellation through the same shared route the
+// patient block above already proved. Reuses this file's shared setup
+// helpers and cleanup functions (no second cleanup path); each case gets its
+// own day offset so no fixture collides with the patient-side cases above.
+let doctorAppointmentId: string;
+let doctorSlotId: string;
+let doctorDoctorId: string;
+let doctorPatientId: string;
+let doctorCredentials: { email: string; password: string };
+let patientCredentials: { email: string; password: string };
+const doctorCancelReason = "  Patient requested a different time.  ";
+
+test.describe("APPT-06: doctor-initiated cancellation", () => {
+  test.afterAll(async () => {
+    await cleanupApiCreatedAppointments();
+    await cleanupTestAppointments();
+    await cleanupTestSlots();
+    await cleanupTestReferenceData();
+    await cleanupTestUsers();
+  });
+
+  test("11. APPT-06 through the UI: a doctor cancels an upcoming appointment through the shared confirmation dialog", async ({
+    page,
+  }) => {
+    const doctorUser = await createTestUser("doctor");
+    const specialty = await createTestSpecialty();
+    const location = await createTestLocation();
+    const doctor = await createTestDoctor({
+      specialtyId: specialty.id,
+      locationId: location.id,
+      profileId: doctorUser.id,
+      isActive: true,
+    });
+    const patient = await createTestUser("patient");
+
+    const { year, month, day } = futureJerusalemDay(110);
+    const start = jerusalemWallClockToUtc(year, month, day, 9, 0);
+    const end = jerusalemWallClockToUtc(year, month, day, 9, 30);
+    const appointment = await createTestAppointment({
+      doctorId: doctor.id,
+      patientId: patient.id,
+      startAt: start.toISOString(),
+      endAt: end.toISOString(),
+    });
+
+    doctorAppointmentId = appointment.id;
+    doctorSlotId = appointment.slotId;
+    doctorDoctorId = doctor.id;
+    doctorPatientId = patient.id;
+    doctorCredentials = { email: doctorUser.email, password: doctorUser.password };
+    patientCredentials = { email: patient.email, password: patient.password };
+
+    await loginAsDoctor(page, doctorCredentials);
+    await page.goto("/doctor/appointments");
+
+    await page.getByRole("button", { name: /^Cancel appointment/ }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("heading", { name: "Cancel this appointment?" })).toBeVisible();
+    await expect(
+      dialog.getByText(
+        "This will cancel the appointment for both you and the other party. This cannot be undone.",
+      ),
+    ).toBeVisible();
+
+    await dialog.getByLabel("Reason (optional)").fill(doctorCancelReason);
+    await dialog.getByRole("button", { name: "Cancel appointment" }).click();
+
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole("status")).toHaveText("Appointment cancelled.");
+    await expect(
+      page.getByTestId("past-section").locator('[data-slot="badge"]', {
+        hasText: "Cancelled by doctor",
+      }),
+    ).toBeVisible();
+  });
+
+  test("12. D-14 status and survival: the row survives with cancelled_by_doctor and a byte-identical reason", async () => {
+    const admin = testAdminClient();
+    const { data: row } = await admin
+      .from("appointments")
+      .select("status, cancelled_reason")
+      .eq("id", doctorAppointmentId)
+      .single();
+
+    expect(row).not.toBeNull();
+    expect(row?.status).toBe("cancelled_by_doctor");
+    expect(row?.cancelled_reason).toBe(doctorCancelReason);
+  });
+
+  test("13. Both parties see one account: the patient's page shows the same Cancelled by doctor badge", async ({
+    page,
+  }) => {
+    await loginAsPatient(page, patientCredentials);
+    await page.goto("/patient/appointments");
+    await expect(
+      page.getByTestId("past-section").locator('[data-slot="badge"]', {
+        hasText: "Cancelled by doctor",
+      }),
+    ).toBeVisible();
+  });
+
+  test("14. APPT-07 for the doctor path: the freed slot returns to available and is genuinely re-bookable by another patient", async ({
+    page,
+  }) => {
+    const admin = testAdminClient();
+    const { data: slotRow } = await admin
+      .from("availability_slots")
+      .select("status")
+      .eq("id", doctorSlotId)
+      .single();
+    expect(slotRow?.status).toBe("available");
+
+    const profileResponse = await page.request.get(`/api/doctors/${doctorDoctorId}`);
+    expect(profileResponse.status()).toBe(200);
+    const profileBody = await profileResponse.json();
+    const slotIds = (profileBody.upcomingSlots as Array<{ id: string }>).map((s) => s.id);
+    expect(slotIds).toContain(doctorSlotId);
+
+    const patientC = await createTestUser("patient");
+    await loginAsPatient(page, patientC);
+    const bookResponse = await page.request.post("/api/appointments", {
+      data: { slotId: doctorSlotId },
+    });
+    expect(bookResponse.status()).toBe(201);
+    const bookBody = await bookResponse.json();
+    apiCreatedAppointmentIds.push(bookBody.appointment.id);
+  });
+
+  test("15. T-05-02 actor is not client-supplied: the session decides the acting party in both directions, not a contradicting body field", async ({
+    page,
+  }) => {
+    const patientDay = futureJerusalemDay(111);
+    const patientStart = jerusalemWallClockToUtc(
+      patientDay.year,
+      patientDay.month,
+      patientDay.day,
+      9,
+      0,
+    );
+    const patientEnd = jerusalemWallClockToUtc(
+      patientDay.year,
+      patientDay.month,
+      patientDay.day,
+      9,
+      30,
+    );
+    const patientCancelAppointment = await createTestAppointment({
+      doctorId: doctorDoctorId,
+      patientId: doctorPatientId,
+      startAt: patientStart.toISOString(),
+      endAt: patientEnd.toISOString(),
+    });
+
+    await loginAsPatient(page, patientCredentials);
+    const patientResponse = await page.request.patch(
+      `/api/appointments/${patientCancelAppointment.id}/cancel`,
+      { data: { reason: "Patient cancelling.", cancelledBy: "doctor" } },
+    );
+    expect(patientResponse.status()).toBe(200);
+    expect((await patientResponse.json()).status).toBe("cancelled_by_patient");
+
+    const doctorDay = futureJerusalemDay(112);
+    const doctorStart = jerusalemWallClockToUtc(
+      doctorDay.year,
+      doctorDay.month,
+      doctorDay.day,
+      9,
+      0,
+    );
+    const doctorEnd = jerusalemWallClockToUtc(
+      doctorDay.year,
+      doctorDay.month,
+      doctorDay.day,
+      9,
+      30,
+    );
+    const doctorCancelAppointment = await createTestAppointment({
+      doctorId: doctorDoctorId,
+      patientId: doctorPatientId,
+      startAt: doctorStart.toISOString(),
+      endAt: doctorEnd.toISOString(),
+    });
+
+    await loginAsDoctor(page, doctorCredentials);
+    const doctorResponse = await page.request.patch(
+      `/api/appointments/${doctorCancelAppointment.id}/cancel`,
+      { data: { reason: "Doctor cancelling.", cancelledBy: "patient" } },
+    );
+    expect(doctorResponse.status()).toBe(200);
+    expect((await doctorResponse.json()).status).toBe("cancelled_by_doctor");
+
+    const admin = testAdminClient();
+    const { data: patientRow } = await admin
+      .from("appointments")
+      .select("status")
+      .eq("id", patientCancelAppointment.id)
+      .single();
+    expect(patientRow?.status).toBe("cancelled_by_patient");
+
+    const { data: doctorRow } = await admin
+      .from("appointments")
+      .select("status")
+      .eq("id", doctorCancelAppointment.id)
+      .single();
+    expect(doctorRow?.status).toBe("cancelled_by_doctor");
+  });
+
+  test("16. T-05-05 cross-doctor 404: a doctor cancelling another doctor's appointment gets the same 404 as a missing id", async ({
+    page,
+  }) => {
+    const otherDoctorUser = await createTestUser("doctor");
+    const otherSpecialty = await createTestSpecialty();
+    const otherLocation = await createTestLocation();
+    const otherDoctor = await createTestDoctor({
+      specialtyId: otherSpecialty.id,
+      locationId: otherLocation.id,
+      profileId: otherDoctorUser.id,
+      isActive: true,
+    });
+    const otherPatient = await createTestUser("patient");
+
+    const { year, month, day } = futureJerusalemDay(113);
+    const start = jerusalemWallClockToUtc(year, month, day, 9, 0);
+    const end = jerusalemWallClockToUtc(year, month, day, 9, 30);
+    const otherAppointment = await createTestAppointment({
+      doctorId: otherDoctor.id,
+      patientId: otherPatient.id,
+      startAt: start.toISOString(),
+      endAt: end.toISOString(),
+    });
+
+    await loginAsDoctor(page, doctorCredentials);
+
+    const foreignResponse = await page.request.patch(
+      `/api/appointments/${otherAppointment.id}/cancel`,
+      { data: {} },
+    );
+    expect(foreignResponse.status()).toBe(404);
+    const foreignBody = await foreignResponse.json();
+
+    const missingResponse = await page.request.patch(
+      `/api/appointments/00000000-0000-0000-0000-000000000000/cancel`,
+      { data: {} },
+    );
+    expect(missingResponse.status()).toBe(404);
+    const missingBody = await missingResponse.json();
+
+    expect(foreignBody).toEqual(missingBody);
+    expect(foreignBody.error).toBe(NOT_FOUND_MESSAGE);
+
+    const admin = testAdminClient();
+    const { data: row } = await admin
+      .from("appointments")
+      .select("status")
+      .eq("id", otherAppointment.id)
+      .single();
+    expect(row?.status).toBe("scheduled");
+  });
+
+  test("17. D-12 timing, doctor side: an elapsed appointment and a second cancellation of an already-cancelled one both reject with 409", async ({
+    page,
+  }) => {
+    await loginAsDoctor(page, doctorCredentials);
+
+    const pastStart = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const pastEnd = new Date(Date.now() - 90 * 60 * 1000);
+    const elapsedAppointment = await createTestAppointment({
+      doctorId: doctorDoctorId,
+      patientId: doctorPatientId,
+      startAt: pastStart.toISOString(),
+      endAt: pastEnd.toISOString(),
+    });
+
+    const elapsedResponse = await page.request.patch(
+      `/api/appointments/${elapsedAppointment.id}/cancel`,
+      { data: {} },
+    );
+    expect(elapsedResponse.status()).toBe(409);
+    expect((await elapsedResponse.json()).error).toBe(NOT_MODIFIABLE_MESSAGE);
+
+    const { year, month, day } = futureJerusalemDay(114);
+    const start = jerusalemWallClockToUtc(year, month, day, 9, 0);
+    const end = jerusalemWallClockToUtc(year, month, day, 9, 30);
+    const cancelTwiceAppointment = await createTestAppointment({
+      doctorId: doctorDoctorId,
+      patientId: doctorPatientId,
+      startAt: start.toISOString(),
+      endAt: end.toISOString(),
+    });
+
+    const firstReason = "First doctor cancellation.";
+    const firstResponse = await page.request.patch(
+      `/api/appointments/${cancelTwiceAppointment.id}/cancel`,
+      { data: { reason: firstReason } },
+    );
+    expect(firstResponse.status()).toBe(200);
+    expect((await firstResponse.json()).status).toBe("cancelled_by_doctor");
+
+    const secondResponse = await page.request.patch(
+      `/api/appointments/${cancelTwiceAppointment.id}/cancel`,
+      { data: { reason: "Second attempt, should not be stored." } },
+    );
+    expect(secondResponse.status()).toBe(409);
+    expect((await secondResponse.json()).error).toBe(NOT_MODIFIABLE_MESSAGE);
+
+    const admin = testAdminClient();
+    const { data: row } = await admin
+      .from("appointments")
+      .select("cancelled_reason")
+      .eq("id", cancelTwiceAppointment.id)
+      .single();
+    expect(row?.cancelled_reason).toBe(firstReason);
+  });
+
+  test("18. UI eligibility on the doctor page: exactly one Cancel appointment control exists, belonging to the upcoming row, and no reschedule control exists anywhere", async ({
+    page,
+  }) => {
+    const doctorUser2 = await createTestUser("doctor");
+    const specialty2 = await createTestSpecialty();
+    const location2 = await createTestLocation();
+    const doctor2 = await createTestDoctor({
+      specialtyId: specialty2.id,
+      locationId: location2.id,
+      profileId: doctorUser2.id,
+      isActive: true,
+    });
+    const patient2 = await createTestUser("patient");
+
+    const upcomingDay = futureJerusalemDay(115);
+    const upcomingStart = jerusalemWallClockToUtc(
+      upcomingDay.year,
+      upcomingDay.month,
+      upcomingDay.day,
+      9,
+      0,
+    );
+    const upcomingEnd = jerusalemWallClockToUtc(
+      upcomingDay.year,
+      upcomingDay.month,
+      upcomingDay.day,
+      9,
+      30,
+    );
+
+    const elapsedStart = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const elapsedEnd = new Date(Date.now() - 90 * 60 * 1000);
+
+    const cancelledDay = futureJerusalemDay(116);
+    const cancelledStart = jerusalemWallClockToUtc(
+      cancelledDay.year,
+      cancelledDay.month,
+      cancelledDay.day,
+      9,
+      0,
+    );
+    const cancelledEnd = jerusalemWallClockToUtc(
+      cancelledDay.year,
+      cancelledDay.month,
+      cancelledDay.day,
+      9,
+      30,
+    );
+
+    await createTestAppointment({
+      doctorId: doctor2.id,
+      patientId: patient2.id,
+      startAt: upcomingStart.toISOString(),
+      endAt: upcomingEnd.toISOString(),
+      status: "scheduled",
+    });
+    await createTestAppointment({
+      doctorId: doctor2.id,
+      patientId: patient2.id,
+      startAt: elapsedStart.toISOString(),
+      endAt: elapsedEnd.toISOString(),
+      status: "scheduled",
+    });
+    await createTestAppointment({
+      doctorId: doctor2.id,
+      patientId: patient2.id,
+      startAt: cancelledStart.toISOString(),
+      endAt: cancelledEnd.toISOString(),
+      status: "cancelled_by_doctor",
+    });
+
+    await loginAsDoctor(page, { email: doctorUser2.email, password: doctorUser2.password });
+    await page.goto("/doctor/appointments");
+
+    const cancelButtons = page.getByRole("button", { name: /^Cancel appointment/ });
+    await expect(cancelButtons).toHaveCount(1);
+    await expect(
+      page.getByTestId("upcoming-section").getByRole("button", { name: /^Cancel appointment/ }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByTestId("past-section").getByRole("button", { name: /^Cancel appointment/ }),
+    ).toHaveCount(0);
+
+    await expect(page.getByRole("button", { name: /reschedule/i })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /reschedule/i })).toHaveCount(0);
+    await expect(page.getByText(/reschedule/i)).toHaveCount(0);
   });
 });
