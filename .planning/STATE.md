@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 04
-current_phase_name: Doctor Availability Management
+current_phase: 05
+current_phase_name: Appointment Booking & Lifecycle
 status: executing
-stopped_at: Phase 5 UI-SPEC approved
-last_updated: "2026-08-10T13:43:26.760Z"
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-08-11T07:34:22.951Z"
 last_activity: 2026-08-10
-last_activity_desc: Phase 05 planning complete
+last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 29
-  completed_plans: 24
+  completed_plans: 25
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-08)
 
 **Core value:** A patient must be able to find a doctor matching their criteria and book an available slot in a few clicks, with an absolute guarantee that two patients never book the same slot.
-**Current focus:** Phase 04 — Doctor Availability Management
+**Current focus:** Phase 05 — Appointment Booking & Lifecycle
 
 ## Current Position
 
-Phase: 04 (Doctor Availability Management) — EXECUTING
-Plan: 4 of 4
+Phase: 05 (Appointment Booking & Lifecycle) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-08-10 — Phase 05 planning complete
+Last activity: 2026-08-10 — Phase 05 execution started
 
-Progress: [██████████] 100%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -82,6 +82,7 @@ Progress: [██████████] 100%
 | Phase 04 P02 | 65min | 3 tasks | 3 files |
 | Phase 04 P03 | 120min | 3 tasks | 4 files |
 | Phase 04 P04 | 20min | 2 tasks | 2 files |
+| Phase 05 P01 | 90min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -141,6 +142,10 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 04] Plan 04-02: DELETE /api/doctor/slots/[id] shares one 404 message across missing/already-deleted/foreign-doctor ids (never 403 for a foreign id) so the response can never confirm another doctor's slot id is real (T-04-03); booked-row rejection reads status from the same-request lookup, never client-supplied or list-cached (T-04-04)
 - [Phase 04]: [Phase 04] Plan 04-03: reason is sent/stored exactly as submitted, never trimmed — trim() is used only to test blankness (Rule 1 fix, found by Task 3 case 6, so a reason's meaningful leading/trailing whitespace round-trips byte-identical per D-04) — The original implementation trimmed the reason before both the client fetch body and the route's insert, which would have silently altered a reason with meaningful whitespace and broken D-04's byte-identical round-trip requirement.
 - [Phase 04]: [Phase 04] Plan 04-04: doctor-schedule-overlap.spec.ts and doctor-schedule-visibility.spec.ts required zero production code changes — both passed against the routes exactly as plans 04-01 through 04-03 left them — This is the plan's central finding: the database-level guarantee (one exclusion constraint, one generic message, one RLS policy) held under real Promise.all concurrency and across the full status/ownership/visibility matrix with no application-layer patching needed, closing AVAIL-03 and AVAIL-07 and completing Phase 04.
+- [Phase ?]: [Phase 05] Plan 05-01: Task 1 checkpoint auto-selected option-b under workflow.auto_advance — revoke insert on public.appointments from anon/authenticated, forcing every appointment row through book_appointment()
+- [Phase ?]: [Phase 05] Plan 05-01: book_appointment()/reschedule_appointment()/cancel_appointment() SECURITY DEFINER functions locked with five custom SQLSTATE codes (MR001-MR005); route layer branches strictly on error.code, never error.message
+- [Phase ?]: [Phase 05] Plan 05-01: lib/appointments.ts is the single shared source for the derived Confirmed/Past/Cancelled badge and the Upcoming/Past split, consumed by both the patient page (this plan) and the doctor page (05-03)
+- [Phase ?]: [Phase 05] Plan 05-01: Rule 1 fix — added migration 20260811070000 granting a patient SELECT on the availability_slots row backing their own appointment regardless of status; the original policy only allowed reading a slot while status='available', silently breaking the post-booking read and the entire /patient/appointments list once a slot flipped to booked
 
 ### Pending Todos
 
@@ -162,6 +167,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-10T13:08:59.088Z
-Stopped at: Phase 5 UI-SPEC approved
-Resume file: .planning/phases/05-appointment-booking-lifecycle/05-UI-SPEC.md
+Last session: 2026-08-11T07:34:22.918Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: None

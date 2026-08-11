@@ -45,17 +45,17 @@
 
 ### Appointments
 
-- [ ] **APPT-01**: Patient can book an available slot with a doctor
-- [ ] **APPT-02**: The system prevents two patients from ever booking the same slot
-- [ ] **APPT-03**: Patient cannot book a slot in the past
-- [ ] **APPT-04**: Booking a slot marks it unavailable immediately
+- [x] **APPT-01**: Patient can book an available slot with a doctor
+- [x] **APPT-02**: The system prevents two patients from ever booking the same slot
+- [x] **APPT-03**: Patient cannot book a slot in the past
+- [x] **APPT-04**: Booking a slot marks it unavailable immediately
 - [ ] **APPT-05**: Patient can cancel their own upcoming appointment
 - [ ] **APPT-06**: Doctor can cancel a patient's appointment
 - [ ] **APPT-07**: Cancelling an appointment frees the slot for rebooking
 - [ ] **APPT-08**: Patient can reschedule an appointment to another available slot
 - [ ] **APPT-09**: Rescheduling releases the old slot and reserves the new one atomically
-- [ ] **APPT-10**: Patient can view their upcoming appointments
-- [ ] **APPT-11**: Patient can view their past appointments
+- [x] **APPT-10**: Patient can view their upcoming appointments
+- [x] **APPT-11**: Patient can view their past appointments
 - [ ] **APPT-12**: Doctor can view their upcoming appointments
 - [ ] **APPT-13**: Doctor can view their past appointments
 
@@ -167,17 +167,17 @@ Which phases cover which requirements.
 | AVAIL-05 | Phase 4 | Complete |
 | AVAIL-06 | Phase 4 | Complete |
 | AVAIL-07 | Phase 4 | Complete |
-| APPT-01 | Phase 5 | Pending |
-| APPT-02 | Phase 5 | Pending |
-| APPT-03 | Phase 5 | Pending |
-| APPT-04 | Phase 5 | Pending |
+| APPT-01 | Phase 5 | Complete |
+| APPT-02 | Phase 5 | Complete |
+| APPT-03 | Phase 5 | Complete |
+| APPT-04 | Phase 5 | Complete |
 | APPT-05 | Phase 5 | Pending |
 | APPT-06 | Phase 5 | Pending |
 | APPT-07 | Phase 5 | Pending |
 | APPT-08 | Phase 5 | Pending |
 | APPT-09 | Phase 5 | Pending |
-| APPT-10 | Phase 5 | Pending |
-| APPT-11 | Phase 5 | Pending |
+| APPT-10 | Phase 5 | Complete |
+| APPT-11 | Phase 5 | Complete |
 | APPT-12 | Phase 5 | Pending |
 | APPT-13 | Phase 5 | Pending |
 | PATIENT-01 | Phase 6 | Pending |
