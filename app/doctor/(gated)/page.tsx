@@ -9,7 +9,12 @@ export default function DoctorHomePage() {
       <p className="max-w-md text-muted-foreground">
         This is your doctor home base. Appointment details will appear here in a later phase.
       </p>
-      <Button render={<Link href="/doctor/schedule" />}>Manage my schedule</Button>
+      <div className="flex items-center gap-2">
+        <Button render={<Link href="/doctor/schedule" />}>Manage my schedule</Button>
+        <Button variant="outline" render={<Link href="/doctor/appointments" />}>
+          My appointments
+        </Button>
+      </div>
     </main>
   );
 }
