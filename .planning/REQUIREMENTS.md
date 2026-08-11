@@ -56,8 +56,8 @@
 - [ ] **APPT-09**: Rescheduling releases the old slot and reserves the new one atomically
 - [x] **APPT-10**: Patient can view their upcoming appointments
 - [x] **APPT-11**: Patient can view their past appointments
-- [ ] **APPT-12**: Doctor can view their upcoming appointments
-- [ ] **APPT-13**: Doctor can view their past appointments
+- [x] **APPT-12**: Doctor can view their upcoming appointments
+- [x] **APPT-13**: Doctor can view their past appointments
 
 ### Patient Space
 
@@ -178,8 +178,8 @@ Which phases cover which requirements.
 | APPT-09 | Phase 5 | Pending |
 | APPT-10 | Phase 5 | Complete |
 | APPT-11 | Phase 5 | Complete |
-| APPT-12 | Phase 5 | Pending |
-| APPT-13 | Phase 5 | Pending |
+| APPT-12 | Phase 5 | Complete |
+| APPT-13 | Phase 5 | Complete |
 | PATIENT-01 | Phase 6 | Pending |
 | PATIENT-02 | Phase 6 | Pending |
 | PATIENT-03 | Phase 6 | Pending |

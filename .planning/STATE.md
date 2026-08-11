@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 05
 current_phase_name: Appointment Booking & Lifecycle
 status: executing
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-08-11T08:40:03.595Z"
+stopped_at: Completed 05-03-PLAN.md
+last_updated: "2026-08-11T10:18:35.716Z"
 last_activity: 2026-08-10
 last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 29
-  completed_plans: 26
+  completed_plans: 27
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-08)
 ## Current Position
 
 Phase: 05 (Appointment Booking & Lifecycle) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-08-10 — Phase 05 execution started
 
-Progress: [█████████░] 90%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -84,6 +84,7 @@ Progress: [█████████░] 90%
 | Phase 04 P04 | 20min | 2 tasks | 2 files |
 | Phase 05 P01 | 90min | 3 tasks | 12 files |
 | Phase 05 P02 | 64min | 3 tasks | 3 files |
+| Phase 05 P03 | 45min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -149,6 +150,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 05] Plan 05-01: Rule 1 fix — added migration 20260811070000 granting a patient SELECT on the availability_slots row backing their own appointment regardless of status; the original policy only allowed reading a slot while status='available', silently breaking the post-booking read and the entire /patient/appointments list once a slot flipped to booked
 - [Phase ?]: [Phase 5] Plan 05-02: cancel route uses session-only guard (no requirePatient()/requireDoctor()) since D-12 lets both the patient and the owning doctor cancel; cancel_appointment()'s own auth.uid()-scoped filter is the real authorization boundary
 - [Phase ?]: [Phase 5] Plan 05-02: cancel eligibility on /patient/appointments read from appointmentBadge().label === "Confirmed" plus isCancelledStatus(), not a direct Date.now() comparison in the row render body, to satisfy eslint react-hooks/purity
+- [Phase ?]: [Phase 5] Plan 05-03: DOCTOR_APPOINTMENT_SELECT deliberately omits patient email and slot reason (T-05-08); Rule 1 fix — added profiles_select_via_own_appointment_doctor RLS policy so the doctor-scoped patient embed stops returning null
 
 ### Pending Todos
 
@@ -170,6 +172,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-11T08:40:03.552Z
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-08-11T10:18:35.628Z
+Stopped at: Completed 05-03-PLAN.md
 Resume file: None
