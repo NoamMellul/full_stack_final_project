@@ -16,8 +16,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation — Database Schema & Authentication** - Full data model deployed with RLS, and patients/doctors can securely authenticate with role-based route protection (completed 2026-08-04)
 - [x] **Phase 2: Admin — Doctor & Reference Data Management** - Admin can populate and govern the entire platform catalog (doctors, specialties, neighborhoods, users, appointments oversight) (completed 2026-08-05)
 - [x] **Phase 3: Doctor Discovery — Search & Public Profiles** - Patients can find and evaluate doctors matching their criteria (completed 2026-08-08)
-- [ ] **Phase 4: Doctor Availability Management** - Doctors control their own schedule with conflict-safe slot and block-period management
-- [ ] **Phase 5: Appointment Booking & Lifecycle** - Patients can book, cancel, and reschedule appointments with a guaranteed anti-double-booking constraint
+- [x] **Phase 4: Doctor Availability Management** - Doctors control their own schedule with conflict-safe slot and block-period management (completed 2026-08-09)
+- [x] **Phase 5: Appointment Booking & Lifecycle** - Patients can book, cancel, and reschedule appointments with a guaranteed anti-double-booking constraint (completed 2026-08-11)
 - [ ] **Phase 6: Dashboards, Notifications & Localization** - Patients and doctors get a personalized home base with real-time updates, in a fully bilingual (Hebrew/English, RTL) interface
 
 ## Phase Details
@@ -163,7 +163,26 @@ Plans:
   3. Patient can reschedule an appointment to another available slot, with the old slot released and the new slot reserved atomically in a single transaction.
   4. Patient can view their own upcoming and past appointments, and doctor can view their own upcoming and past appointments.
 
-**Plans**: TBD
+**Plans**: 5/5 plans executed
+
+Plans:
+**Wave 1**
+
+- [x] 05-01-PLAN.md — Appointment RPC migration + booking tracer (patient books end to end, sees their own appointment list)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 05-02-PLAN.md — Patient cancellation: cancel route, confirmation dialog, slot release and re-booking proof
+- [x] 05-03-PLAN.md — Doctor appointment history: doctor-scoped read endpoint and `/doctor/appointments` page
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [x] 05-04-PLAN.md — Patient reschedule: reschedule route, day-grouped slot picker, atomicity under concurrency
+- [x] 05-05-PLAN.md — Doctor cancellation on `/doctor/appointments` and the phase's full-suite gate
+
+**Cross-cutting constraints:**
+
+- Every layout and spacing class added by this plan uses logical properties (`ps-`, `pe-`, `ms-`, `me-`, `text-start`, `text-end`) and no physical direction class (UI-SPEC RTL note)
 
 ### Phase 6: Dashboards, Notifications & Localization
 
@@ -191,5 +210,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Admin — Doctor & Reference Data Management | 7/7 | Complete    | 2026-08-05 |
 | 3. Doctor Discovery — Search & Public Profiles | 7/7 | Complete    | 2026-08-08 |
 | 4. Doctor Availability Management | 4/4 | In Progress|  |
-| 5. Appointment Booking & Lifecycle | 0/TBD | Not started | - |
+| 5. Appointment Booking & Lifecycle | 5/5 | Complete    | 2026-08-11 |
 | 6. Dashboards, Notifications & Localization | 0/TBD | Not started | - |

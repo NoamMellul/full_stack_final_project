@@ -2,35 +2,35 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 04
-current_phase_name: Doctor Availability Management
-status: verifying
-stopped_at: Completed 04-04-PLAN.md — Phase 04 complete
-last_updated: "2026-08-09T15:08:34.967Z"
-last_activity: 2026-08-09
+current_phase: 06
+current_phase_name: Dashboards, Notifications & Localization
+status: planning
+stopped_at: Completed 05-05-PLAN.md (Phase 5 complete, 5/5 plans)
+last_updated: "2026-08-11T16:32:22.693Z"
+last_activity: 2026-08-11
+last_activity_desc: Phase 05 complete, transitioned to Phase 06
 progress:
   total_phases: 6
-  completed_phases: 4
-  total_plans: 24
-  completed_plans: 24
-last_activity_desc: Phase 04 execution started
+  completed_phases: 5
+  total_plans: 29
+  completed_plans: 29
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-08)
+See: .planning/PROJECT.md (updated 2026-08-11)
 
 **Core value:** A patient must be able to find a doctor matching their criteria and book an available slot in a few clicks, with an absolute guarantee that two patients never book the same slot.
-**Current focus:** Phase 04 — Doctor Availability Management
+**Current focus:** Phase 06 — Dashboards, Notifications & Localization
 
 ## Current Position
 
-Phase: 04 (Doctor Availability Management) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-08-09
+Phase: 06 — Dashboards, Notifications & Localization
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-08-11 — Phase 05 complete, transitioned to Phase 06
 
 Progress: [██████████] 100%
 
@@ -38,7 +38,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 20
+- Total plans completed: 25
 - Average duration: - min
 - Total execution time: 0 hours
 
@@ -49,6 +49,7 @@ Progress: [██████████] 100%
 | 01 | 6 | - | - |
 | 02 | 7 | - | - |
 | 3 | 7 | - | - |
+| 05 | 5 | - | - |
 
 **Recent Trend:**
 
@@ -82,6 +83,11 @@ Progress: [██████████] 100%
 | Phase 04 P02 | 65min | 3 tasks | 3 files |
 | Phase 04 P03 | 120min | 3 tasks | 4 files |
 | Phase 04 P04 | 20min | 2 tasks | 2 files |
+| Phase 05 P01 | 90min | 3 tasks | 12 files |
+| Phase 05 P02 | 64min | 3 tasks | 3 files |
+| Phase 05 P03 | 45min | 3 tasks | 5 files |
+| Phase 05 P04 | 40min | 3 tasks | 3 files |
+| Phase 05 P05 | 35min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -141,6 +147,21 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 04] Plan 04-02: DELETE /api/doctor/slots/[id] shares one 404 message across missing/already-deleted/foreign-doctor ids (never 403 for a foreign id) so the response can never confirm another doctor's slot id is real (T-04-03); booked-row rejection reads status from the same-request lookup, never client-supplied or list-cached (T-04-04)
 - [Phase 04]: [Phase 04] Plan 04-03: reason is sent/stored exactly as submitted, never trimmed — trim() is used only to test blankness (Rule 1 fix, found by Task 3 case 6, so a reason's meaningful leading/trailing whitespace round-trips byte-identical per D-04) — The original implementation trimmed the reason before both the client fetch body and the route's insert, which would have silently altered a reason with meaningful whitespace and broken D-04's byte-identical round-trip requirement.
 - [Phase 04]: [Phase 04] Plan 04-04: doctor-schedule-overlap.spec.ts and doctor-schedule-visibility.spec.ts required zero production code changes — both passed against the routes exactly as plans 04-01 through 04-03 left them — This is the plan's central finding: the database-level guarantee (one exclusion constraint, one generic message, one RLS policy) held under real Promise.all concurrency and across the full status/ownership/visibility matrix with no application-layer patching needed, closing AVAIL-03 and AVAIL-07 and completing Phase 04.
+- [Phase ?]: [Phase 05] Plan 05-01: Task 1 checkpoint auto-selected option-b under workflow.auto_advance — revoke insert on public.appointments from anon/authenticated, forcing every appointment row through book_appointment()
+- [Phase ?]: [Phase 05] Plan 05-01: book_appointment()/reschedule_appointment()/cancel_appointment() SECURITY DEFINER functions locked with five custom SQLSTATE codes (MR001-MR005); route layer branches strictly on error.code, never error.message
+- [Phase ?]: [Phase 05] Plan 05-01: lib/appointments.ts is the single shared source for the derived Confirmed/Past/Cancelled badge and the Upcoming/Past split, consumed by both the patient page (this plan) and the doctor page (05-03)
+- [Phase ?]: [Phase 05] Plan 05-01: Rule 1 fix — added migration 20260811070000 granting a patient SELECT on the availability_slots row backing their own appointment regardless of status; the original policy only allowed reading a slot while status='available', silently breaking the post-booking read and the entire /patient/appointments list once a slot flipped to booked
+- [Phase ?]: [Phase 5] Plan 05-02: cancel route uses session-only guard (no requirePatient()/requireDoctor()) since D-12 lets both the patient and the owning doctor cancel; cancel_appointment()'s own auth.uid()-scoped filter is the real authorization boundary
+- [Phase ?]: [Phase 5] Plan 05-02: cancel eligibility on /patient/appointments read from appointmentBadge().label === "Confirmed" plus isCancelledStatus(), not a direct Date.now() comparison in the row render body, to satisfy eslint react-hooks/purity
+- [Phase ?]: [Phase 5] Plan 05-03: DOCTOR_APPOINTMENT_SELECT deliberately omits patient email and slot reason (T-05-08); Rule 1 fix — added profiles_select_via_own_appointment_doctor RLS policy so the doctor-scoped patient embed stops returning null
+- [Phase ?]: [Phase 5] Plan 05-04: reschedule route uses requirePatient() (unlike the session-only cancel route) since D-06/D-07 scope rescheduling to the patient alone; SQLSTATE mapping locked at MR001->409 slot message (byte-identical to booking's MR001 copy), MR002->409 appointment message, MR004->404, 40P01->409 retry message
+- [Phase ?]: [Phase 5] Plan 05-04: RESEARCH Open Question 1 resolved for consistency with D-19 — the reschedule target inherits the same is_active doctor guard as booking, inside reschedule_appointment() itself, proven by Task 3 case 7; still flagged for end-of-phase confirmation
+- [Phase ?]: [Phase 5] Plan 05-04: fixed leftover no-op debug assertions in a prior interrupted session's appointment-reschedule.spec.ts (Rule 1) and widened the D-10 rejection matrix test's timeout to 90s for its six sequential fixture+login sub-cases (Rule 3) — full 282-test suite green afterward
+- [Phase ?]: [Phase 5] Plan 05-05: doctor page's Cancel appointment button submits to the identical shared PATCH /api/appointments/[id]/cancel route the patient page already uses (no doctor-specific endpoint, no migration, no change to cancel_appointment()) — cancel_appointment() derives cancelled_by_doctor purely from auth.uid() vs patient_id, client never sends an actor field, proven in both directions (T-05-02); row eligibility reads appointmentBadge().label === "Confirmed" plus isCancelledStatus(), mirroring the patient page's pattern
+- [Phase ?]: [Phase 5] Plan 05-05: doctor dialog state/handler names (cancellingAppointment/cancelReason/cancelError/isCancelling, openCancelDialog/closeCancelDialog/handleConfirmCancel) mirror the patient page's plan-05-02 naming exactly, per that plan's explicit contract, even though they are separate files
+- [Phase ?]: [Phase 5] Plan 05-05 closes the phase: all 13 APPT requirements complete, full 290-test Playwright suite green across 28 spec files, zero regressions; RESEARCH Open Question 1 (is_active guard on reschedule, flagged by plan 05-04 for end-of-phase confirmation) confirmed standing, not overturned
+- [Phase 5] Post-execution closure: code review found 2 critical (CR-01 direct UPDATE bypass on `appointments`, CR-02 patient email leak to doctors via `profiles` RLS) + 2 warning findings, all 4 fixed and committed (`ab3c498`, `0359be3`, `ddb9c73`, `1fb3f63`); UAT 37/37 passed (05-UAT.md); security threat verification closed 19/19 threats (05-SECURITY.md, threats_open: 0); goal-backward phase verification passed with live re-run evidence including standalone Playwright specs independently re-proving both CR-01 and CR-02 fixes hold (05-VERIFICATION.md)
+- [Housekeeping] Discovered Phase 4's ROADMAP.md summary line was never checked off (`[ ]` instead of `[x]`) despite 4/4 plans executed and complete since ~2026-08-09 — corrected to `[x] ... (completed 2026-08-09)`; the per-phase detail section already showed 4/4 complete, so this was a synthesis-line-only omission, not missing work
 
 ### Pending Todos
 
@@ -151,6 +172,7 @@ None yet.
 - Shared remote dev database holds accumulated Playwright test residue in specialties/locations/doctors (test-created rows never cleaned up across Phase 02 plans 01-05) — not a defect in 02-06's seed script, which correctly seeded and idempotently re-ran its own 12/12/12 demo rows; a project reset or manual cleanup before final demo/grading would present a cleaner catalog
 - ⚠️ [Phase 3] Task 3 acceptance-criterion 'temporarily remove security_invoker/is_active and confirm assertion 2 fails' could not be executed: sandbox classifier blocked all npx supabase db query --linked calls (even read-only). Substituted with grep of the applied migration + a clean npx supabase db advisors --linked report. Recorded as coverage D7 (human_judgment: true) in 03-01-SUMMARY.md for optional human follow-up.
 - ⚠️ [Phase 3] Two non-blocking code-review warnings left unfixed by design (03-REVIEW.md WR-02, WR-03; confirmed still open in 03-VERIFICATION.md's re-verification): out-of-range search pages report a fabricated `total: 0` instead of the real count, and the doctor-profile upcoming-slots query has no `.limit()`. Neither violates a locked must-have; worth a look if a later phase touches either endpoint.
+- ⚠️ [Phase 4] Phase 4 has no `04-VERIFICATION.md`, `04-SECURITY.md`, or `04-UAT.md` — it was executed and its ROADMAP checkbox is now corrected to complete, but it never went through the same closing gates (goal-backward verification, security threat sign-off, UAT) that Phase 5 just did. Not a known defect — Phase 5's own booking flow exercises the availability infrastructure Phase 4 built, and its concurrency tests passed — but the formal artifacts don't exist. Worth backfilling via `/gsd-secure-phase 04` + a Phase 4 verifier pass before the defense if time allows.
 
 ## Deferred Items
 
@@ -162,6 +184,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-09T15:08:34.940Z
-Stopped at: Completed 04-04-PLAN.md — Phase 04 complete
+Last session: 2026-08-11T16:32:22.693Z
+Stopped at: Phase 5 complete (UAT + security + goal-backward verification all passed), transitioned to Phase 6
 Resume file: None
