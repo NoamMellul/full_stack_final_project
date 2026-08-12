@@ -30,7 +30,9 @@ test.describe("AUTH-01: patient signup", () => {
     await page.getByRole("button", { name: "Create account" }).click();
 
     await page.waitForURL("/patient");
-    await expect(page.getByText("Nothing here yet")).toBeVisible();
+    // /patient now renders the real dashboard (plan 06-03) rather than the
+    // "Nothing here yet" placeholder this test originally asserted.
+    await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
 
     const admin = testAdminClient();
     const { data: profile, error } = await admin

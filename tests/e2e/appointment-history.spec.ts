@@ -438,7 +438,10 @@ test.describe("APPT-10/APPT-11/APPT-12/APPT-13: patient and doctor appointment h
 
     const patientHomePage = await patientContext.newPage();
     await patientHomePage.goto("/patient");
-    await patientHomePage.getByRole("link", { name: "My appointments" }).click();
+    // /patient's dashboard (plan 06-03) renames this quick link to
+    // "Appointment history" (same /patient/appointments target as the old
+    // placeholder's "My appointments" button).
+    await patientHomePage.getByRole("link", { name: "Appointment history" }).click();
     await patientHomePage.waitForURL("/patient/appointments");
     await patientHomePage.close();
   });

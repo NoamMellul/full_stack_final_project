@@ -136,7 +136,9 @@ test.describe("ADMIN-04: link a doctor login", () => {
     await page.getByRole("button", { name: "Update password" }).click();
 
     await page.waitForURL("/doctor");
-    await expect(page.getByText("Nothing here yet")).toBeVisible();
+    // /doctor now renders the real dashboard (plan 06-03) rather than the
+    // "Nothing here yet" placeholder this test originally asserted.
+    await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
 
     await page.getByRole("button", { name: "Log out" }).click();
     await page.waitForURL("/");

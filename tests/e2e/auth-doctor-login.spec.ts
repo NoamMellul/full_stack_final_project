@@ -18,7 +18,9 @@ test.describe("AUTH-05: doctor login", () => {
     await page.getByRole("button", { name: "Log in" }).click();
 
     await page.waitForURL("/doctor");
-    await expect(page.getByText("Nothing here yet")).toBeVisible();
+    // /doctor now renders the real dashboard (plan 06-03) rather than the
+    // "Nothing here yet" placeholder this test originally asserted.
+    await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
   });
 
   test("a doctor account cannot reach /patient", async ({ page }) => {

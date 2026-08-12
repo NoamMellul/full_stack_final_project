@@ -18,7 +18,9 @@ test.describe("AUTH-04: session persistence", () => {
 
     await page.reload();
     await expect(page).toHaveURL("/patient");
-    await expect(page.getByText("Nothing here yet")).toBeVisible();
+    // /patient now renders the real dashboard (plan 06-03) rather than the
+    // "Nothing here yet" placeholder this test originally asserted.
+    await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
   });
 
   test("a session survives a second tab in the same browser context", async ({
@@ -36,7 +38,9 @@ test.describe("AUTH-04: session persistence", () => {
     const secondPage = await context.newPage();
     await secondPage.goto("/patient");
     await expect(secondPage).toHaveURL("/patient");
-    await expect(secondPage.getByText("Nothing here yet")).toBeVisible();
+    // /patient now renders the real dashboard (plan 06-03) rather than the
+    // "Nothing here yet" placeholder this test originally asserted.
+    await expect(secondPage.getByRole("heading", { name: "My dashboard" })).toBeVisible();
     await secondPage.close();
   });
 });

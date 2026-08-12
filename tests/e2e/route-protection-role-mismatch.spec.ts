@@ -8,9 +8,12 @@ type Credentials = { email: string; password: string };
 const ROLES: Role[] = ["patient", "doctor", "admin"];
 const ROUTES: Role[] = ["patient", "doctor", "admin"];
 
+// Patient and doctor home routes now render the real dashboard (plan
+// 06-03) — both share the "My dashboard" <h1>, superseding the old
+// per-role placeholder body copy this map originally held.
 const HOME_BODY_COPY: Record<Role, string> = {
-  patient: "This is your patient home base.",
-  doctor: "This is your doctor home base.",
+  patient: "My dashboard",
+  doctor: "My dashboard",
   admin: "Admin dashboard",
 };
 

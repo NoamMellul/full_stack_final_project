@@ -18,7 +18,9 @@ test.describe("AUTH-02: patient login", () => {
     await page.getByRole("button", { name: "Log in" }).click();
 
     await page.waitForURL("/patient");
-    await expect(page.getByText("Nothing here yet")).toBeVisible();
+    // /patient now renders the real dashboard (plan 06-03) rather than the
+    // "Nothing here yet" placeholder this test originally asserted.
+    await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
   });
 
   test("a wrong password and an unregistered address return the byte-identical message", async ({
