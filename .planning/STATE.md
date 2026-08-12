@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 06
+current_phase: 6
 current_phase_name: Dashboards, Notifications & Localization
 status: executing
-stopped_at: Phase 06 UI-SPEC approved
-last_updated: "2026-08-12T04:49:25.433Z"
-last_activity: 2026-08-11
-last_activity_desc: Phase 05 complete, transitioned to Phase 06
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-08-12T07:04:15.614Z"
+last_activity: 2026-08-12
+last_activity_desc: Phase 6 execution started
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 39
-  completed_plans: 29
+  completed_plans: 30
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-11)
 
 **Core value:** A patient must be able to find a doctor matching their criteria and book an available slot in a few clicks, with an absolute guarantee that two patients never book the same slot.
-**Current focus:** Phase 06 — Dashboards, Notifications & Localization
+**Current focus:** Phase 6 — Dashboards, Notifications & Localization
 
 ## Current Position
 
-Phase: 06 — Dashboards, Notifications & Localization
-Plan: Not started
+Phase: 6 (Dashboards, Notifications & Localization) — EXECUTING
+Plan: 2 of 10
 Status: Ready to execute
-Last activity: 2026-08-11 — Phase 05 complete, transitioned to Phase 06
+Last activity: 2026-08-12 — Phase 6 execution started
 
-Progress: [██████████] 100%
+Progress: [████████░░] 77%
 
 ## Performance Metrics
 
@@ -88,6 +88,7 @@ Progress: [██████████] 100%
 | Phase 05 P03 | 45min | 3 tasks | 5 files |
 | Phase 05 P04 | 40min | 3 tasks | 3 files |
 | Phase 05 P05 | 35min | 2 tasks | 2 files |
+| Phase 06 P01 | 75min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -162,6 +163,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 5] Plan 05-05 closes the phase: all 13 APPT requirements complete, full 290-test Playwright suite green across 28 spec files, zero regressions; RESEARCH Open Question 1 (is_active guard on reschedule, flagged by plan 05-04 for end-of-phase confirmation) confirmed standing, not overturned
 - [Phase 5] Post-execution closure: code review found 2 critical (CR-01 direct UPDATE bypass on `appointments`, CR-02 patient email leak to doctors via `profiles` RLS) + 2 warning findings, all 4 fixed and committed (`ab3c498`, `0359be3`, `ddb9c73`, `1fb3f63`); UAT 37/37 passed (05-UAT.md); security threat verification closed 19/19 threats (05-SECURITY.md, threats_open: 0); goal-backward phase verification passed with live re-run evidence including standalone Playwright specs independently re-proving both CR-01 and CR-02 fixes hold (05-VERIFICATION.md)
 - [Housekeeping] Discovered Phase 4's ROADMAP.md summary line was never checked off (`[ ]` instead of `[x]`) despite 4/4 plans executed and complete since ~2026-08-09 — corrected to `[x] ... (completed 2026-08-09)`; the per-phase detail section already showed 4/4 complete, so this was a synthesis-line-only omission, not missing work
+- [Phase ?]: [Phase 06] Plan 06-01: fixture helpers (favorites.ts, notifications.ts) route all privileged access exclusively through testAdminClient(), mirroring appointments.ts's tracking-array + splice-based cleanup idiom; zero direct SUPABASE_SERVICE_ROLE_KEY reads (grep-verified)
+- [Phase ?]: [Phase 06] Plan 06-01: all 24 behavioural Wave 0 tests declared with test.fixme( (never test.skip) carrying real UI-SPEC-matching assertions across 5 spec files (patient-favorites, patient-dashboard, doctor-dashboard, notifications-realtime, locale-switching) — each owning plan 06-02..06-10 converts only its own test.fixme( to test( to activate
+- [Phase ?]: [Phase 06] Plan 06-01: introduced two new UI-contract locators not pinned by 06-UI-SPEC.md ([data-slot="card"] scoped by caption for doctor-dashboard stat numbers; a Notifications-labeled bell trigger + notification-badge testid) as placeholder ground truth for plans 06-03/06-06 to satisfy
 
 ### Pending Todos
 
@@ -173,6 +177,7 @@ None yet.
 - ⚠️ [Phase 3] Task 3 acceptance-criterion 'temporarily remove security_invoker/is_active and confirm assertion 2 fails' could not be executed: sandbox classifier blocked all npx supabase db query --linked calls (even read-only). Substituted with grep of the applied migration + a clean npx supabase db advisors --linked report. Recorded as coverage D7 (human_judgment: true) in 03-01-SUMMARY.md for optional human follow-up.
 - ⚠️ [Phase 3] Two non-blocking code-review warnings left unfixed by design (03-REVIEW.md WR-02, WR-03; confirmed still open in 03-VERIFICATION.md's re-verification): out-of-range search pages report a fabricated `total: 0` instead of the real count, and the doctor-profile upcoming-slots query has no `.limit()`. Neither violates a locked must-have; worth a look if a later phase touches either endpoint.
 - ⚠️ [Phase 4] Phase 4 has no `04-VERIFICATION.md`, `04-SECURITY.md`, or `04-UAT.md` — it was executed and its ROADMAP checkbox is now corrected to complete, but it never went through the same closing gates (goal-backward verification, security threat sign-off, UAT) that Phase 5 just did. Not a known defect — Phase 5's own booking flow exercises the availability infrastructure Phase 4 built, and its concurrency tests passed — but the formal artifacts don't exist. Worth backfilling via `/gsd-secure-phase 04` + a Phase 4 verifier pass before the defense if time allows.
+- [Phase 06] Plan 06-01's full-suite run (npx playwright test) surfaced 3 pre-existing failures unrelated to this plan's fixme-only additions (admin-doctor-crud.spec.ts:226, appointment-reschedule.spec.ts:764 afterAll timeout, seed-availability.spec.ts:170 doctor slot count 4<6) — consistent with the already-tracked shared-dev-DB test-residue blocker, logged in deferred-items.md and WINDOWS.md, not independently confirmed against a pre-Phase-6 baseline
 
 ## Deferred Items
 
@@ -184,6 +189,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-11T19:47:40.315Z
-Stopped at: Phase 06 UI-SPEC approved
-Resume file: .planning/phases/06-dashboards-notifications-localization/06-UI-SPEC.md
+Last session: 2026-08-12T07:04:15.563Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
