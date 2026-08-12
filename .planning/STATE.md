@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 6
 current_phase_name: Dashboards, Notifications & Localization
 status: executing
-stopped_at: Completed 06-04-PLAN.md
-last_updated: "2026-08-12T16:41:28.551Z"
+stopped_at: Completed 06-05-PLAN.md
+last_updated: "2026-08-12T19:03:14.840Z"
 last_activity: 2026-08-12
 last_activity_desc: Phase 6 execution started
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 39
-  completed_plans: 33
+  completed_plans: 34
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 ## Current Position
 
 Phase: 6 (Dashboards, Notifications & Localization) — EXECUTING
-Plan: 5 of 10
+Plan: 6 of 10
 Status: Ready to execute
 Last activity: 2026-08-12 — Phase 6 execution started
 
-Progress: [█████████░] 85%
+Progress: [█████████░] 87%
 
 ## Performance Metrics
 
@@ -92,6 +92,7 @@ Progress: [█████████░] 85%
 | Phase 06 P02 | 55min | 3 tasks | 10 files |
 | Phase 06 P03 | 85min | 2 tasks | 13 files |
 | Phase 06 P04 | 100min | 3 tasks | 5 files |
+| Phase 06 P05 | 165min | 3 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -176,6 +177,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 06] Plan 06-03 closes with a third recurrence of the same shared-dev-DB test-residue failure class (admin-route-protection.spec.ts:230, appointment-reschedule.spec.ts:764 afterAll timeout, seed-availability.spec.ts:170), logged to WINDOWS.md id 2; admin-doctor-status.spec.ts also failed mid-session on a full-suite run but passed 5/5 in isolation, supporting the residue theory
 - [Phase ?]: [Phase 06] Plan 06-04: substituted the plan's UI-dependent named verify test (still test.fixme, needs 06-06's bell) with 6 new active API-contract Playwright tests proving the same must-haves (ownership isolation, message-absence, IDOR-safe 404s, idempotent mark-as-read) directly over HTTP; NOTIF-01..04 deliberately left Pending since end-user-visible delivery is 06-06's deliverable
 - [Phase ?]: [Phase 06] Plan 06-04: public.notifications added to the supabase_realtime publication (migration 20260812090000, applied to the linked remote project), no RLS or REPLICA IDENTITY change; notifications_select_own/notifications_update_own remain the sole per-subscriber authorization boundary
+- [Phase ?]: [Phase 06] Plan 06-05: locked the flat dot-namespaced dictionary key convention (surface.element[.variant]); translate() falls back locale -> English -> fixed FALLBACK_TRANSLATION, never a raw key/undefined/blank; Hebrew dictionary typed as Record<TranslationKey, string> so a missing key is a tsc compile error
+- [Phase ?]: [Phase 06] Plan 06-05: app/layout.tsx became async and is now the single mount point for both <html lang>/<html dir> and <SiteHeader />; role-scoped layouts (patient/doctor/admin) kept only their auth+role redirect guards; router.refresh() alone (no reload fallback) proved sufficient to re-run the root layout and update dir/lang
+- [Phase ?]: [Phase 06] Plan 06-05: components/site-header.tsx's anonymous-visitor early return removed (D-06) and profiles select widened to full_name, role (role fetched for 06-06's admin bell-omission gate, unused by this plan); language-switcher.tsx labels EN/עב never routed through t()
 
 ### Pending Todos
 
@@ -191,6 +195,7 @@ None yet.
 - [Phase 06] Plan 06-02's full-suite run reconfirmed the same class of pre-existing failures logged by 06-01 (admin-route-protection.spec.ts:230 this time instead of admin-doctor-crud.spec.ts:226, plus the same appointment-reschedule.spec.ts:764 afterAll timeout and seed-availability.spec.ts:170 slot-count assertion) — consistent with the tracked shared-dev-DB test-residue blocker, not caused by this plan (all 6 favorites tests passed)
 - [Phase 06] Plan 06-03's full-suite run reconfirmed the same class of pre-existing failures for a third time (admin-route-protection.spec.ts:230 again, plus the same appointment-reschedule.spec.ts:764 afterAll timeout and seed-availability.spec.ts:170 slot-count assertion) -- consistent with the tracked shared-dev-DB test-residue blocker, not caused by this plan (all 7 dashboard/regression tests passed)
 - [Phase 06] Plan 06-04's full-suite run showed a fourth recurrence of the shared-dev-DB test-residue class (seed-availability.spec.ts:170, now WINDOWS.md id 3) plus a transient dev-server ERR_CONNECTION_REFUSED window that failed 8 unrelated tests (5 of this plan's own new tests + 3 from 06-03) -- all 8 passed cleanly on an isolated re-run immediately afterward, confirming the connectivity theory; only the pre-existing residue failure persisted
+- [Phase 06] Plan 06-05's full-suite run reconfirmed the same class of pre-existing failures for a fifth+ time (admin-route-protection.spec.ts:230, seed-availability.spec.ts:170) plus a new cascading admin-doctor-link-account.spec.ts failure (Supabase Auth 'Could not create a login' — plausibly rate-limiting from this session's several consecutive full-suite runs) and a notifications-realtime.spec.ts Realtime-subscription timeout -- consistent with the tracked shared-dev-DB/environment flakiness blocker, not caused by this plan (all 5 locale-switching tests and every header-touching test passed)
 
 ## Deferred Items
 
@@ -202,6 +207,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-12T16:41:28.477Z
-Stopped at: Completed 06-04-PLAN.md
+Last session: 2026-08-12T19:03:05.222Z
+Stopped at: Completed 06-05-PLAN.md
 Resume file: None

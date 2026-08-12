@@ -91,8 +91,8 @@
 
 ### Internationalization
 
-- [ ] **I18N-01**: User can switch the interface between Hebrew and English
-- [ ] **I18N-02**: Interface layout mirrors correctly (RTL) when Hebrew is selected
+- [x] **I18N-01**: User can switch the interface between Hebrew and English
+- [x] **I18N-02**: Interface layout mirrors correctly (RTL) when Hebrew is selected
 
 ## v2 Requirements
 
@@ -190,8 +190,8 @@ Which phases cover which requirements.
 | NOTIF-02 | Phase 6 | Pending |
 | NOTIF-03 | Phase 6 | Pending |
 | NOTIF-04 | Phase 6 | Pending |
-| I18N-01 | Phase 6 | Pending |
-| I18N-02 | Phase 6 | Pending |
+| I18N-01 | Phase 6 | Complete |
+| I18N-02 | Phase 6 | Complete |
 
 **Coverage:**
 
