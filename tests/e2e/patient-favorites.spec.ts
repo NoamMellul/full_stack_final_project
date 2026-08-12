@@ -113,7 +113,7 @@ test.describe("PATIENT-01/02/03: favorites — add, remove, cross-entry-point co
     },
   );
 
-  test.fixme(
+  test(
     "patient removes a favorite from the favorites list",
     async ({ page }) => {
       const patient = await createTestUser("patient");
@@ -139,7 +139,7 @@ test.describe("PATIENT-01/02/03: favorites — add, remove, cross-entry-point co
     },
   );
 
-  test.fixme(
+  test(
     "favorites list shows the empty state when the patient has no favorites",
     async ({ page }) => {
       const patient = await createTestUser("patient");
