@@ -12,8 +12,8 @@ import { jerusalemDayKey, jerusalemWallClockToUtc } from "../../lib/timezone";
 
 // PATIENT-04: the patient dashboard (app/patient/page.tsx, rewritten by
 // plan 06-03) shows an upcoming-appointment summary and three quick links.
-// Declared with test.fixme so the suite stays green until 06-03 exists —
-// 06-03 converts each test.fixme( to test( without touching the assertions.
+// Activated by 06-03 (converted from the placeholder test.fixme( declared
+// in 06-01) without touching the assertions.
 
 function futureJerusalemDay(daysAhead: number): { year: number; month: number; day: number } {
   const future = new Date(Date.now() + daysAhead * 24 * 60 * 60 * 1000);
@@ -37,7 +37,7 @@ test.describe("PATIENT-04: patient dashboard upcoming summary + quick links", ()
     await cleanupTestUsers();
   });
 
-  test.fixme(
+  test(
     "patient dashboard lists the next upcoming appointment",
     async ({ page }) => {
       const patient = await createTestUser("patient");
@@ -68,7 +68,7 @@ test.describe("PATIENT-04: patient dashboard upcoming summary + quick links", ()
     },
   );
 
-  test.fixme(
+  test(
     "patient dashboard shows the empty state with no upcoming appointments",
     async ({ page }) => {
       const patient = await createTestUser("patient");
@@ -84,7 +84,7 @@ test.describe("PATIENT-04: patient dashboard upcoming summary + quick links", ()
     },
   );
 
-  test.fixme(
+  test(
     "patient dashboard quick links navigate to search, favorites and appointment history",
     async ({ page }) => {
       const patient = await createTestUser("patient");
