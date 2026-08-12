@@ -32,7 +32,7 @@ test.describe("PATIENT-01/02/03: favorites — add, remove, cross-entry-point co
     await cleanupTestUsers();
   });
 
-  test.fixme(
+  test(
     "patient adds a favorite from the doctor profile page",
     async ({ page }) => {
       const patient = await createTestUser("patient");
@@ -49,9 +49,20 @@ test.describe("PATIENT-01/02/03: favorites — add, remove, cross-entry-point co
 
       const toggle = page.getByRole("button", { name: "Add to favorites" });
       await expect(toggle).toBeVisible();
+
+      // FavoriteToggle flips its icon/aria-label optimistically, before the
+      // POST resolves (UI-SPEC "Toggling" state) — the visibility assertion
+      // below can therefore pass well before the write lands. Wait for the
+      // actual response so the DB assertion is not racing the request.
+      const favoritePost = page.waitForResponse(
+        (response) =>
+          response.url().includes("/api/patient/favorites") &&
+          response.request().method() === "POST",
+      );
       await toggle.click();
 
       await expect(page.getByRole("button", { name: "Remove from favorites" })).toBeVisible();
+      await favoritePost;
       expect(await readFavoriteIds(patient.id)).toContain(doctor.id);
     },
   );

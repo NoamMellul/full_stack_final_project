@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import FavoriteToggle from "@/components/favorite-toggle";
 import InitialsAvatar from "@/components/initials-avatar";
 import { createClient } from "@/lib/supabase/client";
 import { formatJerusalemDayHeading, formatJerusalemTime, jerusalemDayKey } from "@/lib/timezone";
@@ -42,6 +43,11 @@ type UpcomingSlot = {
 type SlotDayGroup = {
   dayKey: string;
   slots: UpcomingSlot[];
+};
+
+type FavoritesState = {
+  role: "patient" | "anonymous" | "hidden";
+  favoritedIds: Set<string>;
 };
 
 function groupSlotsByJerusalemDay(slots: UpcomingSlot[]): SlotDayGroup[] {
@@ -92,6 +98,15 @@ function DoctorProfilePageInner() {
   const [bookingApiError, setBookingApiError] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
 
+  // Resolved once on mount — no separate loading state, the toggle simply
+  // renders unfavorited until this resolves. 200 means the viewer is a
+  // patient (populate the set), 401 means anonymous, 403 means a doctor or
+  // admin viewer (hidden entirely, per D-01's role-gating rule).
+  const [favoritesState, setFavoritesState] = useState<FavoritesState>({
+    role: "anonymous",
+    favoritedIds: new Set(),
+  });
+
   const loadDoctor = useCallback(async () => {
     setStatus("loading");
     try {
@@ -120,6 +135,31 @@ function DoctorProfilePageInner() {
     }
     void runLoad();
   }, [loadDoctor]);
+
+  useEffect(() => {
+    async function loadFavoritesState() {
+      try {
+        const response = await fetch("/api/patient/favorites");
+        if (response.status === 401) {
+          setFavoritesState({ role: "anonymous", favoritedIds: new Set() });
+          return;
+        }
+        if (response.status === 403) {
+          setFavoritesState({ role: "hidden", favoritedIds: new Set() });
+          return;
+        }
+        if (!response.ok) return;
+        const data = await response.json();
+        const favoritedIds = new Set<string>(
+          (data.favorites as { doctor_id: string }[]).map((entry) => entry.doctor_id),
+        );
+        setFavoritesState({ role: "patient", favoritedIds });
+      } catch {
+        // Leave the default (anonymous, unfavorited) state on a network error.
+      }
+    }
+    void loadFavoritesState();
+  }, []);
 
   // Session check happens client-side because /doctors/[id] is a public
   // page that never passes through proxy.ts's request gate (D-04). An
@@ -229,6 +269,13 @@ function DoctorProfilePageInner() {
         )}
         <h1 className="text-2xl font-semibold">{doctor.full_name}</h1>
         {doctor.is_demo ? <Badge variant="secondary">Demo profile</Badge> : null}
+        {favoritesState.role !== "hidden" ? (
+          <FavoriteToggle
+            doctorId={doctor.id}
+            initialFavorited={favoritesState.favoritedIds.has(doctor.id)}
+            viewerRole={favoritesState.role}
+          />
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-1 text-sm text-muted-foreground">
