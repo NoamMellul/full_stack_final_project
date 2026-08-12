@@ -291,3 +291,59 @@ test.describe("NOTIF-01/02/03/04: notifications on booking, cancel, reschedule",
     },
   );
 });
+
+// GET /api/notifications and PATCH /api/notifications/[id]/read (06-04):
+// direct API-level proof of the must-haves this plan's routes are
+// responsible for. This is deliberately independent of the UI-dependent
+// "one user never receives another user's notification" test above (still
+// test.fixme — it needs the Notifications trigger button and bell dropdown
+// 06-06 builds); these tests exercise the same isolation/ownership contract
+// through the HTTP surface alone, so the routes have real, executable
+// verification in this plan rather than borrowing a UI-gated title.
+test.describe("GET/PATCH /api/notifications API contract (06-04)", () => {
+  test.afterAll(async () => {
+    await cleanupTestNotifications();
+    await cleanupTestUsers();
+  });
+
+  test("GET /api/notifications requires authentication", async ({ request }) => {
+    const response = await request.get("/api/notifications");
+    expect(response.status()).toBe(401);
+    expect(await response.json()).toEqual({ error: "Not authenticated." });
+  });
+
+  test("GET /api/notifications returns the caller's own notifications, message absent", async ({
+    page,
+  }) => {
+    const patient = await createTestUser("patient");
+    const notification = await insertTestNotification({
+      userId: patient.id,
+      type: "appointment_booked",
+    });
+
+    await loginAsPatient(page, patient);
+    const response = await page.request.get("/api/notifications");
+    expect(response.status()).toBe(200);
+
+    const body = await response.json();
+    expect(body.notifications).toHaveLength(1);
+    const row = body.notifications[0];
+    expect(Object.keys(row).sort()).toEqual(
+      ["created_at", "id", "read_at", "related_appointment_id", "type"].sort(),
+    );
+    expect(row.id).toBe(notification.id);
+    expect(row).not.toHaveProperty("message");
+  });
+
+  test("GET /api/notifications never returns another user's notification", async ({ page }) => {
+    const viewer = await createTestUser("patient");
+    const other = await createTestUser("patient");
+    await insertTestNotification({ userId: other.id, type: "appointment_booked" });
+
+    await loginAsPatient(page, viewer);
+    const response = await page.request.get("/api/notifications");
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body.notifications).toHaveLength(0);
+  });
+});
