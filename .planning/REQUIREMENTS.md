@@ -61,9 +61,9 @@
 
 ### Patient Space
 
-- [ ] **PATIENT-01**: Patient can add a doctor to favorites
-- [ ] **PATIENT-02**: Patient can remove a doctor from favorites
-- [ ] **PATIENT-03**: Patient can view their list of favorite doctors
+- [x] **PATIENT-01**: Patient can add a doctor to favorites
+- [x] **PATIENT-02**: Patient can remove a doctor from favorites
+- [x] **PATIENT-03**: Patient can view their list of favorite doctors
 - [ ] **PATIENT-04**: Patient dashboard shows a summary of upcoming appointments
 
 ### Doctor Space
@@ -180,9 +180,9 @@ Which phases cover which requirements.
 | APPT-11 | Phase 5 | Complete |
 | APPT-12 | Phase 5 | Complete |
 | APPT-13 | Phase 5 | Complete |
-| PATIENT-01 | Phase 6 | Pending |
-| PATIENT-02 | Phase 6 | Pending |
-| PATIENT-03 | Phase 6 | Pending |
+| PATIENT-01 | Phase 6 | Complete |
+| PATIENT-02 | Phase 6 | Complete |
+| PATIENT-03 | Phase 6 | Complete |
 | PATIENT-04 | Phase 6 | Pending |
 | DOCTOR-01 | Phase 6 | Pending |
 | DOCTOR-02 | Phase 6 | Pending |

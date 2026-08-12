@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 6
 current_phase_name: Dashboards, Notifications & Localization
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-08-12T07:04:15.614Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-08-12T08:08:37.776Z"
 last_activity: 2026-08-12
 last_activity_desc: Phase 6 execution started
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 39
-  completed_plans: 30
+  completed_plans: 31
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 ## Current Position
 
 Phase: 6 (Dashboards, Notifications & Localization) — EXECUTING
-Plan: 2 of 10
+Plan: 3 of 10
 Status: Ready to execute
 Last activity: 2026-08-12 — Phase 6 execution started
 
-Progress: [████████░░] 77%
+Progress: [████████░░] 79%
 
 ## Performance Metrics
 
@@ -89,6 +89,7 @@ Progress: [████████░░] 77%
 | Phase 05 P04 | 40min | 3 tasks | 3 files |
 | Phase 05 P05 | 35min | 2 tasks | 2 files |
 | Phase 06 P01 | 75min | 2 tasks | 9 files |
+| Phase 06 P02 | 55min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -166,6 +167,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 06] Plan 06-01: fixture helpers (favorites.ts, notifications.ts) route all privileged access exclusively through testAdminClient(), mirroring appointments.ts's tracking-array + splice-based cleanup idiom; zero direct SUPABASE_SERVICE_ROLE_KEY reads (grep-verified)
 - [Phase ?]: [Phase 06] Plan 06-01: all 24 behavioural Wave 0 tests declared with test.fixme( (never test.skip) carrying real UI-SPEC-matching assertions across 5 spec files (patient-favorites, patient-dashboard, doctor-dashboard, notifications-realtime, locale-switching) — each owning plan 06-02..06-10 converts only its own test.fixme( to test( to activate
 - [Phase ?]: [Phase 06] Plan 06-01: introduced two new UI-contract locators not pinned by 06-UI-SPEC.md ([data-slot="card"] scoped by caption for doctor-dashboard stat numbers; a Notifications-labeled bell trigger + notification-badge testid) as placeholder ground truth for plans 06-03/06-06 to satisfy
+- [Phase ?]: [Phase 06] Plan 06-02: [id] in DELETE /api/patient/favorites/[id] is doctors.id (not favorites.id), matching the toggle's by-doctor-id UX; patient_id on POST is always taken from guard.userId, never the request body; a deactivated doctor's favorites row returns doctor: null rather than being filtered server-side
+- [Phase ?]: [Phase 06] Plan 06-02: D-01 cross-entry-point consistency satisfied by each page independently re-fetching GET /api/patient/favorites once on mount (no shared favorites client store/context); FavoriteToggle accepts an optional className merged via cn, and syncs isFavorited from a late-resolving initialFavorited via a hasInteractedRef guard so a parent's async fetch never clobbers an in-flight optimistic click
 
 ### Pending Todos
 
@@ -178,6 +181,7 @@ None yet.
 - ⚠️ [Phase 3] Two non-blocking code-review warnings left unfixed by design (03-REVIEW.md WR-02, WR-03; confirmed still open in 03-VERIFICATION.md's re-verification): out-of-range search pages report a fabricated `total: 0` instead of the real count, and the doctor-profile upcoming-slots query has no `.limit()`. Neither violates a locked must-have; worth a look if a later phase touches either endpoint.
 - ⚠️ [Phase 4] Phase 4 has no `04-VERIFICATION.md`, `04-SECURITY.md`, or `04-UAT.md` — it was executed and its ROADMAP checkbox is now corrected to complete, but it never went through the same closing gates (goal-backward verification, security threat sign-off, UAT) that Phase 5 just did. Not a known defect — Phase 5's own booking flow exercises the availability infrastructure Phase 4 built, and its concurrency tests passed — but the formal artifacts don't exist. Worth backfilling via `/gsd-secure-phase 04` + a Phase 4 verifier pass before the defense if time allows.
 - [Phase 06] Plan 06-01's full-suite run (npx playwright test) surfaced 3 pre-existing failures unrelated to this plan's fixme-only additions (admin-doctor-crud.spec.ts:226, appointment-reschedule.spec.ts:764 afterAll timeout, seed-availability.spec.ts:170 doctor slot count 4<6) — consistent with the already-tracked shared-dev-DB test-residue blocker, logged in deferred-items.md and WINDOWS.md, not independently confirmed against a pre-Phase-6 baseline
+- [Phase 06] Plan 06-02's full-suite run reconfirmed the same class of pre-existing failures logged by 06-01 (admin-route-protection.spec.ts:230 this time instead of admin-doctor-crud.spec.ts:226, plus the same appointment-reschedule.spec.ts:764 afterAll timeout and seed-availability.spec.ts:170 slot-count assertion) — consistent with the tracked shared-dev-DB test-residue blocker, not caused by this plan (all 6 favorites tests passed)
 
 ## Deferred Items
 
@@ -189,6 +193,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-12T07:04:15.563Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-08-12T08:08:37.746Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
