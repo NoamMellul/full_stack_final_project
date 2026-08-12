@@ -11,7 +11,7 @@ import { expect, test } from "@playwright/test";
 const LOCALE_COOKIE_NAME = "locale";
 
 test.describe("I18N-01/I18N-02: language switcher and RTL mirroring", () => {
-  test.fixme(
+  test(
     "switching to Hebrew sets lang and dir on the html element",
     async ({ page }) => {
       await page.goto("/search");
@@ -25,7 +25,7 @@ test.describe("I18N-01/I18N-02: language switcher and RTL mirroring", () => {
     },
   );
 
-  test.fixme(
+  test(
     "switching back to English restores ltr",
     async ({ page, context }) => {
       await context.addCookies([
@@ -60,7 +60,7 @@ test.describe("I18N-01/I18N-02: language switcher and RTL mirroring", () => {
     },
   );
 
-  test.fixme(
+  test(
     "the language switcher is available to a logged-out visitor",
     async ({ page }) => {
       await page.goto("/");
@@ -69,7 +69,7 @@ test.describe("I18N-01/I18N-02: language switcher and RTL mirroring", () => {
     },
   );
 
-  test.fixme(
+  test(
     "an invalid locale value is rejected",
     async ({ page }) => {
       const response = await page.request.post("/api/locale", { data: { locale: "fr" } });
