@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo } from "react";
+import { createContext, useCallback, useContext } from "react";
 
 import { translate, type Locale, type TranslationKey } from "@/lib/i18n/dictionaries";
 

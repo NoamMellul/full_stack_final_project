@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-import SiteHeader from "@/components/site-header";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PatientLayout({
@@ -22,10 +21,5 @@ export default async function PatientLayout({
 
   if (profile?.role !== "patient") redirect("/");
 
-  return (
-    <>
-      <SiteHeader />
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

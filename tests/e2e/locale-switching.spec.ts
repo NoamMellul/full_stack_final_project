@@ -41,7 +41,7 @@ test.describe("I18N-01/I18N-02: language switcher and RTL mirroring", () => {
     },
   );
 
-  test.fixme(
+  test(
     "the chosen locale survives a fresh navigation with no wrong-direction flash",
     async ({ page, context }) => {
       await context.addCookies([
