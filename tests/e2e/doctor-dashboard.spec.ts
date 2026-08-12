@@ -14,9 +14,9 @@ import { jerusalemDayKey, jerusalemWallClockToUtc } from "../../lib/timezone";
 // DOCTOR-01/02: the doctor dashboard (app/doctor/(gated)/page.tsx,
 // rewritten by plan 06-03) shows two head-only counts — upcoming
 // appointments and available slots — reusing app/admin/page.tsx's stat-card
-// markup ([data-slot="card"], per components/ui/card.tsx). Declared with
-// test.fixme so the suite stays green until 06-03 exists — 06-03 converts
-// each test.fixme( to test( without touching the assertions.
+// markup ([data-slot="card"], per components/ui/card.tsx). Activated by
+// 06-03 (converted from the placeholder test.fixme( declared in 06-01)
+// without touching the assertions.
 
 function futureJerusalemDay(daysAhead: number): { year: number; month: number; day: number } {
   const future = new Date(Date.now() + daysAhead * 24 * 60 * 60 * 1000);
@@ -45,7 +45,7 @@ test.describe("DOCTOR-01/02: doctor dashboard upcoming + available-slot counts",
     await cleanupTestUsers();
   });
 
-  test.fixme(
+  test(
     "doctor dashboard shows the upcoming appointment count",
     async ({ page }) => {
       const doctorUser = await createTestUser("doctor");
@@ -83,7 +83,7 @@ test.describe("DOCTOR-01/02: doctor dashboard upcoming + available-slot counts",
     },
   );
 
-  test.fixme(
+  test(
     "doctor dashboard shows the remaining available slot count",
     async ({ page }) => {
       const doctorUser = await createTestUser("doctor");
@@ -121,7 +121,7 @@ test.describe("DOCTOR-01/02: doctor dashboard upcoming + available-slot counts",
     },
   );
 
-  test.fixme(
+  test(
     "a cancelled appointment is not counted as upcoming",
     async ({ page }) => {
       const doctorUser = await createTestUser("doctor");
@@ -152,7 +152,7 @@ test.describe("DOCTOR-01/02: doctor dashboard upcoming + available-slot counts",
     },
   );
 
-  test.fixme(
+  test(
     "a past slot is not counted as available",
     async ({ page }) => {
       const doctorUser = await createTestUser("doctor");
