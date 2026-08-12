@@ -33,3 +33,34 @@ volume slowing down cleanup queries.
 **Action:** Not fixed — out of this plan's scope per the Scope Boundary rule. Recorded here and in
 `.planning/WINDOWS.md` for visibility before `/gsd-ship`. Worth a project reset / manual cleanup pass
 (already an open item in STATE.md Blockers/Concerns) before the final demo.
+
+## 06-03: same pre-existing failure class recurs, on a third different admin spec file
+
+**Found during:** the plan's required `npx playwright test` full-suite re-run, after fixing 7
+pre-existing specs whose assertions this plan's own dashboard rewrite genuinely broke (documented as
+Deviations, not here — those were in-scope, direct-consequence fixes, not deferred).
+
+**Observed:** `300 passed / 11 skipped / 3 failed` (314 total; the 11 skipped are the still-unactivated
+`test.fixme(` placeholders for notifications-realtime.spec.ts and locale-switching.spec.ts, owned by
+later plans). The 3 failures:
+
+- `tests/e2e/admin-route-protection.spec.ts:230` — "every admin endpoint returns 401
+  unauthenticated, 403 for a patient session, and 403 for a doctor session"
+- `tests/e2e/appointment-reschedule.spec.ts:764` — case 11, `afterAll` hook timeout (30000ms exceeded)
+  — identical failure to 06-01/06-02
+- `tests/e2e/seed-availability.spec.ts:170` — case 4, doctor slot count out of the 6-10 range —
+  identical failure to 06-01/06-02
+
+**Why out of scope:** `appointment-reschedule.spec.ts:764` and `seed-availability.spec.ts:170` are
+byte-identical recurrences of the exact failures logged by 06-01 and 06-02. The third slot in this
+recurring pattern has now landed on a third different admin spec file across three runs
+(`admin-doctor-crud.spec.ts:226` in 06-01, `admin-route-protection.spec.ts:230` in 06-02, and again
+`admin-route-protection.spec.ts:230` here) — none touched by this plan's changes (`app/patient/page.tsx`,
+`app/doctor/(gated)/page.tsx`, and 9 test spec files, none of which reference `/admin` endpoints).
+`admin-doctor-status.spec.ts`, which failed in an earlier same-session full-suite run before these test
+fixes were committed, was independently re-run in isolation and passed 5/5 — confirming that class of
+failure is a full-suite-only, shared-dev-DB-residue artifact rather than a defect in any spec file's
+own logic, consistent with the already-tracked STATE.md blocker.
+
+**Action:** Not fixed — out of this plan's scope per the Scope Boundary rule. Recorded here and in
+`.planning/WINDOWS.md`.
