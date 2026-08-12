@@ -1,0 +1,14 @@
+{
+  "common.retry": "נסה שוב",
+  "header.log_out": "התנתקות",
+  "notifications.title": "התראות",
+  "notifications.empty": "אין התראות עדיין.",
+  "notifications.load_error": "לא ניתן היה לטעון את ההתראות.",
+  "notifications.appointment_booked.patient": "התור שלך נקבע בהצלחה.",
+  "notifications.appointment_booked.doctor": "מטופל קבע תור אצלך.",
+  "notifications.appointment_rescheduled.patient": "התור שלך נדחה למועד אחר.",
+  "notifications.appointment_rescheduled.doctor": "מטופל שינה את מועד התור שלו.",
+  "notifications.appointment_cancelled.patient": "התור שלך בוטל על ידי הרופא.",
+  "notifications.appointment_cancelled.doctor": "מטופל ביטל את התור שלו.",
+  "notifications.generic": "יש לך התראה חדשה."
+}

@@ -1,0 +1,14 @@
+{
+  "common.retry": "Retry",
+  "header.log_out": "Log out",
+  "notifications.title": "Notifications",
+  "notifications.empty": "No notifications yet.",
+  "notifications.load_error": "Could not load notifications.",
+  "notifications.appointment_booked.patient": "Your appointment has been booked.",
+  "notifications.appointment_booked.doctor": "A patient booked an appointment with you.",
+  "notifications.appointment_rescheduled.patient": "Your appointment has been rescheduled.",
+  "notifications.appointment_rescheduled.doctor": "A patient rescheduled their appointment.",
+  "notifications.appointment_cancelled.patient": "Your appointment was cancelled by the doctor.",
+  "notifications.appointment_cancelled.doctor": "A patient cancelled their appointment.",
+  "notifications.generic": "You have a new notification."
+}
