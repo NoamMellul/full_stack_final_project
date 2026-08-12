@@ -13,6 +13,7 @@ import {
   createTestLocation,
   createTestSpecialty,
 } from "./helpers/reference-data";
+import { testAdminClient } from "./helpers/supabase-admin";
 import { cleanupTestUsers, createTestUser } from "./helpers/test-users";
 import { jerusalemDayKey, jerusalemWallClockToUtc } from "../../lib/timezone";
 
@@ -68,6 +69,46 @@ test.describe("NOTIF-01/02/03/04: notifications on booking, cancel, reschedule",
     await cleanupTestSlots();
     await cleanupTestReferenceData();
     await cleanupTestUsers();
+  });
+
+  // Proves Realtime replication itself, independent of RLS and independent
+  // of any UI: a service-role subscriber (bypassing notifications_select_own
+  // entirely) must receive a postgres_changes INSERT event the instant a row
+  // lands in public.notifications. This isolates "is the table published to
+  // supabase_realtime" from "is delivery correctly scoped per subscriber" —
+  // the latter is 06-06's browser-session-scoped test, once the bell exists.
+  test("notifications table is published to supabase_realtime", async () => {
+    const patient = await createTestUser("patient");
+    const admin = testAdminClient();
+
+    let receivedId: string | null = null;
+    const channel = admin.channel("notifications-realtime-proof").on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "notifications" },
+      (payload) => {
+        receivedId = (payload.new as { id: string }).id;
+      },
+    );
+
+    await new Promise<void>((resolve, reject) => {
+      channel.subscribe((status, err) => {
+        if (status === "SUBSCRIBED") {
+          resolve();
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          reject(
+            new Error(
+              `Realtime channel subscribe failed: ${status}${err ? ` (${err.message})` : ""}`,
+            ),
+          );
+        }
+      });
+    });
+
+    const notification = await insertTestNotification({ userId: patient.id });
+
+    await expect.poll(() => receivedId, { timeout: 55000 }).toBe(notification.id);
+
+    await admin.removeChannel(channel);
   });
 
   test.fixme("patient sees a notification after booking", async ({ page }) => {
