@@ -64,12 +64,12 @@
 - [x] **PATIENT-01**: Patient can add a doctor to favorites
 - [x] **PATIENT-02**: Patient can remove a doctor from favorites
 - [x] **PATIENT-03**: Patient can view their list of favorite doctors
-- [ ] **PATIENT-04**: Patient dashboard shows a summary of upcoming appointments
+- [x] **PATIENT-04**: Patient dashboard shows a summary of upcoming appointments
 
 ### Doctor Space
 
-- [ ] **DOCTOR-01**: Doctor dashboard shows count of upcoming appointments
-- [ ] **DOCTOR-02**: Doctor dashboard shows count of remaining available slots
+- [x] **DOCTOR-01**: Doctor dashboard shows count of upcoming appointments
+- [x] **DOCTOR-02**: Doctor dashboard shows count of remaining available slots
 
 ### Admin
 
@@ -183,9 +183,9 @@ Which phases cover which requirements.
 | PATIENT-01 | Phase 6 | Complete |
 | PATIENT-02 | Phase 6 | Complete |
 | PATIENT-03 | Phase 6 | Complete |
-| PATIENT-04 | Phase 6 | Pending |
-| DOCTOR-01 | Phase 6 | Pending |
-| DOCTOR-02 | Phase 6 | Pending |
+| PATIENT-04 | Phase 6 | Complete |
+| DOCTOR-01 | Phase 6 | Complete |
+| DOCTOR-02 | Phase 6 | Complete |
 | NOTIF-01 | Phase 6 | Pending |
 | NOTIF-02 | Phase 6 | Pending |
 | NOTIF-03 | Phase 6 | Pending |
