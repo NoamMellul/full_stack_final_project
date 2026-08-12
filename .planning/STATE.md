@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 6
 current_phase_name: Dashboards, Notifications & Localization
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-08-12T09:32:46.807Z"
+stopped_at: Completed 06-04-PLAN.md
+last_updated: "2026-08-12T16:41:28.551Z"
 last_activity: 2026-08-12
 last_activity_desc: Phase 6 execution started
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 39
-  completed_plans: 32
+  completed_plans: 33
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 ## Current Position
 
 Phase: 6 (Dashboards, Notifications & Localization) — EXECUTING
-Plan: 4 of 10
+Plan: 5 of 10
 Status: Ready to execute
 Last activity: 2026-08-12 — Phase 6 execution started
 
-Progress: [████████░░] 82%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
@@ -91,6 +91,7 @@ Progress: [████████░░] 82%
 | Phase 06 P01 | 75min | 2 tasks | 9 files |
 | Phase 06 P02 | 55min | 3 tasks | 10 files |
 | Phase 06 P03 | 85min | 2 tasks | 13 files |
+| Phase 06 P04 | 100min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -173,6 +174,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 06] Plan 06-03: PostgREST embedded-join head-count (appointments joined to availability_slots via !inner, .gt on the embedded start_at, count:'exact' + head:true) worked directly against the live Supabase instance -- the plan's documented row-array-length fallback was not needed
 - [Phase ?]: [Phase 06] Plan 06-03: 7 pre-existing specs asserting the old 'Nothing here yet' placeholder / old link labels updated in place as a direct-consequence Rule 1 fix (not deferred) since the plan's own verification requires 0 failed; admin-doctor-link-account.spec.ts's single broken assertion had cascaded into 3 more sub-test failures via a Playwright worker restart
 - [Phase ?]: [Phase 06] Plan 06-03 closes with a third recurrence of the same shared-dev-DB test-residue failure class (admin-route-protection.spec.ts:230, appointment-reschedule.spec.ts:764 afterAll timeout, seed-availability.spec.ts:170), logged to WINDOWS.md id 2; admin-doctor-status.spec.ts also failed mid-session on a full-suite run but passed 5/5 in isolation, supporting the residue theory
+- [Phase ?]: [Phase 06] Plan 06-04: substituted the plan's UI-dependent named verify test (still test.fixme, needs 06-06's bell) with 6 new active API-contract Playwright tests proving the same must-haves (ownership isolation, message-absence, IDOR-safe 404s, idempotent mark-as-read) directly over HTTP; NOTIF-01..04 deliberately left Pending since end-user-visible delivery is 06-06's deliverable
+- [Phase ?]: [Phase 06] Plan 06-04: public.notifications added to the supabase_realtime publication (migration 20260812090000, applied to the linked remote project), no RLS or REPLICA IDENTITY change; notifications_select_own/notifications_update_own remain the sole per-subscriber authorization boundary
 
 ### Pending Todos
 
@@ -187,6 +190,7 @@ None yet.
 - [Phase 06] Plan 06-01's full-suite run (npx playwright test) surfaced 3 pre-existing failures unrelated to this plan's fixme-only additions (admin-doctor-crud.spec.ts:226, appointment-reschedule.spec.ts:764 afterAll timeout, seed-availability.spec.ts:170 doctor slot count 4<6) — consistent with the already-tracked shared-dev-DB test-residue blocker, logged in deferred-items.md and WINDOWS.md, not independently confirmed against a pre-Phase-6 baseline
 - [Phase 06] Plan 06-02's full-suite run reconfirmed the same class of pre-existing failures logged by 06-01 (admin-route-protection.spec.ts:230 this time instead of admin-doctor-crud.spec.ts:226, plus the same appointment-reschedule.spec.ts:764 afterAll timeout and seed-availability.spec.ts:170 slot-count assertion) — consistent with the tracked shared-dev-DB test-residue blocker, not caused by this plan (all 6 favorites tests passed)
 - [Phase 06] Plan 06-03's full-suite run reconfirmed the same class of pre-existing failures for a third time (admin-route-protection.spec.ts:230 again, plus the same appointment-reschedule.spec.ts:764 afterAll timeout and seed-availability.spec.ts:170 slot-count assertion) -- consistent with the tracked shared-dev-DB test-residue blocker, not caused by this plan (all 7 dashboard/regression tests passed)
+- [Phase 06] Plan 06-04's full-suite run showed a fourth recurrence of the shared-dev-DB test-residue class (seed-availability.spec.ts:170, now WINDOWS.md id 3) plus a transient dev-server ERR_CONNECTION_REFUSED window that failed 8 unrelated tests (5 of this plan's own new tests + 3 from 06-03) -- all 8 passed cleanly on an isolated re-run immediately afterward, confirming the connectivity theory; only the pre-existing residue failure persisted
 
 ## Deferred Items
 
@@ -198,6 +202,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-12T09:32:46.776Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-08-12T16:41:28.477Z
+Stopped at: Completed 06-04-PLAN.md
 Resume file: None

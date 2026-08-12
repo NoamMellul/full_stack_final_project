@@ -64,3 +64,36 @@ own logic, consistent with the already-tracked STATE.md blocker.
 
 **Action:** Not fixed — out of this plan's scope per the Scope Boundary rule. Recorded here and in
 `.planning/WINDOWS.md`.
+
+## 06-04: fourth recurrence of the same failure class, plus a transient dev-server connectivity blip
+
+**Found during:** the plan's required `npx playwright test` full-suite run, after committing Task 3.
+
+**Observed:** `301 passed / 11 skipped / 9 failed` (321 total; up from 314 by +1 Task 1 test and +6
+Task 2/3 API-contract tests). The 9 failures:
+
+- 5 in `tests/e2e/notifications-realtime.spec.ts` — all 5 of this plan's new
+  `GET/PATCH /api/notifications API contract (06-04)` tests
+- 3 in `tests/e2e/patient-dashboard.spec.ts` (from 06-03, untouched by this plan)
+- 1 in `tests/e2e/seed-availability.spec.ts:170` — the same doctor-slot-count assertion that has now
+  failed in every one of 06-01, 06-03, and this run
+
+All 8 of the first two groups failed with the identical error `net::ERR_CONNECTION_REFUSED at
+http://localhost:3000/...` — the Next.js dev server (`webServer` in `playwright.config.ts`) was
+unreachable for a window during the 27-minute run, not a defect in either this plan's routes or
+06-03's dashboard pages. Re-running exactly those 4 spec files in isolation immediately afterward
+produced `17 passed / 1 failed / 6 skipped` — every one of the 8 connection-refused failures passed
+cleanly, confirming the transient-connectivity theory. The 1 remaining failure
+(`seed-availability.spec.ts:170`, doctor slot count 3 < 6) reproduced identically in isolation — this
+is the fourth recurrence of the same shared-dev-DB-residue class first logged by 06-01 (id 1) and
+06-03 (id 2), now id 3 in `.planning/WINDOWS.md`.
+
+**Why out of scope:** This plan's changes are `supabase/migrations/20260812090000_...sql`,
+`app/api/notifications/route.ts`, `app/api/notifications/[id]/read/route.ts`, and additive-only test
+edits to `tests/e2e/notifications-realtime.spec.ts`. None of the 3 `patient-dashboard.spec.ts` failures
+or the 1 `seed-availability.spec.ts` failure touch code this plan modified, and this plan's own 5
+"failures" were proven to be the dev-server blip, not a defect in the new routes (the identical 6 tests
+already passed cleanly in an isolated run immediately after Task 3, before the full-suite run started).
+
+**Action:** Not fixed — out of this plan's scope per the Scope Boundary rule. Recorded here and in
+`.planning/WINDOWS.md` (ledger id 3).
