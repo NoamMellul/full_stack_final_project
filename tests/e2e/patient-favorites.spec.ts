@@ -67,7 +67,7 @@ test.describe("PATIENT-01/02/03: favorites — add, remove, cross-entry-point co
     },
   );
 
-  test.fixme(
+  test(
     "patient adds a favorite from a search result card",
     async ({ page }) => {
       const patient = await createTestUser("patient");
@@ -84,14 +84,24 @@ test.describe("PATIENT-01/02/03: favorites — add, remove, cross-entry-point co
       await expect(page.getByText(doctor.fullName)).toBeVisible();
 
       const toggle = page.getByRole("button", { name: "Add to favorites" });
+
+      // Same race as the doctor-profile toggle (FavoriteToggle's optimistic
+      // flip resolves well before this environment's ~1s Supabase round
+      // trip) — wait for the actual response before the DB assertion.
+      const favoritePost = page.waitForResponse(
+        (response) =>
+          response.url().includes("/api/patient/favorites") &&
+          response.request().method() === "POST",
+      );
       await toggle.click();
 
       await expect(page.getByRole("button", { name: "Remove from favorites" })).toBeVisible();
+      await favoritePost;
       expect(await readFavoriteIds(patient.id)).toContain(doctor.id);
     },
   );
 
-  test.fixme(
+  test(
     "favorite state added on the profile page is reflected on the search results page",
     async ({ page }) => {
       const patient = await createTestUser("patient");
@@ -105,8 +115,20 @@ test.describe("PATIENT-01/02/03: favorites — add, remove, cross-entry-point co
 
       await loginAsPatient(page, patient);
       await page.goto(`/doctors/${doctor.id}`);
+
+      // Wait for the POST to actually land before navigating away — a
+      // client-side navigation can otherwise abort an in-flight fetch
+      // before FavoriteToggle's optimistic flip is followed through by a
+      // completed write (same underlying race as the two "adds a favorite"
+      // tests above).
+      const favoritePost = page.waitForResponse(
+        (response) =>
+          response.url().includes("/api/patient/favorites") &&
+          response.request().method() === "POST",
+      );
       await page.getByRole("button", { name: "Add to favorites" }).click();
       await expect(page.getByRole("button", { name: "Remove from favorites" })).toBeVisible();
+      await favoritePost;
 
       await page.goto(`/search?q=${encodeURIComponent(doctor.fullName)}`);
       await expect(page.getByRole("button", { name: "Remove from favorites" })).toBeVisible();
@@ -155,7 +177,7 @@ test.describe("PATIENT-01/02/03: favorites — add, remove, cross-entry-point co
     },
   );
 
-  test.fixme(
+  test(
     "another patient's favorites are never returned",
     async ({ page }) => {
       const victim = await createTestUser("patient");

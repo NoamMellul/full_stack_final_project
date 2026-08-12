@@ -2,7 +2,7 @@
 
 import { Heart } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -37,7 +37,24 @@ export default function FavoriteToggle({
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // The caller resolves its favorited-id set asynchronously (a GET fired on
+  // mount, per D-01's per-page-load fetch), so this component very often
+  // renders once before that resolves and again after with a different
+  // `initialFavorited`. `useState`'s initializer only applies on the very
+  // first render — without this sync, a toggle for an already-favorited
+  // doctor would render "Add to favorites" forever. Skipped once the viewer
+  // has interacted, so a later parent re-render never clobbers an
+  // in-flight/optimistic click with stale server data.
+  const hasInteractedRef = useRef(false);
+  useEffect(() => {
+    if (!hasInteractedRef.current) {
+      setIsFavorited(initialFavorited);
+    }
+  }, [initialFavorited]);
+
   async function handleClick() {
+    hasInteractedRef.current = true;
+
     // Auth-on-click, not auth-on-mount (mirrors the booking CTA's D-04
     // pattern): an anonymous visitor is redirected to /login before any
     // favorites request is attempted — no toggle state ever renders "as if

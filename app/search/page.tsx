@@ -18,6 +18,11 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
+type FavoritesState = {
+  role: "patient" | "anonymous" | "hidden";
+  favoritedIds: Set<string>;
+};
+
 function SearchPageInner() {
   const router = useRouter();
   const pathname = usePathname();
@@ -29,6 +34,40 @@ function SearchPageInner() {
   const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
   const [doctors, setDoctors] = useState<DoctorSearchResult[]>([]);
   const [total, setTotal] = useState(0);
+
+  // Resolved once per page load (not per card, not per query change) — D-01's
+  // cross-entry-point requirement is satisfied by this independent re-fetch
+  // on mount, never a shared client-side store. 200 means patient, 401 means
+  // anonymous, 403 means the viewer is a doctor or admin (toggle hidden).
+  const [favoritesState, setFavoritesState] = useState<FavoritesState>({
+    role: "anonymous",
+    favoritedIds: new Set(),
+  });
+
+  useEffect(() => {
+    async function loadFavoritesState() {
+      try {
+        const response = await fetch("/api/patient/favorites");
+        if (response.status === 401) {
+          setFavoritesState({ role: "anonymous", favoritedIds: new Set() });
+          return;
+        }
+        if (response.status === 403) {
+          setFavoritesState({ role: "hidden", favoritedIds: new Set() });
+          return;
+        }
+        if (!response.ok) return;
+        const data = await response.json();
+        const favoritedIds = new Set<string>(
+          (data.favorites as { doctor_id: string }[]).map((entry) => entry.doctor_id),
+        );
+        setFavoritesState({ role: "patient", favoritedIds });
+      } catch {
+        // Leave the default (anonymous, unfavorited) state on a network error.
+      }
+    }
+    void loadFavoritesState();
+  }, []);
 
   // page lives in the URL (D-13); MAX_PAGE/1 bounds are re-enforced server
   // side by validateSearchParams, this parse only needs a safe fallback.
@@ -144,6 +183,8 @@ function SearchPageInner() {
           page={page}
           onPageChange={handlePageChange}
           onRetry={handleRetry}
+          favoriteViewerRole={favoritesState.role}
+          favoritedDoctorIds={favoritesState.favoritedIds}
         />
       </div>
     </main>

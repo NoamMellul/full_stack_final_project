@@ -14,6 +14,8 @@ type SearchResultsProps = {
   page: number;
   onPageChange: (page: number) => void;
   onRetry: () => void;
+  favoriteViewerRole: "patient" | "anonymous" | "hidden";
+  favoritedDoctorIds: Set<string>;
 };
 
 // Standard condensed pagination: always show page 1, page `pageCount`, the
@@ -52,6 +54,8 @@ export default function SearchResults({
   page,
   onPageChange,
   onRetry,
+  favoriteViewerRole,
+  favoritedDoctorIds,
 }: SearchResultsProps) {
   if (status === "loading") {
     return (
@@ -97,7 +101,12 @@ export default function SearchResults({
       </p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {doctors.map((doctor) => (
-          <DoctorCard key={doctor.id} doctor={doctor} />
+          <DoctorCard
+            key={doctor.id}
+            doctor={doctor}
+            favoriteViewerRole={favoriteViewerRole}
+            isFavorited={favoritedDoctorIds.has(doctor.id)}
+          />
         ))}
       </div>
       {pageCount > 1 ? (

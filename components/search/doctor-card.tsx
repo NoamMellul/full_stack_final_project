@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import FavoriteToggle from "@/components/favorite-toggle";
 import InitialsAvatar from "@/components/initials-avatar";
 import { formatJerusalemDayHeading, formatJerusalemTime } from "@/lib/timezone";
 
@@ -29,14 +30,32 @@ export type DoctorSearchResult = {
 
 const LANGUAGE_LABELS: Record<string, string> = { he: "Hebrew", en: "English" };
 
-export default function DoctorCard({ doctor }: { doctor: DoctorSearchResult }) {
+type DoctorCardProps = {
+  doctor: DoctorSearchResult;
+  favoriteViewerRole?: "patient" | "anonymous" | "hidden";
+  isFavorited?: boolean;
+};
+
+export default function DoctorCard({
+  doctor,
+  favoriteViewerRole = "hidden",
+  isFavorited = false,
+}: DoctorCardProps) {
   // Flips true if the external photo_url 404s/fails to load — falls back to
   // InitialsAvatar rather than a broken-image glyph (UI-SPEC partial state).
   const [photoFailed, setPhotoFailed] = useState(false);
   const showPhoto = Boolean(doctor.photo_url) && !photoFailed;
 
   return (
-    <Card>
+    <Card className="relative">
+      {favoriteViewerRole !== "hidden" ? (
+        <FavoriteToggle
+          doctorId={doctor.id}
+          initialFavorited={isFavorited}
+          viewerRole={favoriteViewerRole}
+          className="absolute top-2 end-2"
+        />
+      ) : null}
       <CardContent className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           {showPhoto ? (
