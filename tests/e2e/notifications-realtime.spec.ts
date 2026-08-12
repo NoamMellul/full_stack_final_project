@@ -346,4 +346,71 @@ test.describe("GET/PATCH /api/notifications API contract (06-04)", () => {
     const body = await response.json();
     expect(body.notifications).toHaveLength(0);
   });
+
+  test("PATCH /api/notifications/[id]/read requires authentication", async ({ request }) => {
+    const response = await request.patch(
+      "/api/notifications/00000000-0000-0000-0000-000000000000/read",
+    );
+    expect(response.status()).toBe(401);
+  });
+
+  test("PATCH /api/notifications/[id]/read marks the caller's own notification read, idempotently", async ({
+    page,
+  }) => {
+    const patient = await createTestUser("patient");
+    const notification = await insertTestNotification({
+      userId: patient.id,
+      type: "appointment_booked",
+    });
+
+    await loginAsPatient(page, patient);
+
+    const response = await page.request.patch(`/api/notifications/${notification.id}/read`);
+    expect(response.status()).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+
+    const [row] = await readNotificationsFor(patient.id);
+    expect(row.read_at).not.toBeNull();
+
+    // Repeating the identical PATCH is idempotent: still 200, still read —
+    // no `.is("read_at", null)` filter turns the second call into a 404.
+    const secondResponse = await page.request.patch(`/api/notifications/${notification.id}/read`);
+    expect(secondResponse.status()).toBe(200);
+    const [rowAfterSecond] = await readNotificationsFor(patient.id);
+    expect(rowAfterSecond.read_at).not.toBeNull();
+  });
+
+  test("PATCH /api/notifications/[id]/read returns the byte-identical 404 for a foreign, missing, or malformed id", async ({
+    page,
+  }) => {
+    const viewer = await createTestUser("patient");
+    const other = await createTestUser("patient");
+    const otherNotification = await insertTestNotification({
+      userId: other.id,
+      type: "appointment_booked",
+    });
+
+    await loginAsPatient(page, viewer);
+
+    const foreignResponse = await page.request.patch(
+      `/api/notifications/${otherNotification.id}/read`,
+    );
+    expect(foreignResponse.status()).toBe(404);
+    const foreignBody = await foreignResponse.json();
+    expect(foreignBody).toEqual({ error: "This notification no longer exists." });
+
+    const missingResponse = await page.request.patch(
+      "/api/notifications/00000000-0000-0000-0000-000000000000/read",
+    );
+    expect(missingResponse.status()).toBe(404);
+    expect(await missingResponse.json()).toEqual(foreignBody);
+
+    const malformedResponse = await page.request.patch("/api/notifications/not-a-uuid/read");
+    expect(malformedResponse.status()).toBe(404);
+    expect(await malformedResponse.json()).toEqual(foreignBody);
+
+    // The foreign user's notification must remain unread throughout.
+    const [otherRow] = await readNotificationsFor(other.id);
+    expect(otherRow.read_at).toBeNull();
+  });
 });
