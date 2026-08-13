@@ -97,3 +97,25 @@ already passed cleanly in an isolated run immediately after Task 3, before the f
 
 **Action:** Not fixed — out of this plan's scope per the Scope Boundary rule. Recorded here and in
 `.planning/WINDOWS.md` (ledger id 3).
+
+## 06-10: pre-existing Base UI `nativeButton` console warning on `Button render={<Link .../>}`
+
+**Found during:** Task 1/2's spec runs against `/search` and `/patient` — browser console output
+repeatedly logged `Base UI: A component that acts as a button expected a native <button> because the
+`nativeButton` prop is true. Rendering a non-<button> removes native button semantics...` for
+`components/search/doctor-card.tsx`'s "View profile" button and `app/patient/page.tsx`'s three
+quick-link buttons, all of which use shadcn's `Button` with `render={<Link .../>}` (producing an `<a>`,
+not a `<button>`).
+
+**Why out of scope:** This pattern (`Button render={<Link .../>}`) is used extensively across the
+codebase (login/signup pages, search pagination, dashboard quick links, favorites empty-state CTA) and
+predates this plan — none of it was introduced or modified by 06-10's changes (this plan touched only
+`tests/e2e/locale-switching.spec.ts`; the grep audit found zero physical-direction utilities to fix in
+`favorite-toggle.tsx`, `notification-bell.tsx`, `doctor-card.tsx`, or `favorites/page.tsx`, so none of
+those four files needed an edit either). It is a console warning, not a test failure — every assertion
+in every affected test passed. Fixing it would mean auditing every `Button render={<Link>}` call site
+project-wide (an unbounded, cross-cutting change unrelated to RTL/I18N-02), squarely outside this plan's
+declared file scope.
+
+**Action:** Not fixed — out of this plan's scope per the Scope Boundary rule. Recorded here for
+visibility before `/gsd-ship`.

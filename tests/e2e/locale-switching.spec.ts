@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import heDict from "../../dictionaries/he.json";
+import { cleanupTestFavorites, createTestFavorite } from "./helpers/favorites";
 import { cleanupTestNotifications, insertTestNotification } from "./helpers/notifications";
 import {
   cleanupTestReferenceData,
@@ -191,6 +192,145 @@ test.describe("I18N-02: RTL geometry regression tests (favorite heart, notificat
 
       expect(popoverBox.x).toBeGreaterThanOrEqual(0);
       expect(popoverBox.x + popoverBox.width).toBeLessThanOrEqual(viewport.width);
+    },
+  );
+});
+
+// 06-10 Task 2: resolves the three UI-SPEC backstop considerations
+// (favorites-list overflow at scale, favorites-list long-text containment,
+// dashboard-level error copy) with recorded, executable evidence rather than
+// eyeballed observation.
+test.describe("06-10: UI-SPEC backstop resolution (favorites overflow, long text, dashboard errors)", () => {
+  test.afterAll(async () => {
+    await cleanupTestFavorites();
+    await cleanupTestReferenceData();
+    await cleanupTestUsers();
+  });
+
+  test(
+    "the /patient/favorites list scrolls naturally at a large favorited-doctor count in both directions",
+    async ({ page, context }) => {
+      test.setTimeout(90000);
+      const patient = await createTestUser("patient");
+      const specialty = await createTestSpecialty();
+      const location = await createTestLocation();
+
+      const doctors = await Promise.all(
+        Array.from({ length: 25 }, (_, index) =>
+          createTestDoctor({
+            specialtyId: specialty.id,
+            locationId: location.id,
+            isActive: true,
+            fullName: `Overflow Test Doctor ${index}`,
+          }),
+        ),
+      );
+      await Promise.all(
+        doctors.map((doctor) =>
+          createTestFavorite({ patientId: patient.id, doctorId: doctor.id }),
+        ),
+      );
+
+      await loginAsPatient(page, patient);
+      await page.goto("/patient/favorites");
+
+      const rows = page.locator('[data-slot="card"]');
+      await expect(rows).toHaveCount(25);
+      const overflowsEn = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+      expect(overflowsEn).toBe(false);
+
+      await context.addCookies([
+        { name: LOCALE_COOKIE_NAME, value: "he", url: "http://localhost:3000" },
+      ]);
+      await page.goto("/patient/favorites");
+      await expect(rows).toHaveCount(25);
+      const overflowsHe = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+      expect(overflowsHe).toBe(false);
+    },
+  );
+
+  test(
+    "an unusually long doctor name is contained by the truncate treatment on /patient/favorites in both directions",
+    async ({ page, context }) => {
+      const patient = await createTestUser("patient");
+      const specialty = await createTestSpecialty();
+      const location = await createTestLocation();
+      // No spaces, so the row's truncate/max-width treatment (not natural
+      // word-wrap) is what has to contain it — 108 characters, well past
+      // the 80-character floor this backstop targets.
+      const longName = `Dr. ${"Verylongsurnamewithnobreaks".repeat(4)}`;
+
+      const shortDoctor = await createTestDoctor({
+        specialtyId: specialty.id,
+        locationId: location.id,
+        isActive: true,
+        fullName: "Short Name Doctor",
+      });
+      const longDoctor = await createTestDoctor({
+        specialtyId: specialty.id,
+        locationId: location.id,
+        isActive: true,
+        fullName: longName,
+      });
+      await createTestFavorite({ patientId: patient.id, doctorId: shortDoctor.id });
+      await createTestFavorite({ patientId: patient.id, doctorId: longDoctor.id });
+
+      await loginAsPatient(page, patient);
+      await page.goto("/patient/favorites");
+
+      const shortCard = page.locator('[data-slot="card"]', { hasText: shortDoctor.fullName });
+      const longCard = page.locator('[data-slot="card"]', { hasText: longName });
+      await expect(shortCard).toBeVisible();
+      await expect(longCard).toBeVisible();
+
+      const shortBox = await shortCard.boundingBox();
+      const longBox = await longCard.boundingBox();
+      if (!shortBox || !longBox) {
+        throw new Error("Missing bounding box for a favorites row");
+      }
+      // The long name is contained by DoctorCard's existing truncate/
+      // max-width span, not by the row growing — both cards are the same
+      // width and neither pushes the heart off the card or wraps the row.
+      expect(longBox.width).toBe(shortBox.width);
+
+      const overflowsEn = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+      expect(overflowsEn).toBe(false);
+
+      await context.addCookies([
+        { name: LOCALE_COOKIE_NAME, value: "he", url: "http://localhost:3000" },
+      ]);
+      await page.goto("/patient/favorites");
+      const longCardHe = page.locator('[data-slot="card"]', { hasText: longName });
+      await expect(longCardHe).toBeVisible();
+      const overflowsHe = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+      expect(overflowsHe).toBe(false);
+    },
+  );
+
+  test(
+    "a failed patient-dashboard appointments fetch degrades to a readable error state, not a blank page or a fabricated appointment",
+    async ({ page }) => {
+      const patient = await createTestUser("patient");
+
+      // Route interception must be armed before the first navigation to
+      // /patient — loginAsPatient's own post-login redirect is the request
+      // this test needs to fail.
+      await page.route("**/api/patient/appointments", (route) => route.abort());
+      await loginAsPatient(page, patient);
+
+      await expect(
+        page.getByText("Could not load your appointments. Please try again."),
+      ).toBeVisible();
+      await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
     },
   );
 });
