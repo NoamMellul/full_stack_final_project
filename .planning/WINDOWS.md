@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 7
+open_count: 9
 waived_count: 0
 fixed_count: 0
-total_count: 7
-last_updated: 2026-08-13T08:36:13.818Z
+total_count: 9
+last_updated: 2026-08-13T09:56:14.389Z
 ---
 
 # Broken Windows Ledger
@@ -22,6 +22,8 @@ last_updated: 2026-08-13T08:36:13.818Z
 | 5 | 06 | unrun-verify | tests/e2e/seed-availability.spec.ts | 170 | Recurring shared-dev-DB slot-count assertion failure (doctor holds <6 slots) during 06-05's full-suite run, consistent with WINDOWS.md ids 1 and 3 | open |  | 2026-08-12T19:02:35.805Z |  |
 | 6 | 06 | unrun-verify | tests/e2e/appointment-reschedule.spec.ts | 764 | 6th+ recurrence of the same shared-dev-DB/environment flakiness class during 06-06's closure full-suite run (319 passed, 2 failed, 34.7min): appointment-reschedule.spec.ts:764 afterAll cleanup hook timed out (30000ms exceeded), byte-identical failure mode to prior recurrences since 06-01. Not caused by 06-06's notification-bell code -- all 13 of this plan's own notifications-realtime.spec.ts tests passed cleanly in the same run. | open |  | 2026-08-13T08:36:13.176Z |  |
 | 7 | 06 | unrun-verify | tests/e2e/seed-availability.spec.ts | 170 | 6th+ recurrence of the same shared-dev-DB residue class (WINDOWS.md ids 1,3,5) during 06-06's closure full-suite run: doctor slot count 3 < 6 (D-01 shape rule). Same run showed 319 passed/2 failed in 34.7min; not caused by 06-06's notification-bell code -- all 13 of this plan's own notifications-realtime.spec.ts tests passed cleanly. | open |  | 2026-08-13T08:36:13.818Z |  |
+| 8 | 06 | unmet-truth | tests/e2e/seed-availability.spec.ts | 170 | Recurring shared-dev-DB test residue: doctor slot count assertion (expect >=6, received 3) failed again on 06-07's full-suite run and isolated re-run; already tracked as WINDOWS ids 1/3, not caused by 06-07 (dictionary-only plan, zero application code touched) | open |  | 2026-08-13T09:56:04.863Z |  |
+| 9 | 06 | deviation | tests/e2e/appointment-reschedule.spec.ts,tests/e2e/doctor-schedule-overlap.spec.ts,tests/e2e/doctor-schedule-visibility.spec.ts |  | 06-07's full-suite run (dictionary-only plan, zero application code touched) hit 5 failures: appointment-reschedule.spec.ts:764, doctor-schedule-overlap.spec.ts:381 (Cross-doctor non-collision), doctor-schedule-visibility.spec.ts:190 (beforeAll timeout, cascading 8 skipped), seed-availability.spec.ts:170/184 (beforeAll timeout, cascading 3 skipped). A targeted re-run of just these 4 spec files in isolation passed the appointment-reschedule and doctor-schedule-visibility suites cleanly; the second re-run's remaining failures were all 'afterAll hook timeout of 30000ms exceeded' cleanup-only timeouts (test assertions themselves passed), consistent with Supabase Admin API rate-limiting from this session's several consecutive full-suite runs against the shared dev project (already-documented STATE.md blocker class). Not caused by 06-07's changes. | open |  | 2026-08-13T09:56:14.389Z |  |
 
 ````json
 [
@@ -107,6 +109,30 @@ last_updated: 2026-08-13T08:36:13.818Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-13T08:36:13.818Z",
+    "resolved_at": null
+  },
+  {
+    "id": 8,
+    "kind": "unmet-truth",
+    "phase": "06",
+    "file": "tests/e2e/seed-availability.spec.ts",
+    "line": 170,
+    "description": "Recurring shared-dev-DB test residue: doctor slot count assertion (expect >=6, received 3) failed again on 06-07's full-suite run and isolated re-run; already tracked as WINDOWS ids 1/3, not caused by 06-07 (dictionary-only plan, zero application code touched)",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-13T09:56:04.863Z",
+    "resolved_at": null
+  },
+  {
+    "id": 9,
+    "kind": "deviation",
+    "phase": "06",
+    "file": "tests/e2e/appointment-reschedule.spec.ts,tests/e2e/doctor-schedule-overlap.spec.ts,tests/e2e/doctor-schedule-visibility.spec.ts",
+    "line": null,
+    "description": "06-07's full-suite run (dictionary-only plan, zero application code touched) hit 5 failures: appointment-reschedule.spec.ts:764, doctor-schedule-overlap.spec.ts:381 (Cross-doctor non-collision), doctor-schedule-visibility.spec.ts:190 (beforeAll timeout, cascading 8 skipped), seed-availability.spec.ts:170/184 (beforeAll timeout, cascading 3 skipped). A targeted re-run of just these 4 spec files in isolation passed the appointment-reschedule and doctor-schedule-visibility suites cleanly; the second re-run's remaining failures were all 'afterAll hook timeout of 30000ms exceeded' cleanup-only timeouts (test assertions themselves passed), consistent with Supabase Admin API rate-limiting from this session's several consecutive full-suite runs against the shared dev project (already-documented STATE.md blocker class). Not caused by 06-07's changes.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-13T09:56:14.389Z",
     "resolved_at": null
   }
 ]
