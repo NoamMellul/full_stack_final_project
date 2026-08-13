@@ -14,6 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/lib/i18n/locale-provider";
 import { notificationCopyKey, type NotificationViewerRole } from "@/lib/i18n/notification-copy";
+import { createClient } from "@/lib/supabase/client";
 import { formatJerusalemDayHeading, formatJerusalemTime } from "@/lib/timezone";
 
 // Payload shape matches GET /api/notifications's NOTIFICATION_SELECT
@@ -32,6 +33,75 @@ export type NotificationRow = {
 type LoadStatus = "loading" | "error" | "ready";
 
 const BADGE_OVERFLOW_LABEL = "9+";
+
+// Subscribes to live INSERTs on the caller's own notifications row set.
+// `userId` is `null` for an anonymous visitor or an admin session (the
+// header never mounts NotificationBell for either) — the effect returns
+// immediately without opening a channel in that case.
+//
+// The `.on()` filter string (`user_id=eq.<userId>`) and the
+// notifications_select_own RLS policy both already scope delivery; the
+// handler's own comparison below is defense in depth, not the boundary
+// (T-06-26) — a Realtime payload is never rendered without independently
+// confirming its user_id equals the signed-in user's id.
+export function useNotificationRealtime(
+  userId: string | null,
+  onInsert: (row: NotificationRow) => void,
+) {
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+
+    const supabase = createClient();
+
+    async function run() {
+      // `userId` is a server-sourced prop (SiteHeader's own
+      // supabase.auth.getUser() call) — nothing on the client has touched
+      // this browser Supabase client's own auth state yet. Its Realtime
+      // connection authorizes postgres_changes per-subscriber using
+      // whatever JWT createClient()'s internal auth-state listener has
+      // handed to realtime.setAuth() so far, which only fires once that
+      // listener has actually run. Awaiting getSession() here forces that
+      // hydration (and therefore the setAuth() call) to complete before
+      // .subscribe() opens the channel — without it, .subscribe() can race
+      // ahead and join authenticated only as the anon key, so postgres_
+      // changes broadcasts silently never pass RLS for this connection
+      // (the join itself still acks "ok", so nothing about it look wrong).
+      // This also doubles as this effect's Strict-Mode-safety gate: a
+      // synchronous double-invoke's first ("phantom") run has `cancelled`
+      // flipped true by its cleanup well before this await resolves, so it
+      // exits below without ever opening a channel.
+      await supabase.auth.getSession();
+      if (cancelled) return;
+
+      const channel = supabase
+        .channel(`notifications-${userId}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+          (payload) => {
+            const row = payload.new as NotificationRow & { user_id: string };
+            if (row.user_id !== userId) return;
+            onInsert(row);
+          },
+        )
+        .subscribe();
+
+      return () => {
+        void supabase.removeChannel(channel);
+      };
+    }
+
+    const cleanupPromise = run();
+    // Mandatory cleanup: without eventually calling removeChannel, every
+    // unmount/remount of the header (i.e. every same-page navigation) leaks
+    // a websocket subscription and its closure (T-06-29).
+    return () => {
+      cancelled = true;
+      void cleanupPromise.then((cleanup) => cleanup?.());
+    };
+  }, [userId, onInsert]);
+}
 
 export default function NotificationBell({
   userId,
@@ -67,6 +137,19 @@ export default function NotificationBell({
     }
     void runLoad();
   }, [load]);
+
+  const handleInsert = useCallback((row: NotificationRow) => {
+    // The mount-time fetch and the first live event can race — guard
+    // against prepending a row already present from the initial load.
+    setRows((current) => {
+      if (current.some((existing) => existing.id === row.id)) {
+        return current;
+      }
+      return [row, ...current];
+    });
+  }, []);
+
+  useNotificationRealtime(userId, handleInsert);
 
   const unreadCount = rows.filter((row) => row.read_at === null).length;
   const badgeLabel = unreadCount > 9 ? BADGE_OVERFLOW_LABEL : String(unreadCount);

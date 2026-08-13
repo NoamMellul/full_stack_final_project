@@ -111,7 +111,7 @@ test.describe("NOTIF-01/02/03/04: notifications on booking, cancel, reschedule",
     await admin.removeChannel(channel);
   });
 
-  test.fixme("patient sees a notification after booking", async ({ page }) => {
+  test("patient sees a notification after booking", async ({ page }) => {
     const patient = await createTestUser("patient");
     const specialty = await createTestSpecialty();
     const location = await createTestLocation();
@@ -136,7 +136,7 @@ test.describe("NOTIF-01/02/03/04: notifications on booking, cancel, reschedule",
     await expect(page.getByText("Your appointment has been booked.")).toBeVisible();
   });
 
-  test.fixme("doctor sees a notification after a patient books", async ({ browser }) => {
+  test("doctor sees a notification after a patient books", async ({ browser }) => {
     const patient = await createTestUser("patient");
     const doctorUser = await createTestUser("doctor");
     const specialty = await createTestSpecialty();
@@ -169,7 +169,7 @@ test.describe("NOTIF-01/02/03/04: notifications on booking, cancel, reschedule",
     await doctorContext.close();
   });
 
-  test.fixme("patient sees a notification after the doctor cancels", async ({ browser }) => {
+  test("patient sees a notification after the doctor cancels", async ({ browser }) => {
     const patient = await createTestUser("patient");
     const doctorUser = await createTestUser("doctor");
     const specialty = await createTestSpecialty();
@@ -208,7 +208,7 @@ test.describe("NOTIF-01/02/03/04: notifications on booking, cancel, reschedule",
     await patientContext.close();
   });
 
-  test.fixme("patient sees a notification after rescheduling", async ({ page }) => {
+  test("patient sees a notification after rescheduling", async ({ page }) => {
     const patient = await createTestUser("patient");
     const specialty = await createTestSpecialty();
     const location = await createTestLocation();
@@ -255,7 +255,7 @@ test.describe("NOTIF-01/02/03/04: notifications on booking, cancel, reschedule",
     await expect(page.getByText("Your appointment has been rescheduled.")).toBeVisible();
   });
 
-  test.fixme(
+  test(
     "the notification badge updates without a page reload",
     async ({ page }) => {
       const patient = await createTestUser("patient");
@@ -275,7 +275,7 @@ test.describe("NOTIF-01/02/03/04: notifications on booking, cancel, reschedule",
     },
   );
 
-  test.fixme(
+  test(
     "one user never receives another user's notification",
     async ({ page }) => {
       const viewer = await createTestUser("patient");

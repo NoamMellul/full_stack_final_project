@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import LanguageSwitcher from "@/components/language-switcher";
 import LogoutButton from "@/components/logout-button";
+import NotificationBell from "@/components/notification-bell";
 import { createClient } from "@/lib/supabase/server";
 
 // D-06: renders for anonymous visitors too (logo + switcher only) — this is
@@ -29,13 +30,18 @@ export default async function SiteHeader() {
       </Link>
       <div className="flex items-center gap-2">
         <LanguageSwitcher />
-        {/* 06-06 mounts the notification bell here, gated to profile?.role !== "admin" */}
         {user ? (
           <>
             {profile?.full_name ? (
               <span className="hidden max-w-40 truncate text-sm sm:inline">
                 {profile.full_name}
               </span>
+            ) : null}
+            {/* notifications.user_id is only ever written for patients and
+                doctors — the bell is omitted entirely (not disabled) for an
+                admin session, which has structurally nothing to show. */}
+            {profile?.role === "patient" || profile?.role === "doctor" ? (
+              <NotificationBell userId={user.id} viewerRole={profile.role} />
             ) : null}
             <LogoutButton />
           </>
