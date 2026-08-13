@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import FavoriteToggle from "@/components/favorite-toggle";
 import InitialsAvatar from "@/components/initials-avatar";
 import type { DoctorSearchResult } from "@/components/search/doctor-card";
+import { useT } from "@/lib/i18n/locale-provider";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { formatJerusalemDayHeading, formatJerusalemTime } from "@/lib/timezone";
 
 // Matches GET /api/patient/favorites's response entries. `doctor` reuses
@@ -23,8 +25,6 @@ export type FavoriteEntry = {
   doctor: DoctorSearchResult | null;
 };
 
-const LANGUAGE_LABELS: Record<string, string> = { he: "Hebrew", en: "English" };
-
 function FavoritesSkeleton() {
   return (
     <div className="flex flex-col gap-4">
@@ -35,6 +35,16 @@ function FavoritesSkeleton() {
   );
 }
 
+// Resolves a spoken-language badge from the shared languages.he/languages.en
+// dictionary pair, falling back to the raw code for any value that is
+// neither — same fallback as components/search/doctor-card.tsx's identical
+// lookup (RESEARCH Pitfall 6, closed for the third and final LANGUAGE_LABELS
+// instance by this plan).
+const LANGUAGE_KEY_BY_CODE: Record<string, TranslationKey> = {
+  he: "languages.he",
+  en: "languages.en",
+};
+
 function FavoriteRow({
   entry,
   onRemoved,
@@ -42,6 +52,7 @@ function FavoriteRow({
   entry: FavoriteEntry & { doctor: DoctorSearchResult };
   onRemoved: () => void;
 }) {
+  const t = useT();
   const [photoFailed, setPhotoFailed] = useState(false);
   const doctor = entry.doctor;
   const showPhoto = Boolean(doctor.photo_url) && !photoFailed;
@@ -72,21 +83,25 @@ function FavoriteRow({
         </div>
 
         <div className="flex flex-wrap gap-1">
-          {doctor.language_codes.map((code) => (
-            <Badge key={code} variant="secondary">
-              {LANGUAGE_LABELS[code] ?? code}
-            </Badge>
-          ))}
-          {doctor.is_demo ? <Badge variant="secondary">Demo profile</Badge> : null}
+          {doctor.language_codes.map((code) => {
+            const key = LANGUAGE_KEY_BY_CODE[code];
+            return (
+              <Badge key={code} variant="secondary">
+                {key ? t(key) : code}
+              </Badge>
+            );
+          })}
+          {doctor.is_demo ? <Badge variant="secondary">{t("doctor_card.demo_profile")}</Badge> : null}
         </div>
 
         {doctor.next_available_at ? (
           <p className="text-sm">
-            Next available: {formatJerusalemDayHeading(doctor.next_available_at)}{" "}
+            {t("doctor_card.next_available_prefix")}{" "}
+            {formatJerusalemDayHeading(doctor.next_available_at)}{" "}
             {formatJerusalemTime(doctor.next_available_at)}
           </p>
         ) : (
-          <Badge variant="secondary">No upcoming availability</Badge>
+          <Badge variant="secondary">{t("doctor_card.no_availability")}</Badge>
         )}
 
         <FavoriteToggle
@@ -102,6 +117,7 @@ function FavoriteRow({
 }
 
 export default function PatientFavoritesPage() {
+  const t = useT();
   const [status, setStatus] = useState<"loading" | "error" | "ready">("loading");
   const [favorites, setFavorites] = useState<FavoriteEntry[]>([]);
 
@@ -147,28 +163,26 @@ export default function PatientFavoritesPage() {
 
   return (
     <main className="flex flex-1 flex-col ps-6 pe-6 py-8">
-      <h1 className="text-2xl font-semibold">My favorites</h1>
+      <h1 className="text-2xl font-semibold">{t("patient_favorites.title")}</h1>
 
       <div className="mt-8">
         {status === "loading" ? (
           <FavoritesSkeleton />
         ) : status === "error" ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <p className="text-sm text-destructive">
-              Could not load your favorites. Please try again.
-            </p>
+            <p className="text-sm text-destructive">{t("patient_favorites.load_error")}</p>
             <Button variant="outline" onClick={handleRetry}>
-              Retry
+              {t("common.retry")}
             </Button>
           </div>
         ) : renderableFavorites.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <h2 className="text-lg font-semibold">No favorites yet</h2>
+            <h2 className="text-lg font-semibold">{t("patient_favorites.empty_heading")}</h2>
             <p className="max-w-md text-sm text-muted-foreground">
-              Save doctors you like to find them quickly next time.
+              {t("patient_favorites.empty_body")}
             </p>
             <Button className="min-h-11" render={<Link href="/search" />}>
-              Find a doctor
+              {t("patient_favorites.find_doctor_cta")}
             </Button>
           </div>
         ) : (

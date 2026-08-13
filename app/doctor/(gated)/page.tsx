@@ -4,21 +4,28 @@ import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getT } from "@/lib/i18n/server";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/server";
 
-const STAT_CAPTIONS = ["Upcoming appointments", "Available slots"] as const;
+const STAT_CAPTION_KEYS = [
+  "doctor_dashboard.upcoming_caption",
+  "doctor_dashboard.available_caption",
+] as const satisfies readonly TranslationKey[];
 
 // Same 32px/600 value + 14px/600 caption stat-card markup as
 // app/admin/page.tsx, shown while both count queries resolve behind the
-// Suspense boundary below (UI-SPEC loading).
-function DoctorDashboardStatsSkeleton() {
+// Suspense boundary below (UI-SPEC loading). Takes `t` as a prop (rather
+// than awaiting its own getT()) so the fallback itself never suspends — the
+// parent page resolves the translator once and hands it down synchronously.
+function DoctorDashboardStatsSkeleton({ t }: { t: (key: TranslationKey) => string }) {
   return (
     <div className="grid grid-cols-2 gap-8">
-      {STAT_CAPTIONS.map((caption) => (
-        <Card key={caption} className="bg-secondary">
+      {STAT_CAPTION_KEYS.map((captionKey) => (
+        <Card key={captionKey} className="bg-secondary">
           <CardContent className="flex flex-col gap-2">
             <Skeleton className="h-[32px] w-16" />
-            <span className="text-sm leading-[1.4] font-semibold">{caption}</span>
+            <span className="text-sm leading-[1.4] font-semibold">{t(captionKey)}</span>
           </CardContent>
         </Card>
       ))}
@@ -32,6 +39,7 @@ function DoctorDashboardStatsSkeleton() {
 // replicated here rather than calling the guard, which returns a
 // NextResponse unusable in a page.
 async function DoctorDashboardStats() {
+  const t = await getT();
   const supabase = await createClient();
   const {
     data: { user },
@@ -78,17 +86,17 @@ async function DoctorDashboardStats() {
   // number 0 rather than an empty/missing-data card (a zero count is a
   // normal value, matching the admin dashboard's identical stat cards).
   const cards = [
-    { caption: "Upcoming appointments", value: upcomingResult.count ?? 0 },
-    { caption: "Available slots", value: availableResult.count ?? 0 },
+    { captionKey: STAT_CAPTION_KEYS[0], value: upcomingResult.count ?? 0 },
+    { captionKey: STAT_CAPTION_KEYS[1], value: availableResult.count ?? 0 },
   ];
 
   return (
     <div className="grid grid-cols-2 gap-8">
       {cards.map((card) => (
-        <Card key={card.caption} className="bg-secondary">
+        <Card key={card.captionKey} className="bg-secondary">
           <CardContent className="flex flex-col gap-2">
             <span className="text-[32px] leading-[1.2] font-semibold">{card.value}</span>
-            <span className="text-sm leading-[1.4] font-semibold">{card.caption}</span>
+            <span className="text-sm leading-[1.4] font-semibold">{t(card.captionKey)}</span>
           </CardContent>
         </Card>
       ))}
@@ -96,20 +104,23 @@ async function DoctorDashboardStats() {
   );
 }
 
-export default function DoctorDashboardPage() {
+export default async function DoctorDashboardPage() {
+  const t = await getT();
   return (
     <main className="flex flex-1 flex-col ps-6 pe-6 py-8">
-      <h1 className="text-2xl font-semibold">My dashboard</h1>
+      <h1 className="text-2xl font-semibold">{t("doctor_dashboard.title")}</h1>
 
       <div className="mt-8 flex flex-col gap-8">
-        <Suspense fallback={<DoctorDashboardStatsSkeleton />}>
+        <Suspense fallback={<DoctorDashboardStatsSkeleton t={t} />}>
           <DoctorDashboardStats />
         </Suspense>
 
         <div className="flex items-center gap-2">
-          <Button render={<Link href="/doctor/schedule" />}>Manage my schedule</Button>
+          <Button render={<Link href="/doctor/schedule" />}>
+            {t("doctor_dashboard.manage_schedule")}
+          </Button>
           <Button variant="outline" render={<Link href="/doctor/appointments" />}>
-            My appointments
+            {t("doctor_dashboard.my_appointments")}
           </Button>
         </div>
       </div>

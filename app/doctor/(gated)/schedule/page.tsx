@@ -16,6 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/lib/i18n/locale-provider";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { translateValidationMessage } from "@/lib/i18n/validation-messages";
 import { validateBlockedPeriodInput, validateSlotInput } from "@/lib/validation/availability";
 import {
   formatJerusalemDayHeading,
@@ -52,10 +55,14 @@ export function groupEntriesByJerusalemDay(entries: ScheduleEntry[]): EntryDayGr
   return groups;
 }
 
-function statusBadge(status: ScheduleEntry["status"]) {
-  if (status === "available") return <Badge variant="default">Available</Badge>;
-  if (status === "blocked") return <Badge variant="secondary">Blocked</Badge>;
-  return <Badge variant="outline">Booked</Badge>;
+function statusBadge(status: ScheduleEntry["status"], t: (key: TranslationKey) => string) {
+  if (status === "available") {
+    return <Badge variant="default">{t("doctor_schedule.status_available")}</Badge>;
+  }
+  if (status === "blocked") {
+    return <Badge variant="secondary">{t("doctor_schedule.status_blocked")}</Badge>;
+  }
+  return <Badge variant="outline">{t("doctor_schedule.status_booked")}</Badge>;
 }
 
 function ScheduleListSkeleton() {
@@ -69,6 +76,7 @@ function ScheduleListSkeleton() {
 }
 
 export default function DoctorSchedulePage() {
+  const t = useT();
   const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
 
@@ -136,7 +144,7 @@ export default function DoctorSchedulePage() {
     setAddApiError(null);
 
     if (!date || !startTime || !endTime) {
-      setAddApiError("Start and end time are required.");
+      setAddApiError(t("validation.start_end_required"));
       return;
     }
 
@@ -150,7 +158,7 @@ export default function DoctorSchedulePage() {
 
     const validationError = validateSlotInput(body);
     if (validationError) {
-      setAddApiError(validationError);
+      setAddApiError(translateValidationMessage(validationError, t));
       return;
     }
 
@@ -164,14 +172,14 @@ export default function DoctorSchedulePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setAddApiError(data.error ?? "Could not save this time slot. Please try again.");
+        setAddApiError(data.error ?? t("doctor_schedule.save_slot_generic_error"));
         return;
       }
 
       closeAddDialog();
       await loadEntries();
     } catch {
-      setAddApiError("Could not save this time slot. Please try again.");
+      setAddApiError(t("doctor_schedule.save_slot_generic_error"));
     } finally {
       setIsAdding(false);
     }
@@ -196,7 +204,7 @@ export default function DoctorSchedulePage() {
     setBlockApiError(null);
 
     if (!blockStartDate || !blockStartTime || !blockEndDate || !blockEndTime) {
-      setBlockApiError("Start and end time are required.");
+      setBlockApiError(t("validation.start_end_required"));
       return;
     }
 
@@ -226,7 +234,7 @@ export default function DoctorSchedulePage() {
 
     const validationError = validateBlockedPeriodInput(body);
     if (validationError) {
-      setBlockApiError(validationError);
+      setBlockApiError(translateValidationMessage(validationError, t));
       return;
     }
 
@@ -240,14 +248,14 @@ export default function DoctorSchedulePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setBlockApiError(data.error ?? "Could not save this time slot. Please try again.");
+        setBlockApiError(data.error ?? t("doctor_schedule.save_slot_generic_error"));
         return;
       }
 
       closeBlockDialog();
       await loadEntries();
     } catch {
-      setBlockApiError("Could not save this time slot. Please try again.");
+      setBlockApiError(t("doctor_schedule.save_slot_generic_error"));
     } finally {
       setIsBlocking(false);
     }
@@ -274,19 +282,21 @@ export default function DoctorSchedulePage() {
         // The row's deletability may have changed between list-load and this
         // click (e.g. a patient just booked it) — surface the server's
         // message verbatim and refresh so the list catches up on screen.
-        setStatusMessage(data.error ?? "Could not delete this entry. Please try again.");
+        setStatusMessage(data.error ?? t("doctor_schedule.delete_entry_error"));
         closeDeleteDialog();
         await loadEntries();
         return;
       }
 
       setStatusMessage(
-        deletingEntry.status === "blocked" ? "Block removed." : "Slot deleted.",
+        deletingEntry.status === "blocked"
+          ? t("doctor_schedule.block_removed_status")
+          : t("doctor_schedule.slot_deleted_status"),
       );
       closeDeleteDialog();
       await loadEntries();
     } catch {
-      setStatusMessage("Could not delete this entry. Please try again.");
+      setStatusMessage(t("doctor_schedule.delete_entry_error"));
       closeDeleteDialog();
     } finally {
       setIsDeleting(false);
@@ -298,13 +308,13 @@ export default function DoctorSchedulePage() {
   return (
     <main className="flex flex-1 flex-col gap-6 ps-4 pe-4 py-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">My schedule</h1>
+        <h1 className="text-2xl font-semibold">{t("doctor_schedule.title")}</h1>
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" onClick={openBlockDialog}>
-            Block period
+            {t("doctor_schedule.block_period")}
           </Button>
           <Button type="button" onClick={openAddDialog}>
-            Add slot
+            {t("doctor_schedule.add_slot")}
           </Button>
         </div>
       </div>
@@ -312,11 +322,11 @@ export default function DoctorSchedulePage() {
       <Dialog open={addOpen} onOpenChange={(open) => (!open ? closeAddDialog() : undefined)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Add a slot</DialogTitle>
+            <DialogTitle>{t("doctor_schedule.add_dialog_title")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAddSubmit} noValidate className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="add-slot-date">Date</Label>
+              <Label htmlFor="add-slot-date">{t("doctor_schedule.date_label")}</Label>
               <Input
                 id="add-slot-date"
                 type="date"
@@ -325,7 +335,7 @@ export default function DoctorSchedulePage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="add-slot-start-time">Start time</Label>
+              <Label htmlFor="add-slot-start-time">{t("doctor_schedule.start_time_label")}</Label>
               <Input
                 id="add-slot-start-time"
                 type="time"
@@ -334,7 +344,7 @@ export default function DoctorSchedulePage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="add-slot-end-time">End time</Label>
+              <Label htmlFor="add-slot-end-time">{t("doctor_schedule.end_time_label")}</Label>
               <Input
                 id="add-slot-end-time"
                 type="time"
@@ -351,7 +361,7 @@ export default function DoctorSchedulePage() {
 
             <DialogFooter>
               <Button type="submit" disabled={isAdding}>
-                {isAdding ? "Adding…" : "Add slot"}
+                {isAdding ? t("doctor_schedule.adding") : t("doctor_schedule.add_slot")}
               </Button>
             </DialogFooter>
           </form>
@@ -361,11 +371,11 @@ export default function DoctorSchedulePage() {
       <Dialog open={blockOpen} onOpenChange={(open) => (!open ? closeBlockDialog() : undefined)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Block a period</DialogTitle>
+            <DialogTitle>{t("doctor_schedule.block_dialog_title")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleBlockSubmit} noValidate className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="block-start-date">Start date</Label>
+              <Label htmlFor="block-start-date">{t("doctor_schedule.start_date_label")}</Label>
               <Input
                 id="block-start-date"
                 type="date"
@@ -374,7 +384,7 @@ export default function DoctorSchedulePage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="block-start-time">Start time</Label>
+              <Label htmlFor="block-start-time">{t("doctor_schedule.start_time_label")}</Label>
               <Input
                 id="block-start-time"
                 type="time"
@@ -383,7 +393,7 @@ export default function DoctorSchedulePage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="block-end-date">End date</Label>
+              <Label htmlFor="block-end-date">{t("doctor_schedule.end_date_label")}</Label>
               <Input
                 id="block-end-date"
                 type="date"
@@ -392,7 +402,7 @@ export default function DoctorSchedulePage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="block-end-time">End time</Label>
+              <Label htmlFor="block-end-time">{t("doctor_schedule.end_time_label")}</Label>
               <Input
                 id="block-end-time"
                 type="time"
@@ -401,10 +411,10 @@ export default function DoctorSchedulePage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="block-reason">Reason (optional)</Label>
+              <Label htmlFor="block-reason">{t("doctor_schedule.block_reason_label")}</Label>
               <Textarea
                 id="block-reason"
-                placeholder="e.g. Vacation, Conference"
+                placeholder={t("doctor_schedule.block_reason_placeholder")}
                 value={blockReason}
                 onChange={(e) => setBlockReason(e.target.value)}
               />
@@ -418,7 +428,7 @@ export default function DoctorSchedulePage() {
 
             <DialogFooter>
               <Button type="submit" disabled={isBlocking}>
-                {isBlocking ? "Blocking…" : "Block period"}
+                {isBlocking ? t("doctor_schedule.blocking") : t("doctor_schedule.block_period")}
               </Button>
             </DialogFooter>
           </form>
@@ -434,17 +444,19 @@ export default function DoctorSchedulePage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {deletingEntry?.status === "blocked" ? "Remove this block?" : "Delete this slot?"}
+              {deletingEntry?.status === "blocked"
+                ? t("doctor_schedule.remove_block_title")
+                : t("doctor_schedule.delete_slot_title")}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             {deletingEntry?.status === "blocked"
-              ? "This cannot be undone. Availability from before the block won't be restored automatically."
-              : "This cannot be undone."}
+              ? t("doctor_schedule.remove_block_body")
+              : t("doctor_schedule.delete_slot_body")}
           </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeDeleteDialog} disabled={isDeleting}>
-              Cancel
+              {t("doctor_schedule.cancel")}
             </Button>
             <Button
               type="button"
@@ -452,7 +464,7 @@ export default function DoctorSchedulePage() {
               onClick={handleConfirmDelete}
               disabled={isDeleting}
             >
-              {isDeleting ? "Deleting…" : "Delete"}
+              {isDeleting ? t("doctor_schedule.deleting") : t("doctor_schedule.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -466,18 +478,16 @@ export default function DoctorSchedulePage() {
         <ScheduleListSkeleton />
       ) : listStatus === "error" ? (
         <div className="flex flex-col items-center gap-3 py-8 text-center">
-          <p className="text-sm text-destructive">
-            Could not load your schedule. Please try again.
-          </p>
+          <p className="text-sm text-destructive">{t("doctor_schedule.load_error")}</p>
           <Button variant="outline" onClick={handleRetry}>
-            Retry
+            {t("common.retry")}
           </Button>
         </div>
       ) : groups.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-8 text-center">
-          <h2 className="text-lg font-semibold">No upcoming availability</h2>
+          <h2 className="text-lg font-semibold">{t("doctor_schedule.empty_heading")}</h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Add a slot or block a period to build out your schedule.
+            {t("doctor_schedule.empty_body")}
           </p>
         </div>
       ) : (
@@ -493,7 +503,7 @@ export default function DoctorSchedulePage() {
                     <span className="text-sm">
                       {formatJerusalemTime(entry.start_at)} – {formatJerusalemTime(entry.end_at)}
                     </span>
-                    {statusBadge(entry.status)}
+                    {statusBadge(entry.status, t)}
                     {entry.status === "blocked" && entry.reason ? (
                       <span className="min-w-0 flex-1 text-sm break-words text-muted-foreground">
                         {entry.reason}
@@ -505,10 +515,10 @@ export default function DoctorSchedulePage() {
                         variant="destructive"
                         size="sm"
                         className="min-h-11"
-                        aria-label={`Delete ${formatJerusalemTime(entry.start_at)} – ${formatJerusalemTime(entry.end_at)}`}
+                        aria-label={`${t("doctor_schedule.delete")} ${formatJerusalemTime(entry.start_at)} – ${formatJerusalemTime(entry.end_at)}`}
                         onClick={() => openDeleteDialog(entry)}
                       >
-                        Delete
+                        {t("doctor_schedule.delete")}
                       </Button>
                     ) : null}
                   </div>
