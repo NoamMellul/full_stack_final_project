@@ -6,6 +6,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import SearchFilters from "@/components/search/search-filters";
 import SearchResults from "@/components/search/search-results";
 import type { DoctorSearchResult } from "@/components/search/doctor-card";
+import { useT } from "@/lib/i18n/locale-provider";
 
 // Small custom debounce hook (no library — RESEARCH.md Pattern 4). Kept at
 // this page level and passed down as props by plan 03-05; do not move.
@@ -24,6 +25,7 @@ type FavoritesState = {
 };
 
 function SearchPageInner() {
+  const t = useT();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -116,7 +118,7 @@ function SearchPageInner() {
       const response = await fetch(`/api/doctors?${searchParams.toString()}`);
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error ?? "Could not load doctors. Please try again.");
+        throw new Error(data.error ?? t("search.results.load_error"));
       }
       setDoctors(data.doctors as DoctorSearchResult[]);
       setTotal(data.total as number);
@@ -124,7 +126,7 @@ function SearchPageInner() {
     } catch {
       setListStatus("error");
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   // Every query change (not just the very first mount) re-shows the
   // skeleton grid until the response resolves — the initial fetch and every
@@ -162,7 +164,7 @@ function SearchPageInner() {
 
   return (
     <main className="flex flex-1 flex-col gap-6 ps-4 pe-4 py-6">
-      <h1 className="text-2xl font-semibold">Find a doctor</h1>
+      <h1 className="text-2xl font-semibold">{t("search.heading")}</h1>
 
       <SearchFilters
         nameValue={nameInput}

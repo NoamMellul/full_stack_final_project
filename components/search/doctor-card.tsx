@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import FavoriteToggle from "@/components/favorite-toggle";
 import InitialsAvatar from "@/components/initials-avatar";
+import { useT } from "@/lib/i18n/locale-provider";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { formatJerusalemDayHeading, formatJerusalemTime } from "@/lib/timezone";
 
 // Shared by search-results.tsx and app/search/page.tsx — exported from here
@@ -28,7 +30,14 @@ export type DoctorSearchResult = {
   next_available_at: string | null;
 };
 
-const LANGUAGE_LABELS: Record<string, string> = { he: "Hebrew", en: "English" };
+// Resolves a spoken-language badge from the shared languages.he/languages.en
+// dictionary pair, falling back to the raw code for any value that is
+// neither — the same fallback the deleted per-file language-label map
+// already had (RESEARCH Pitfall 6).
+const LANGUAGE_KEY_BY_CODE: Record<string, TranslationKey> = {
+  he: "languages.he",
+  en: "languages.en",
+};
 
 type DoctorCardProps = {
   doctor: DoctorSearchResult;
@@ -41,6 +50,7 @@ export default function DoctorCard({
   favoriteViewerRole = "hidden",
   isFavorited = false,
 }: DoctorCardProps) {
+  const t = useT();
   // Flips true if the external photo_url 404s/fails to load — falls back to
   // InitialsAvatar rather than a broken-image glyph (UI-SPEC partial state).
   const [photoFailed, setPhotoFailed] = useState(false);
@@ -80,28 +90,32 @@ export default function DoctorCard({
         </div>
 
         <div className="flex flex-wrap gap-1">
-          {doctor.language_codes.map((code) => (
-            <Badge key={code} variant="secondary">
-              {LANGUAGE_LABELS[code] ?? code}
-            </Badge>
-          ))}
-          {doctor.is_demo ? <Badge variant="secondary">Demo profile</Badge> : null}
+          {doctor.language_codes.map((code) => {
+            const key = LANGUAGE_KEY_BY_CODE[code];
+            return (
+              <Badge key={code} variant="secondary">
+                {key ? t(key) : code}
+              </Badge>
+            );
+          })}
+          {doctor.is_demo ? <Badge variant="secondary">{t("doctor_card.demo_profile")}</Badge> : null}
         </div>
 
         {doctor.next_available_at ? (
           <p className="text-sm">
-            Next available: {formatJerusalemDayHeading(doctor.next_available_at)}{" "}
+            {t("doctor_card.next_available_prefix")}{" "}
+            {formatJerusalemDayHeading(doctor.next_available_at)}{" "}
             {formatJerusalemTime(doctor.next_available_at)}
           </p>
         ) : (
-          <Badge variant="secondary">No upcoming availability</Badge>
+          <Badge variant="secondary">{t("doctor_card.no_availability")}</Badge>
         )}
 
         <Button
           className="w-fit min-h-11 px-4"
           render={<Link href={`/doctors/${doctor.id}`} />}
         >
-          View profile
+          {t("doctor_card.view_profile")}
         </Button>
       </CardContent>
     </Card>
