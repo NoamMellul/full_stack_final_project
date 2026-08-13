@@ -18,10 +18,19 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import FavoriteToggle from "@/components/favorite-toggle";
 import InitialsAvatar from "@/components/initials-avatar";
+import { useT } from "@/lib/i18n/locale-provider";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { createClient } from "@/lib/supabase/client";
 import { formatJerusalemDayHeading, formatJerusalemTime, jerusalemDayKey } from "@/lib/timezone";
 
-const LANGUAGE_LABELS: Record<string, string> = { he: "Hebrew", en: "English" };
+// Resolves a spoken-language badge from the shared languages.he/languages.en
+// dictionary pair, falling back to the raw code for any value that is
+// neither — completes the RESEARCH Pitfall 6 consolidation started in
+// components/search/doctor-card.tsx (half 2 of 2).
+const LANGUAGE_KEY_BY_CODE: Record<string, TranslationKey> = {
+  he: "languages.he",
+  en: "languages.en",
+};
 
 type DoctorProfile = {
   id: string;
@@ -85,6 +94,7 @@ function DoctorProfileSkeleton() {
 }
 
 function DoctorProfilePageInner() {
+  const t = useT();
   const params = useParams<{ id: string }>();
   const id = params.id;
   const router = useRouter();
@@ -198,13 +208,17 @@ function DoctorProfilePageInner() {
       const data = await response.json();
 
       if (!response.ok) {
-        setBookingApiError(data.error ?? "Could not book this appointment. Please try again.");
+        // data.error is the appointments route's own literal (unchanged by
+        // this plan); the client renders it as-is. Only the fallback
+        // default — used when the response body carries no error, or the
+        // request itself throws — is routed through t().
+        setBookingApiError(data.error ?? t("doctor_profile.booking_generic_error"));
         return;
       }
 
       router.push("/patient/appointments?booked=1");
     } catch {
-      setBookingApiError("Could not book this appointment. Please try again.");
+      setBookingApiError(t("doctor_profile.booking_generic_error"));
     } finally {
       setIsBooking(false);
     }
@@ -221,11 +235,13 @@ function DoctorProfilePageInner() {
   if (status === "notFound") {
     return (
       <main className="flex flex-1 flex-col items-center gap-3 ps-4 pe-4 py-16 text-center">
-        <h1 className="text-2xl font-semibold text-destructive">Doctor not found</h1>
+        <h1 className="text-2xl font-semibold text-destructive">
+          {t("doctor_profile.not_found_heading")}
+        </h1>
         <p className="max-w-md text-sm text-destructive">
-          This doctor profile doesn&apos;t exist or is no longer active.
+          {t("doctor_profile.not_found_body")}
         </p>
-        <Button render={<Link href="/search" />}>Back to search</Button>
+        <Button render={<Link href="/search" />}>{t("doctor_profile.back_to_search")}</Button>
       </main>
     );
   }
@@ -233,9 +249,9 @@ function DoctorProfilePageInner() {
   if (status === "error") {
     return (
       <main className="flex flex-1 flex-col items-center gap-3 ps-4 pe-4 py-16 text-center">
-        <p className="text-sm text-destructive">Could not load this doctor. Please try again.</p>
+        <p className="text-sm text-destructive">{t("doctor_profile.load_error")}</p>
         <Button variant="outline" onClick={() => void loadDoctor()}>
-          Retry
+          {t("common.retry")}
         </Button>
       </main>
     );
@@ -268,7 +284,9 @@ function DoctorProfilePageInner() {
           <InitialsAvatar name={doctor.full_name} size="default" className="size-16 text-base" />
         )}
         <h1 className="text-2xl font-semibold">{doctor.full_name}</h1>
-        {doctor.is_demo ? <Badge variant="secondary">Demo profile</Badge> : null}
+        {doctor.is_demo ? (
+          <Badge variant="secondary">{t("doctor_card.demo_profile")}</Badge>
+        ) : null}
         {favoritesState.role !== "hidden" ? (
           <FavoriteToggle
             doctorId={doctor.id}
@@ -284,11 +302,14 @@ function DoctorProfilePageInner() {
       </div>
 
       <div className="flex flex-wrap gap-1">
-        {doctor.languages.map((language) => (
-          <Badge key={language.id} variant="secondary">
-            {LANGUAGE_LABELS[language.code] ?? language.code}
-          </Badge>
-        ))}
+        {doctor.languages.map((language) => {
+          const key = LANGUAGE_KEY_BY_CODE[language.code];
+          return (
+            <Badge key={language.id} variant="secondary">
+              {key ? t(key) : language.code}
+            </Badge>
+          );
+        })}
       </div>
 
       <Card>
@@ -296,16 +317,16 @@ function DoctorProfilePageInner() {
           {bio ? (
             <p className="whitespace-pre-line">{bio}</p>
           ) : (
-            <p className="text-sm text-muted-foreground">No description provided.</p>
+            <p className="text-sm text-muted-foreground">{t("doctor_profile.no_description")}</p>
           )}
         </CardContent>
       </Card>
 
       <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">Upcoming availability</h2>
+        <h2 className="text-lg font-semibold">{t("doctor_profile.availability_heading")}</h2>
 
         {slotGroups.length === 0 ? (
-          <Badge variant="secondary">No upcoming availability</Badge>
+          <Badge variant="secondary">{t("doctor_card.no_availability")}</Badge>
         ) : (
           <div className="flex flex-col gap-4">
             {slotGroups.map((group) => (
@@ -323,7 +344,7 @@ function DoctorProfilePageInner() {
                         className="min-h-11 px-4"
                         onClick={() => void handleSelectSlot(slot)}
                       >
-                        Select this slot
+                        {t("doctor_profile.select_slot")}
                       </Button>
                     </div>
                   ))}
@@ -342,7 +363,7 @@ function DoctorProfilePageInner() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirm your appointment</DialogTitle>
+            <DialogTitle>{t("doctor_profile.booking_dialog_title")}</DialogTitle>
           </DialogHeader>
           {selectedSlot ? (
             <div className="flex flex-col gap-2 text-sm">
@@ -375,7 +396,7 @@ function DoctorProfilePageInner() {
               onClick={closeBookingDialog}
               disabled={isBooking}
             >
-              Cancel
+              {t("doctor_profile.booking_dialog_cancel")}
             </Button>
             <Button
               type="button"
@@ -383,7 +404,9 @@ function DoctorProfilePageInner() {
               onClick={() => void handleConfirmBooking()}
               disabled={isBooking}
             >
-              {isBooking ? "Booking…" : "Confirm booking"}
+              {isBooking
+                ? t("doctor_profile.booking_dialog_confirming")
+                : t("doctor_profile.booking_dialog_confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
