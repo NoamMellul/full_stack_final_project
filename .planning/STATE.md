@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 6
+current_phase: 06
 current_phase_name: Dashboards, Notifications & Localization
 status: executing
-stopped_at: Completed 06-06-PLAN.md
-last_updated: "2026-08-13T08:38:22.777Z"
-last_activity: 2026-08-12
-last_activity_desc: Phase 6 execution started
+stopped_at: Completed 06-07-PLAN.md
+last_updated: "2026-08-13T09:58:51.587Z"
+last_activity: 2026-08-13
+last_activity_desc: Phase 06 execution started
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 39
-  completed_plans: 35
+  completed_plans: 36
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-11)
 
 **Core value:** A patient must be able to find a doctor matching their criteria and book an available slot in a few clicks, with an absolute guarantee that two patients never book the same slot.
-**Current focus:** Phase 6 — Dashboards, Notifications & Localization
+**Current focus:** Phase 06 — Dashboards, Notifications & Localization
 
 ## Current Position
 
-Phase: 6 (Dashboards, Notifications & Localization) — EXECUTING
-Plan: 7 of 10
-Status: Ready to execute
-Last activity: 2026-08-12 — Phase 6 execution started
+Phase: 06 (Dashboards, Notifications & Localization) — EXECUTING
+Plan: 8 of 10
+Status: Executing Phase 06
+Last activity: 2026-08-13 — Completed 06-07-PLAN.md
 
-Progress: [█████████░] 90%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -94,6 +94,7 @@ Progress: [█████████░] 90%
 | Phase 06 P04 | 100min | 3 tasks | 5 files |
 | Phase 06 P05 | 165min | 3 tasks | 15 files |
 | Phase 06 P06 | 70min | 3 tasks | 5 files |
+| Phase 06 P07 | 210min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -183,6 +184,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 06] Plan 06-05: components/site-header.tsx's anonymous-visitor early return removed (D-06) and profiles select widened to full_name, role (role fetched for 06-06's admin bell-omission gate, unused by this plan); language-switcher.tsx labels EN/עב never routed through t()
 - [Phase 06]: [Phase 06] Plan 06-06: useNotificationRealtime awaits supabase.auth.getSession() before .channel().subscribe() -- without it, .subscribe() can race ahead of the browser client's own auth-state listener and join Realtime authenticated only as the anon key, so RLS silently drops every postgres_changes broadcast for that connection even though the channel still acks SUBSCRIBED — Closes RESEARCH Assumption A1 (flagged in the plan) -- root-caused via bisection (raw supabase-js in a bare page, Node.js reproductions, a debug widget mounted side-by-side with the real bell) after the badge-update test failed consistently on a hard page.goto to the same route.
 - [Phase 06]: [Phase 06] Plan 06-06: notificationCopyKey(type, viewerRole) resolves notification copy from the viewer's OWN role (profiles.role), never a field read off the notification row -- both recipients of one event share an identical type value with no role discriminator on the row itself — RLS (notifications_select_own) already scopes every readable row to user_id = auth.uid(), so the viewer's own role is definitionally the recipient role for every row they can see; deriving copy from the row alone would be silently wrong for exactly one of the two recipients of any shared event.
+- [Phase ?]: [Phase 06] Plan 06-07: RESEARCH Assumption A3 locked as option (a) - lib/i18n/validation-messages.ts's VALIDATION_MESSAGE_KEYS/translateValidationMessage() translates lib/validation/*.ts's literal English messages at the render boundary; no validator or route handler modified
+- [Phase ?]: [Phase 06] Plan 06-07: authored the complete 213-key non-admin dictionary inventory (home/auth/search/doctor_card/doctor_profile/appointment_status/favorite_toggle/patient_dashboard/patient_appointments/doctor_appointments/doctor_dashboard/doctor_schedule/auth.change_password/patient_favorites/validation namespaces); languages.he/languages.en authored as the single shared pair collapsing the two duplicated LANGUAGE_LABELS maps (RESEARCH Pitfall 6); 06-08 and 06-09 consume read-only and must not add keys
+- [Phase ?]: [Phase 06] Plan 06-07: appointment_status.confirmed/past/cancelled_by_patient/cancelled_by_doctor mirror lib/appointments.ts's four literal badge labels verbatim; lib/appointments.ts itself untouched (06-09 changes appointmentBadge() to return labelKey and switches both appointment pages' eligibility predicates off rendered text, T-06-40)
 
 ### Pending Todos
 
@@ -200,6 +204,7 @@ None yet.
 - [Phase 06] Plan 06-04's full-suite run showed a fourth recurrence of the shared-dev-DB test-residue class (seed-availability.spec.ts:170, now WINDOWS.md id 3) plus a transient dev-server ERR_CONNECTION_REFUSED window that failed 8 unrelated tests (5 of this plan's own new tests + 3 from 06-03) -- all 8 passed cleanly on an isolated re-run immediately afterward, confirming the connectivity theory; only the pre-existing residue failure persisted
 - [Phase 06] Plan 06-05's full-suite run reconfirmed the same class of pre-existing failures for a fifth+ time (admin-route-protection.spec.ts:230, seed-availability.spec.ts:170) plus a new cascading admin-doctor-link-account.spec.ts failure (Supabase Auth 'Could not create a login' — plausibly rate-limiting from this session's several consecutive full-suite runs) and a notifications-realtime.spec.ts Realtime-subscription timeout -- consistent with the tracked shared-dev-DB/environment flakiness blocker, not caused by this plan (all 5 locale-switching tests and every header-touching test passed)
 - [Phase 06] Plan 06-06's executing session ended (usage-limit stop, then an expired-login retry) after committing all 3 tasks but before writing 06-06-SUMMARY.md or advancing STATE.md/ROADMAP.md -- closed out retroactively in a follow-up session: independently re-verified tsc/lint/build/full-suite (the crashed session's own "13/13, run twice" claim was not accurate on first independent re-check, though a clean re-run did confirm 13/13). Full-suite run: 319 passed/2 failed, both the same pre-existing shared-dev-DB/environment flakiness class as every prior 06-0X plan (6th+ recurrence, WINDOWS.md ids 6-7), unrelated to 06-06's code.
+- [Phase 06] Plan 06-07's full-suite run (321 tests) showed 305 passed/5 failed/11 did-not-run -- a worse-than-usual recurrence of the tracked shared-dev-DB test-residue/Supabase-API-rate-limiting flakiness class (WINDOWS.md ids 8-9): appointment-reschedule.spec.ts:764, doctor-schedule-overlap.spec.ts:381, doctor-schedule-visibility.spec.ts:190 (beforeAll timeout, 8 cascaded skips), seed-availability.spec.ts:170/184 (beforeAll timeout, 3 cascaded skips). An isolated re-run of just these 4 spec files passed the appointment-reschedule and doctor-schedule-visibility suites cleanly; remaining failures were afterAll-hook 30s cleanup timeouts (assertions themselves passed) plus the recurring seed-availability.spec.ts:170 residue. This plan touched zero application code (dictionary JSON + one unimported utility module only), so these are not a 06-07 regression -- but the pattern is now compounding across a long test-heavy session and would benefit from a dev-DB reset or a quieter-window re-run before /gsd-ship
 
 ## Deferred Items
 
@@ -211,6 +216,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-13T08:38:22.743Z
-Stopped at: Completed 06-06-PLAN.md
+Last session: 2026-08-13T09:58:51.554Z
+Stopped at: Completed 06-07-PLAN.md
 Resume file: None
