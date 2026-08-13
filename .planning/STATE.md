@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 06
 current_phase_name: Dashboards, Notifications & Localization
 status: executing
-stopped_at: Completed 06-08-PLAN.md
-last_updated: "2026-08-13T11:27:58.815Z"
+stopped_at: Completed 06-09-PLAN.md
+last_updated: "2026-08-13T16:54:40.315Z"
 last_activity: 2026-08-13
 last_activity_desc: Phase 06 execution resumed (wave continue)
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 39
-  completed_plans: 37
+  completed_plans: 38
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 ## Current Position
 
 Phase: 06 (Dashboards, Notifications & Localization) — EXECUTING
-Plan: 9 of 10
+Plan: 10 of 10
 Status: Ready to execute
 Last activity: 2026-08-13 — Phase 06 execution resumed (wave continue)
 
-Progress: [██████████] 95%
+Progress: [██████████] 97%
 
 ## Performance Metrics
 
@@ -96,6 +96,7 @@ Progress: [██████████] 95%
 | Phase 06 P06 | 70min | 3 tasks | 5 files |
 | Phase 06 P07 | 210min | 3 tasks | 3 files |
 | Phase 06 P08 | 55min | 3 tasks | 8 files |
+| Phase 06 P09 | 45min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -190,6 +191,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 06] Plan 06-07: appointment_status.confirmed/past/cancelled_by_patient/cancelled_by_doctor mirror lib/appointments.ts's four literal badge labels verbatim; lib/appointments.ts itself untouched (06-09 changes appointmentBadge() to return labelKey and switches both appointment pages' eligibility predicates off rendered text, T-06-40)
 - [Phase ?]: [Phase 06] Plan 06-08: client-authored generic-error fallbacks (auth.login.generic_error, auth.signup.generic_error, doctor_profile.booking_generic_error) route through t(); the server route's own returned error string renders unchanged in either locale, preserving T-06-37's login non-oracle guarantee with zero route-handler changes
 - [Phase ?]: [Phase 06] Plan 06-08: both duplicate LANGUAGE_LABELS maps (doctor-card.tsx, doctors/[id]/page.tsx) deleted in favor of shared languages.he/languages.en dictionary lookup with the same raw-code fallback (RESEARCH Pitfall 6 closed); search-filters.tsx's separate language Select items map also now resolves from the same pair; a third LANGUAGE_LABELS instance in app/patient/favorites/page.tsx is out of this plan's scope, owned by 06-09
+- [Phase ?]: [Phase 06] Plan 06-09: AppointmentBadge.label -> labelKey: TranslationKey; both appointment pages' cancel/reschedule eligibility predicates now compare labelKey against the appointment_status confirmed key instead of rendered text, closing T-06-40 (interface-language-independent permission decision)
+- [Phase ?]: [Phase 06] Plan 06-09: components/site-header.tsx and components/notification-bell.tsx received no edit -- site-header.tsx is a pure composition wrapper with zero translatable literals of its own, and notification-bell.tsx was already fully translated by 06-06; translation coverage is measured per-string, not per-file
+- [Phase ?]: [Phase 06] Plan 06-09's full-suite closure run (311 passed/10 failed, 31.8min) hit only already-tracked shared-dev-DB/Supabase-Auth-under-load flakiness (WINDOWS.md id 11) across admin-doctor-crud.spec.ts, admin-doctor-link-account.spec.ts, appointment-reschedule.spec.ts:764 (afterAll cleanup timeout only) and seed-availability.spec.ts:170 -- none touch this plan's 10 files; all task-scoped specs passed cleanly
 
 ### Pending Todos
 
@@ -220,6 +224,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-13T11:27:58.782Z
-Stopped at: Completed 06-08-PLAN.md
+Last session: 2026-08-13T16:54:40.279Z
+Stopped at: Completed 06-09-PLAN.md
 Resume file: None
