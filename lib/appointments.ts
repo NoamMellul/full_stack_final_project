@@ -7,6 +7,8 @@
 // an attendance outcome ("completed"/"no_show") back to appointments.status
 // — "Past" is a UI-computed label only, never a stored value (D-16, D-17).
 
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+
 export type AppointmentStatus =
   | "scheduled"
   | "confirmed"
@@ -25,7 +27,7 @@ export function isCancelledStatus(status: AppointmentStatus): boolean {
 }
 
 export type AppointmentBadge = {
-  label: string;
+  labelKey: TranslationKey;
   variant: "default" | "secondary" | "outline";
 };
 
@@ -40,15 +42,15 @@ export function appointmentBadge(
   now: number = Date.now(),
 ): AppointmentBadge {
   if (status === "cancelled_by_patient") {
-    return { label: "Cancelled by patient", variant: "outline" };
+    return { labelKey: "appointment_status.cancelled_by_patient", variant: "outline" };
   }
   if (status === "cancelled_by_doctor") {
-    return { label: "Cancelled by doctor", variant: "outline" };
+    return { labelKey: "appointment_status.cancelled_by_doctor", variant: "outline" };
   }
   if (new Date(startAt).getTime() < now) {
-    return { label: "Past", variant: "secondary" };
+    return { labelKey: "appointment_status.past", variant: "secondary" };
   }
-  return { label: "Confirmed", variant: "default" };
+  return { labelKey: "appointment_status.confirmed", variant: "default" };
 }
 
 export function splitAppointments<T extends AppointmentLike>(

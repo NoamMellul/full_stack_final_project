@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PatientAppointment } from "@/app/patient/appointments/page";
 import { appointmentBadge, splitAppointments } from "@/lib/appointments";
+import { useT } from "@/lib/i18n/locale-provider";
 import { formatJerusalemDayHeading, formatJerusalemTime } from "@/lib/timezone";
 
 // Same three-Skeleton treatment as app/patient/appointments/page.tsx's
@@ -28,6 +29,7 @@ function UpcomingSummarySkeleton() {
 // controls — appointment management stays on /patient/appointments so this
 // dashboard summary can never become a second mutation surface (T-06-*).
 function DashboardAppointmentRow({ appointment }: { appointment: PatientAppointment }) {
+  const t = useT();
   const slot = appointment.slot;
   const badge = slot ? appointmentBadge(appointment.status, slot.start_at) : null;
 
@@ -43,15 +45,17 @@ function DashboardAppointmentRow({ appointment }: { appointment: PatientAppointm
           ) : null}
         </span>
         <span className="text-sm text-muted-foreground">
-          with Dr. {appointment.doctor?.full_name ?? "Unknown"}
+          {t("patient_dashboard.with_doctor_prefix")}{" "}
+          {appointment.doctor?.full_name ?? t("patient_dashboard.unknown_doctor")}
         </span>
       </div>
-      {badge ? <Badge variant={badge.variant}>{badge.label}</Badge> : null}
+      {badge ? <Badge variant={badge.variant}>{t(badge.labelKey)}</Badge> : null}
     </div>
   );
 }
 
 export default function PatientDashboardPage() {
+  const t = useT();
   const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
   const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
 
@@ -89,31 +93,29 @@ export default function PatientDashboardPage() {
 
   return (
     <main className="flex flex-1 flex-col ps-6 pe-6 py-8">
-      <h1 className="text-2xl font-semibold">My dashboard</h1>
+      <h1 className="text-2xl font-semibold">{t("patient_dashboard.title")}</h1>
 
       <div className="mt-8 flex flex-col gap-8">
         <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">Upcoming appointments</h2>
+          <h2 className="text-lg font-semibold">{t("patient_dashboard.upcoming_heading")}</h2>
 
           {listStatus === "loading" ? (
             <UpcomingSummarySkeleton />
           ) : listStatus === "error" ? (
             <div className="flex flex-col items-center gap-3 py-4 text-center">
-              <p className="text-sm text-destructive">
-                Could not load your appointments. Please try again.
-              </p>
+              <p className="text-sm text-destructive">{t("patient_dashboard.load_error")}</p>
               <Button type="button" variant="outline" className="min-h-11" onClick={handleRetry}>
-                Retry
+                {t("common.retry")}
               </Button>
             </div>
           ) : upcomingPreview.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-4 text-center">
-              <h3 className="text-lg font-semibold">No upcoming appointments</h3>
+              <h3 className="text-lg font-semibold">{t("patient_dashboard.empty_heading")}</h3>
               <p className="max-w-md text-sm text-muted-foreground">
-                Book a doctor to see your next appointment here.
+                {t("patient_dashboard.empty_body")}
               </p>
               <Button className="min-h-11" render={<Link href="/search" />}>
-                Find a doctor
+                {t("patient_dashboard.find_doctor_cta")}
               </Button>
             </div>
           ) : (
@@ -127,21 +129,21 @@ export default function PatientDashboardPage() {
 
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" className="min-h-11" render={<Link href="/search" />}>
-            Search doctors
+            {t("patient_dashboard.search_doctors_link")}
           </Button>
           <Button
             variant="outline"
             className="min-h-11"
             render={<Link href="/patient/favorites" />}
           >
-            My favorites
+            {t("patient_dashboard.favorites_link")}
           </Button>
           <Button
             variant="outline"
             className="min-h-11"
             render={<Link href="/patient/appointments" />}
           >
-            Appointment history
+            {t("patient_dashboard.appointment_history_link")}
           </Button>
         </div>
       </div>
