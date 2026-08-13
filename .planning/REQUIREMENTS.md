@@ -84,10 +84,10 @@
 
 ### Notifications
 
-- [ ] **NOTIF-01**: Patient receives an in-app notification when a booking is confirmed
-- [ ] **NOTIF-02**: Patient receives an in-app notification when their appointment is cancelled
-- [ ] **NOTIF-03**: Doctor receives an in-app notification when a new appointment is booked
-- [ ] **NOTIF-04**: Patient receives an in-app notification when their appointment is rescheduled
+- [x] **NOTIF-01**: Patient receives an in-app notification when a booking is confirmed
+- [x] **NOTIF-02**: Patient receives an in-app notification when their appointment is cancelled
+- [x] **NOTIF-03**: Doctor receives an in-app notification when a new appointment is booked
+- [x] **NOTIF-04**: Patient receives an in-app notification when their appointment is rescheduled
 
 ### Internationalization
 
@@ -186,10 +186,10 @@ Which phases cover which requirements.
 | PATIENT-04 | Phase 6 | Complete |
 | DOCTOR-01 | Phase 6 | Complete |
 | DOCTOR-02 | Phase 6 | Complete |
-| NOTIF-01 | Phase 6 | Pending |
-| NOTIF-02 | Phase 6 | Pending |
-| NOTIF-03 | Phase 6 | Pending |
-| NOTIF-04 | Phase 6 | Pending |
+| NOTIF-01 | Phase 6 | Complete |
+| NOTIF-02 | Phase 6 | Complete |
+| NOTIF-03 | Phase 6 | Complete |
+| NOTIF-04 | Phase 6 | Complete |
 | I18N-01 | Phase 6 | Complete |
 | I18N-02 | Phase 6 | Complete |
 

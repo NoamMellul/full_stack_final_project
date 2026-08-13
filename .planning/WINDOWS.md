@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 5
+open_count: 7
 waived_count: 0
 fixed_count: 0
-total_count: 5
-last_updated: 2026-08-12T19:02:35.805Z
+total_count: 7
+last_updated: 2026-08-13T08:36:13.818Z
 ---
 
 # Broken Windows Ledger
@@ -20,6 +20,8 @@ last_updated: 2026-08-12T19:02:35.805Z
 | 3 | 06 | deviation | tests/e2e/seed-availability.spec.ts | 170 | Recurrence (06-04) of the same shared-dev-DB residue flakiness class first logged as id 1 (06-01) and id 2 (06-03): full-suite run showed 301 passed/11 skipped/9 failed, with 8 of those 9 (5 new notifications-realtime API-contract tests + 3 patient-dashboard tests, none touched incorrectly) traced to a transient dev-server ERR_CONNECTION_REFUSED window and confirmed passing on an isolated re-run of the same 4 spec files (17 passed, 1 failed). The 1 persisting failure is seed-availability.spec.ts:170 (doctor slot count 3 < 6), byte-identical to the prior two recurrences. See deferred-items.md 06-04 section. | open |  | 2026-08-12T16:37:59.076Z |  |
 | 4 | 06 | unrun-verify | tests/e2e/admin-route-protection.spec.ts | 230 | Recurring shared-dev-DB/environment failure: 'every admin endpoint returns 401/403' timed out again during 06-05's full-suite run (5th+ recurrence per STATE.md blockers; not caused by 06-05's i18n/header changes) | open |  | 2026-08-12T19:02:35.199Z |  |
 | 5 | 06 | unrun-verify | tests/e2e/seed-availability.spec.ts | 170 | Recurring shared-dev-DB slot-count assertion failure (doctor holds <6 slots) during 06-05's full-suite run, consistent with WINDOWS.md ids 1 and 3 | open |  | 2026-08-12T19:02:35.805Z |  |
+| 6 | 06 | unrun-verify | tests/e2e/appointment-reschedule.spec.ts | 764 | 6th+ recurrence of the same shared-dev-DB/environment flakiness class during 06-06's closure full-suite run (319 passed, 2 failed, 34.7min): appointment-reschedule.spec.ts:764 afterAll cleanup hook timed out (30000ms exceeded), byte-identical failure mode to prior recurrences since 06-01. Not caused by 06-06's notification-bell code -- all 13 of this plan's own notifications-realtime.spec.ts tests passed cleanly in the same run. | open |  | 2026-08-13T08:36:13.176Z |  |
+| 7 | 06 | unrun-verify | tests/e2e/seed-availability.spec.ts | 170 | 6th+ recurrence of the same shared-dev-DB residue class (WINDOWS.md ids 1,3,5) during 06-06's closure full-suite run: doctor slot count 3 < 6 (D-01 shape rule). Same run showed 319 passed/2 failed in 34.7min; not caused by 06-06's notification-bell code -- all 13 of this plan's own notifications-realtime.spec.ts tests passed cleanly. | open |  | 2026-08-13T08:36:13.818Z |  |
 
 ````json
 [
@@ -81,6 +83,30 @@ last_updated: 2026-08-12T19:02:35.805Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-12T19:02:35.805Z",
+    "resolved_at": null
+  },
+  {
+    "id": 6,
+    "kind": "unrun-verify",
+    "phase": "06",
+    "file": "tests/e2e/appointment-reschedule.spec.ts",
+    "line": 764,
+    "description": "6th+ recurrence of the same shared-dev-DB/environment flakiness class during 06-06's closure full-suite run (319 passed, 2 failed, 34.7min): appointment-reschedule.spec.ts:764 afterAll cleanup hook timed out (30000ms exceeded), byte-identical failure mode to prior recurrences since 06-01. Not caused by 06-06's notification-bell code -- all 13 of this plan's own notifications-realtime.spec.ts tests passed cleanly in the same run.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-13T08:36:13.176Z",
+    "resolved_at": null
+  },
+  {
+    "id": 7,
+    "kind": "unrun-verify",
+    "phase": "06",
+    "file": "tests/e2e/seed-availability.spec.ts",
+    "line": 170,
+    "description": "6th+ recurrence of the same shared-dev-DB residue class (WINDOWS.md ids 1,3,5) during 06-06's closure full-suite run: doctor slot count 3 < 6 (D-01 shape rule). Same run showed 319 passed/2 failed in 34.7min; not caused by 06-06's notification-bell code -- all 13 of this plan's own notifications-realtime.spec.ts tests passed cleanly.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-13T08:36:13.818Z",
     "resolved_at": null
   }
 ]

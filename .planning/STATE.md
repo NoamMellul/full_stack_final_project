@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 6
 current_phase_name: Dashboards, Notifications & Localization
 status: executing
-stopped_at: Completed 06-05-PLAN.md
-last_updated: "2026-08-12T19:03:14.840Z"
+stopped_at: Completed 06-06-PLAN.md
+last_updated: "2026-08-13T08:38:22.777Z"
 last_activity: 2026-08-12
 last_activity_desc: Phase 6 execution started
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 39
-  completed_plans: 34
+  completed_plans: 35
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 ## Current Position
 
 Phase: 6 (Dashboards, Notifications & Localization) — EXECUTING
-Plan: 6 of 10
+Plan: 7 of 10
 Status: Ready to execute
 Last activity: 2026-08-12 — Phase 6 execution started
 
-Progress: [█████████░] 87%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -93,6 +93,7 @@ Progress: [█████████░] 87%
 | Phase 06 P03 | 85min | 2 tasks | 13 files |
 | Phase 06 P04 | 100min | 3 tasks | 5 files |
 | Phase 06 P05 | 165min | 3 tasks | 15 files |
+| Phase 06 P06 | 70min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -180,6 +181,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 06] Plan 06-05: locked the flat dot-namespaced dictionary key convention (surface.element[.variant]); translate() falls back locale -> English -> fixed FALLBACK_TRANSLATION, never a raw key/undefined/blank; Hebrew dictionary typed as Record<TranslationKey, string> so a missing key is a tsc compile error
 - [Phase ?]: [Phase 06] Plan 06-05: app/layout.tsx became async and is now the single mount point for both <html lang>/<html dir> and <SiteHeader />; role-scoped layouts (patient/doctor/admin) kept only their auth+role redirect guards; router.refresh() alone (no reload fallback) proved sufficient to re-run the root layout and update dir/lang
 - [Phase ?]: [Phase 06] Plan 06-05: components/site-header.tsx's anonymous-visitor early return removed (D-06) and profiles select widened to full_name, role (role fetched for 06-06's admin bell-omission gate, unused by this plan); language-switcher.tsx labels EN/עב never routed through t()
+- [Phase 06]: [Phase 06] Plan 06-06: useNotificationRealtime awaits supabase.auth.getSession() before .channel().subscribe() -- without it, .subscribe() can race ahead of the browser client's own auth-state listener and join Realtime authenticated only as the anon key, so RLS silently drops every postgres_changes broadcast for that connection even though the channel still acks SUBSCRIBED — Closes RESEARCH Assumption A1 (flagged in the plan) -- root-caused via bisection (raw supabase-js in a bare page, Node.js reproductions, a debug widget mounted side-by-side with the real bell) after the badge-update test failed consistently on a hard page.goto to the same route.
+- [Phase 06]: [Phase 06] Plan 06-06: notificationCopyKey(type, viewerRole) resolves notification copy from the viewer's OWN role (profiles.role), never a field read off the notification row -- both recipients of one event share an identical type value with no role discriminator on the row itself — RLS (notifications_select_own) already scopes every readable row to user_id = auth.uid(), so the viewer's own role is definitionally the recipient role for every row they can see; deriving copy from the row alone would be silently wrong for exactly one of the two recipients of any shared event.
 
 ### Pending Todos
 
@@ -196,6 +199,7 @@ None yet.
 - [Phase 06] Plan 06-03's full-suite run reconfirmed the same class of pre-existing failures for a third time (admin-route-protection.spec.ts:230 again, plus the same appointment-reschedule.spec.ts:764 afterAll timeout and seed-availability.spec.ts:170 slot-count assertion) -- consistent with the tracked shared-dev-DB test-residue blocker, not caused by this plan (all 7 dashboard/regression tests passed)
 - [Phase 06] Plan 06-04's full-suite run showed a fourth recurrence of the shared-dev-DB test-residue class (seed-availability.spec.ts:170, now WINDOWS.md id 3) plus a transient dev-server ERR_CONNECTION_REFUSED window that failed 8 unrelated tests (5 of this plan's own new tests + 3 from 06-03) -- all 8 passed cleanly on an isolated re-run immediately afterward, confirming the connectivity theory; only the pre-existing residue failure persisted
 - [Phase 06] Plan 06-05's full-suite run reconfirmed the same class of pre-existing failures for a fifth+ time (admin-route-protection.spec.ts:230, seed-availability.spec.ts:170) plus a new cascading admin-doctor-link-account.spec.ts failure (Supabase Auth 'Could not create a login' — plausibly rate-limiting from this session's several consecutive full-suite runs) and a notifications-realtime.spec.ts Realtime-subscription timeout -- consistent with the tracked shared-dev-DB/environment flakiness blocker, not caused by this plan (all 5 locale-switching tests and every header-touching test passed)
+- [Phase 06] Plan 06-06's executing session ended (usage-limit stop, then an expired-login retry) after committing all 3 tasks but before writing 06-06-SUMMARY.md or advancing STATE.md/ROADMAP.md -- closed out retroactively in a follow-up session: independently re-verified tsc/lint/build/full-suite (the crashed session's own "13/13, run twice" claim was not accurate on first independent re-check, though a clean re-run did confirm 13/13). Full-suite run: 319 passed/2 failed, both the same pre-existing shared-dev-DB/environment flakiness class as every prior 06-0X plan (6th+ recurrence, WINDOWS.md ids 6-7), unrelated to 06-06's code.
 
 ## Deferred Items
 
@@ -207,6 +211,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-12T19:03:05.222Z
-Stopped at: Completed 06-05-PLAN.md
+Last session: 2026-08-13T08:38:22.743Z
+Stopped at: Completed 06-06-PLAN.md
 Resume file: None
