@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n/locale-provider";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -15,8 +16,6 @@ export type FavoriteToggleProps = {
   onRemoved?: () => void;
   className?: string;
 };
-
-const FAILURE_MESSAGE = "Could not update your favorites. Please try again.";
 
 // Single shared component rendered at three call sites (app/doctors/[id]/
 // page.tsx, components/search/doctor-card.tsx, app/patient/favorites/
@@ -30,6 +29,7 @@ export default function FavoriteToggle({
   onRemoved,
   className,
 }: FavoriteToggleProps) {
+  const t = useT();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -94,7 +94,7 @@ export default function FavoriteToggle({
 
       if (!response.ok && !alreadyDesiredState) {
         setIsFavorited(!nextFavorited);
-        setErrorMessage(FAILURE_MESSAGE);
+        setErrorMessage(t("favorite_toggle.error"));
         return;
       }
 
@@ -103,7 +103,7 @@ export default function FavoriteToggle({
       }
     } catch {
       setIsFavorited(!nextFavorited);
-      setErrorMessage(FAILURE_MESSAGE);
+      setErrorMessage(t("favorite_toggle.error"));
     } finally {
       setIsPending(false);
     }
@@ -117,7 +117,7 @@ export default function FavoriteToggle({
         className={cn("size-11 sm:size-8", className)}
         disabled={isPending}
         aria-pressed={isFavorited}
-        aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+        aria-label={isFavorited ? t("favorite_toggle.remove_aria") : t("favorite_toggle.add_aria")}
         onClick={() => void handleClick()}
       >
         <Heart

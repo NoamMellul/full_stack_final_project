@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n/locale-provider";
 
 export default function LogoutButton() {
+  const t = useT();
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export default function LogoutButton() {
       const response = await fetch("/api/auth/logout", { method: "POST" });
 
       if (!response.ok) {
-        setErrorMessage("Could not log out. Please try again.");
+        setErrorMessage(t("header.log_out_error"));
         setIsPending(false);
         return;
       }
@@ -27,7 +29,7 @@ export default function LogoutButton() {
       router.push("/");
       router.refresh();
     } catch {
-      setErrorMessage("Could not log out. Please try again.");
+      setErrorMessage(t("header.log_out_error"));
       setIsPending(false);
     }
   }
@@ -42,7 +44,7 @@ export default function LogoutButton() {
         className="h-11 w-11 justify-center gap-1 px-0 sm:h-8 sm:w-auto sm:justify-center sm:px-2.5"
       >
         <LogOut />
-        <span className="hidden sm:inline">Log out</span>
+        <span className="hidden sm:inline">{t("header.log_out")}</span>
       </Button>
       {errorMessage ? (
         <span className="text-sm font-normal text-destructive">{errorMessage}</span>
