@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useT } from "@/lib/i18n/locale-provider";
+import { translateValidationMessage } from "@/lib/i18n/validation-messages";
 import { validateEmail, validateFullName, validatePassword } from "@/lib/validation/auth";
 
 type FieldErrors = {
@@ -18,6 +20,7 @@ type FieldErrors = {
 };
 
 export default function SignupPage() {
+  const t = useT();
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -34,6 +37,8 @@ export default function SignupPage() {
     e.preventDefault();
     setApiError(null);
 
+    // Errors are stored untranslated and translated only at the point they
+    // render, via translateValidationMessage below.
     const errors: FieldErrors = {
       fullName: validateFullName(fullName),
       email: validateEmail(email),
@@ -55,7 +60,11 @@ export default function SignupPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setApiError(data.error ?? "Could not create account.");
+        // data.error is the signup route's own literal (unchanged by this
+        // plan); the client renders it as-is. Only the fallback default —
+        // used when the response body carries no error — is routed
+        // through t().
+        setApiError(data.error ?? t("auth.signup.generic_error"));
         return;
       }
 
@@ -70,13 +79,13 @@ export default function SignupPage() {
     <main className="flex flex-1 items-center justify-center ps-4 pe-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Create your account</CardTitle>
-          <CardDescription>Sign up as a patient to book an appointment.</CardDescription>
+          <CardTitle className="text-2xl">{t("auth.signup.title")}</CardTitle>
+          <CardDescription>{t("auth.signup.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="fullName">Full name</Label>
+              <Label htmlFor="fullName">{t("auth.signup.full_name_label")}</Label>
               <Input
                 id="fullName"
                 name="fullName"
@@ -87,11 +96,13 @@ export default function SignupPage() {
                 className="max-w-full overflow-x-auto"
               />
               {fieldErrors.fullName ? (
-                <p className="text-sm font-normal text-destructive">{fieldErrors.fullName}</p>
+                <p className="text-sm font-normal text-destructive">
+                  {translateValidationMessage(fieldErrors.fullName, t)}
+                </p>
               ) : null}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.signup.email_label")}</Label>
               <Input
                 id="email"
                 name="email"
@@ -101,11 +112,13 @@ export default function SignupPage() {
                 aria-invalid={fieldErrors.email ? true : undefined}
               />
               {fieldErrors.email ? (
-                <p className="text-sm font-normal text-destructive">{fieldErrors.email}</p>
+                <p className="text-sm font-normal text-destructive">
+                  {translateValidationMessage(fieldErrors.email, t)}
+                </p>
               ) : null}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("auth.signup.password_label")}</Label>
               <Input
                 id="password"
                 name="password"
@@ -115,7 +128,9 @@ export default function SignupPage() {
                 aria-invalid={fieldErrors.password ? true : undefined}
               />
               {fieldErrors.password ? (
-                <p className="text-sm font-normal text-destructive">{fieldErrors.password}</p>
+                <p className="text-sm font-normal text-destructive">
+                  {translateValidationMessage(fieldErrors.password, t)}
+                </p>
               ) : null}
             </div>
             {apiError ? (
@@ -124,12 +139,12 @@ export default function SignupPage() {
               </Alert>
             ) : null}
             <Button type="submit" disabled={isSubmitting} className="w-full">
-              {isSubmitting ? "Creating account…" : "Create account"}
+              {isSubmitting ? t("auth.signup.submitting") : t("auth.signup.submit")}
             </Button>
             <p className="text-center text-sm">
-              Already have an account?{" "}
+              {t("auth.signup.have_account_prompt")}{" "}
               <Link href="/login" className="text-primary underline-offset-4 hover:underline">
-                Log in
+                {t("auth.signup.login_link")}
               </Link>
             </p>
           </form>
