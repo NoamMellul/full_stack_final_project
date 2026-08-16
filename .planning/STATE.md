@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 Phase: 06 (Dashboards, Notifications & Localization) — EXECUTING
 Plan: 10 of 10
 Status: Phase complete — ready for verification
-Last activity: 2026-08-13 — Phase 06 execution resumed (wave continue)
+Last activity: 2026-08-13 - Completed quick task 260813-w0r: Fix Base UI nativeButton console warning
 
 Progress: [██████████] 100%
 
@@ -217,6 +217,12 @@ None yet.
 - [Phase 06] Plan 06-07's full-suite run (321 tests) showed 305 passed/5 failed/11 did-not-run -- a worse-than-usual recurrence of the tracked shared-dev-DB test-residue/Supabase-API-rate-limiting flakiness class (WINDOWS.md ids 8-9): appointment-reschedule.spec.ts:764, doctor-schedule-overlap.spec.ts:381, doctor-schedule-visibility.spec.ts:190 (beforeAll timeout, 8 cascaded skips), seed-availability.spec.ts:170/184 (beforeAll timeout, 3 cascaded skips). An isolated re-run of just these 4 spec files passed the appointment-reschedule and doctor-schedule-visibility suites cleanly; remaining failures were afterAll-hook 30s cleanup timeouts (assertions themselves passed) plus the recurring seed-availability.spec.ts:170 residue. This plan touched zero application code (dictionary JSON + one unimported utility module only), so these are not a 06-07 regression -- but the pattern is now compounding across a long test-heavy session and would benefit from a dev-DB reset or a quieter-window re-run before /gsd-ship
 - [Phase 06] Plan 06-08's full-suite run reconfirmed the same recurring shared-dev-DB/environment flakiness class for a 10th+ time (appointment-cancel.spec.ts:310 ECONNRESET, appointment-reschedule.spec.ts:764 afterAll timeout, seed-availability.spec.ts:170 slot-count 3<6) -- logged as WINDOWS.md id 10, not caused by this plan (all 77 task-scoped auth/search/doctor-profile tests passed cleanly)
 - [Phase 06] Plan 06-10's full-suite closure run reconfirmed the 12th+ recurrence of the shared-dev-DB test-residue class (seed-availability.spec.ts:170, doctor slot count 3<6, WINDOWS.md id 12) - not caused by this plan (RTL/i18n test-only changes); a project reset or manual cleanup pass before the final demo/grading would present a cleaner doctor-slot distribution, per the same open item already tracked since 06-01
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260813-w0r | Fix Base UI nativeButton console warning: components/ui/button.tsx derives nativeButton from render presence (10 render={<Link/>} call sites fixed centrally); 10 Playwright selectors realigned to the resulting accessible-role flip (link -> button) | 2026-08-13 | 295d2aa | [260813-w0r-fix-base-ui-nativebutton-console-warning](./quick/260813-w0r-fix-base-ui-nativebutton-console-warning/) |
 
 ## Deferred Items
 
