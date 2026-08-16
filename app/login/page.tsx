@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
+import DoctorRequestDialog from "@/components/doctor-request-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -132,6 +133,9 @@ function LoginForm() {
               </Link>
             </p>
           </form>
+          <div className="mt-4 text-center text-sm">
+            <DoctorRequestDialog />
+          </div>
         </CardContent>
       </Card>
     </main>

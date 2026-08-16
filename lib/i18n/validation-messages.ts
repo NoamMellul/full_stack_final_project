@@ -19,11 +19,13 @@ import type { TranslationKey } from "@/lib/i18n/dictionaries";
 // One entry per distinct literal message returned by a lib/validation/*.ts
 // function reachable from a non-admin page (lib/validation/auth.ts,
 // lib/validation/appointments.ts, lib/validation/availability.ts,
-// lib/validation/search.ts). lib/validation/doctor.ts and
-// lib/validation/reference-data.ts surface only on /admin/*, which D-04
-// excludes — their messages are deliberately absent here, so they fall
-// through translateValidationMessage() unchanged (correct admin-only
-// English behaviour).
+// lib/validation/search.ts, lib/validation/doctor-request.ts).
+// lib/validation/doctor.ts and lib/validation/reference-data.ts surface only
+// on /admin/*, which D-04 excludes — their messages are deliberately absent
+// here, so they fall through translateValidationMessage() unchanged (correct
+// admin-only English behaviour). lib/validation/doctor-request.ts is the
+// exception: it surfaces on the public /login dialog
+// (components/doctor-request-dialog.tsx), so its messages ARE included here.
 export const VALIDATION_MESSAGE_KEYS: Record<string, TranslationKey> = {
   "Email is required.": "validation.email_required",
   "Invalid email format.": "validation.email_invalid",
@@ -45,6 +47,10 @@ export const VALIDATION_MESSAGE_KEYS: Record<string, TranslationKey> = {
   "Neighborhood filter is invalid.": "validation.neighborhood_filter_invalid",
   "Dates must be in YYYY-MM-DD format.": "validation.date_format_invalid",
   "The end date must be on or after the start date.": "validation.date_range_invalid",
+  "Specialty is required.": "validation.specialty_required",
+  "Full name is too long.": "validation.full_name_too_long",
+  "Message must be text.": "validation.message_must_be_text",
+  "Message is too long.": "validation.message_too_long",
 };
 
 // Returns the translated message when `message` is a mapped validator
