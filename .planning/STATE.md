@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 Phase: 06 (Dashboards, Notifications & Localization) — EXECUTING
 Plan: 10 of 10
 Status: Phase complete — ready for verification
-Last activity: 2026-08-16 - Completed quick task 260816-etv: / becomes an auth-aware router
+Last activity: 2026-08-16 - Completed quick task 260816-g33: role-aware in-app navigation bar
 
 Progress: [██████████] 100%
 
@@ -224,6 +224,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260813-w0r | Fix Base UI nativeButton console warning: components/ui/button.tsx derives nativeButton from render presence (10 render={<Link/>} call sites fixed centrally); 10 Playwright selectors realigned to the resulting accessible-role flip (link -> button) | 2026-08-13 | 295d2aa | [260813-w0r-fix-base-ui-nativebutton-console-warning](./quick/260813-w0r-fix-base-ui-nativebutton-console-warning/) |
 | 260816-etv | `/` becomes an auth-aware router (anon -> /login, authenticated -> /patient, /doctor or /admin via new lib/auth/role-home.ts, shared with app/login/page.tsx); realigned 6 specs (17 stale root-URL assertions) and removed 10 dead create-next-app scaffold dictionary keys | 2026-08-16 | f028c44 | [260816-etv-make-an-auth-aware-router-app-page-tsx-r](./quick/260816-etv-make-an-auth-aware-router-app-page-tsx-r/) |
+| 260816-g33 | Role-aware in-app navigation bar: new components/site-nav.tsx (desktop links + mobile hamburger menu via the existing Popover primitive) wired into components/site-header.tsx, role-specific link sets for patient/doctor/admin plus an anon Search-only set, 11 new nav.* dictionary keys | 2026-08-16 | 47c99f1 | [260816-g33-add-a-role-aware-in-app-navigation-bar-s](./quick/260816-g33-add-a-role-aware-in-app-navigation-bar-s/) |
 
 ## Deferred Items
 
