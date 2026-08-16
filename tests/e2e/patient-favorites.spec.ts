@@ -173,7 +173,7 @@ test.describe("PATIENT-01/02/03: favorites — add, remove, cross-entry-point co
       await expect(
         page.getByText("Save doctors you like to find them quickly next time."),
       ).toBeVisible();
-      await expect(page.getByRole("link", { name: "Find a doctor" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Find a doctor" })).toBeVisible();
     },
   );
 

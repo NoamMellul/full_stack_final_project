@@ -80,7 +80,7 @@ test.describe("PATIENT-04: patient dashboard upcoming summary + quick links", ()
       await expect(
         page.getByText("Book a doctor to see your next appointment here."),
       ).toBeVisible();
-      await expect(page.getByRole("link", { name: "Find a doctor" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Find a doctor" })).toBeVisible();
     },
   );
 
@@ -92,15 +92,15 @@ test.describe("PATIENT-04: patient dashboard upcoming summary + quick links", ()
       await loginAsPatient(page, patient);
       await page.goto("/patient");
 
-      await expect(page.getByRole("link", { name: "Search doctors" })).toHaveAttribute(
+      await expect(page.getByRole("button", { name: "Search doctors" })).toHaveAttribute(
         "href",
         "/search",
       );
-      await expect(page.getByRole("link", { name: "My favorites" })).toHaveAttribute(
+      await expect(page.getByRole("button", { name: "My favorites" })).toHaveAttribute(
         "href",
         "/patient/favorites",
       );
-      await expect(page.getByRole("link", { name: "Appointment history" })).toHaveAttribute(
+      await expect(page.getByRole("button", { name: "Appointment history" })).toHaveAttribute(
         "href",
         "/patient/appointments",
       );
