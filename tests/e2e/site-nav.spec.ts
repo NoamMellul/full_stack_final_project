@@ -27,6 +27,7 @@ const ROLE_LINKS: Record<Role, { label: string; href: string }[]> = {
     { label: "Dashboard", href: "/admin" },
     { label: "Appointments", href: "/admin/appointments" },
     { label: "Doctors", href: "/admin/doctors" },
+    { label: "Doctor requests", href: "/admin/doctor-requests" },
     { label: "Locations", href: "/admin/locations" },
     { label: "Specialties", href: "/admin/specialties" },
     { label: "Users", href: "/admin/users" },

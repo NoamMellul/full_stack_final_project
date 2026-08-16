@@ -37,6 +37,7 @@ const NAV_LINKS: Record<"patient" | "doctor" | "admin", NavLink[]> = {
     { href: "/admin", labelKey: "nav.dashboard" },
     { href: "/admin/appointments", labelKey: "nav.appointments" },
     { href: "/admin/doctors", labelKey: "nav.doctors" },
+    { href: "/admin/doctor-requests", labelKey: "nav.doctor_requests" },
     { href: "/admin/locations", labelKey: "nav.locations" },
     { href: "/admin/specialties", labelKey: "nav.specialties" },
     { href: "/admin/users", labelKey: "nav.users" },
