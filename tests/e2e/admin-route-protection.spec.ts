@@ -1,5 +1,6 @@
 import { expect, test, type BrowserContext } from "@playwright/test";
 
+import { cleanupTestDoctorRequests, createTestDoctorRequest } from "./helpers/doctor-requests";
 import {
   cleanupTestReferenceData,
   createTestDoctor,
@@ -13,10 +14,16 @@ import { cleanupTestUsers, createTestUser, uniqueTestEmail } from "./helpers/tes
 // admin API endpoint added across plans 02-01 through 02-05, proven closed to
 // an unauthenticated caller, a patient session and a doctor session, with no
 // side effect from a rejected request.
+//
+// POST /api/doctor-requests (QUICK-260816-hb3) is deliberately absent from
+// this matrix: it is a public endpoint by design, with no requireX() guard.
+// Its anonymous-success path is asserted in tests/e2e/doctor-request.spec.ts
+// instead — someone will otherwise "fix" its omission here later.
 
 const ADMIN_PAGES = [
   "/admin",
   "/admin/doctors",
+  "/admin/doctor-requests",
   "/admin/specialties",
   "/admin/locations",
   "/admin/users",
@@ -40,6 +47,7 @@ test.describe("Admin cross-cutting denial matrix", () => {
   let specialty: { id: string; nameEn: string; nameHe: string };
   let location: { id: string; city: string; neighborhood: string };
   let doctorFixture: { id: string; fullName: string };
+  let doctorRequestFixture: { id: string; full_name: string };
 
   let unauthContext: BrowserContext;
   let patientContext: BrowserContext;
@@ -122,6 +130,17 @@ test.describe("Admin cross-cutting denial matrix", () => {
       label: "GET /api/admin/appointments",
       path: () => "/api/admin/appointments",
     },
+    {
+      method: "GET",
+      label: "GET /api/admin/doctor-requests",
+      path: () => "/api/admin/doctor-requests",
+    },
+    {
+      method: "PATCH",
+      label: "PATCH /api/admin/doctor-requests/{id}",
+      // The handler deliberately parses no request body — no `body` here.
+      path: () => `/api/admin/doctor-requests/${doctorRequestFixture.id}`,
+    },
   ];
 
   async function loginInContext(
@@ -170,6 +189,11 @@ test.describe("Admin cross-cutting denial matrix", () => {
       locationId: location.id,
       isActive: true,
     });
+    doctorRequestFixture = await createTestDoctorRequest({
+      fullName: `Denial Matrix Doctor Request ${Date.now()}`,
+      email: uniqueTestEmail("denial-matrix-doctor-request"),
+      specialtyId: specialty.id,
+    });
 
     // Four persistent contexts (never re-logged-in per assertion) — one per
     // session state, reused across the whole page and endpoint matrix below.
@@ -188,6 +212,7 @@ test.describe("Admin cross-cutting denial matrix", () => {
     await patientContext?.close();
     await doctorContext?.close();
     await adminContext?.close();
+    await cleanupTestDoctorRequests();
     await cleanupTestReferenceData();
     await cleanupTestUsers();
   });
@@ -228,6 +253,11 @@ test.describe("Admin cross-cutting denial matrix", () => {
   }
 
   test("every admin endpoint returns 401 unauthenticated, 403 for a patient session, and 403 for a doctor session", async () => {
+    // 17 endpoints x 3 session states = 51 sequential HTTP round trips —
+    // widened past the 30s default the same way plan 05-04's six-sub-case
+    // rejection matrix test was, so a slow-but-correct run cannot be
+    // mistaken for a hung one.
+    test.setTimeout(90000);
     for (const descriptor of ENDPOINTS) {
       const unauthResponse = await callEndpoint(unauthContext, descriptor);
       expect(unauthResponse.status(), `${descriptor.label} (unauthenticated)`).toBe(401);
@@ -269,5 +299,12 @@ test.describe("Admin cross-cutting denial matrix", () => {
       .single();
     expect(locationRow?.city).toBe(location.city);
     expect(locationRow?.neighborhood).toBe(location.neighborhood);
+
+    const { data: doctorRequestRow } = await admin
+      .from("doctor_requests")
+      .select("status")
+      .eq("id", doctorRequestFixture.id)
+      .single();
+    expect(doctorRequestRow?.status).toBe("pending");
   });
 });
