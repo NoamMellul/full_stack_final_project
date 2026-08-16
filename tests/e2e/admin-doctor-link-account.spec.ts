@@ -141,7 +141,7 @@ test.describe("ADMIN-04: link a doctor login", () => {
     await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
 
     await page.getByRole("button", { name: "Log out" }).click();
-    await page.waitForURL("/");
+    await page.waitForURL(/\/login/);
 
     await page.goto("/login");
     await page.getByLabel("Email").fill(doctorEmail);

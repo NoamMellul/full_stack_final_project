@@ -9,7 +9,7 @@ test.describe("AUTH-03: logout", () => {
     await cleanupTestUsers();
   });
 
-  test("logging out returns the user to /", async ({ page }) => {
+  test("logging out returns the user to /login", async ({ page }) => {
     const user = await createTestUser("patient");
 
     await page.goto("/login");
@@ -19,8 +19,8 @@ test.describe("AUTH-03: logout", () => {
     await page.waitForURL("/patient");
 
     await page.getByRole("button", { name: "Log out" }).click();
-    await page.waitForURL("/");
-    await expect(page).toHaveURL("/");
+    await page.waitForURL(/\/login/);
+    await expect(page).toHaveURL(/\/login/);
   });
 
   test("after logout, navigating to /patient redirects to /login instead of rendering it", async ({
@@ -35,7 +35,7 @@ test.describe("AUTH-03: logout", () => {
     await page.waitForURL("/patient");
 
     await page.getByRole("button", { name: "Log out" }).click();
-    await page.waitForURL("/");
+    await page.waitForURL(/\/login/);
 
     await page.goto("/patient");
     await expect(page).toHaveURL(/\/login/);
@@ -58,7 +58,7 @@ test.describe("AUTH-03: logout", () => {
     const logoutButton = page.getByRole("button", { name: "Log out" });
     await logoutButton.click();
     await expect(logoutButton).toBeDisabled();
-    await page.waitForURL("/");
+    await page.waitForURL(/\/login/);
   });
 
   test("a failed logout request shows the failure copy and re-enables the control", async ({
@@ -113,7 +113,7 @@ test.describe("AUTH-03: logout", () => {
     await page.waitForURL("/doctor");
 
     await page.getByRole("button", { name: "Log out" }).click();
-    await page.waitForURL("/");
+    await page.waitForURL(/\/login/);
 
     await page.goto("/doctor");
     await expect(page).toHaveURL(/\/login/);

@@ -203,19 +203,19 @@ test.describe("Admin cross-cutting denial matrix", () => {
       await page.close();
     });
 
-    test(`a patient visiting ${path} is redirected away`, async () => {
+    test(`a patient visiting ${path} is redirected away, to their own /patient`, async () => {
       const page = await patientContext.newPage();
       await page.goto(path);
-      await page.waitForURL("/");
-      await expect(page).toHaveURL("/");
+      await page.waitForURL("/patient");
+      await expect(page).toHaveURL("/patient");
       await page.close();
     });
 
-    test(`a doctor visiting ${path} is redirected away`, async () => {
+    test(`a doctor visiting ${path} is redirected away, to their own /doctor`, async () => {
       const page = await doctorContext.newPage();
       await page.goto(path);
-      await page.waitForURL("/");
-      await expect(page).toHaveURL("/");
+      await page.waitForURL("/doctor");
+      await expect(page).toHaveURL("/doctor");
       await page.close();
     });
 

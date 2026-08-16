@@ -23,7 +23,9 @@ test.describe("AUTH-05: doctor login", () => {
     await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
   });
 
-  test("a doctor account cannot reach /patient", async ({ page }) => {
+  test("a doctor account cannot reach /patient, and is bounced back to /doctor", async ({
+    page,
+  }) => {
     const doctor = await createTestUser("doctor");
 
     await page.goto("/login");
@@ -33,8 +35,8 @@ test.describe("AUTH-05: doctor login", () => {
     await page.waitForURL("/doctor");
 
     await page.goto("/patient");
-    await page.waitForURL("/");
-    await expect(page).toHaveURL("/");
+    await page.waitForURL("/doctor");
+    await expect(page).toHaveURL("/doctor");
   });
 
   test("an admin account logs in and lands on /admin", async ({ page }) => {

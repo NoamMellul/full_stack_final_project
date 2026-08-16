@@ -42,7 +42,7 @@ test.describe("AUTH-07: role-versus-route denial matrix", () => {
       const shouldAllow = role === route;
       const label = shouldAllow
         ? `a ${role} logged in reaches /${route} (matching role)`
-        : `a ${role} logged in is denied /${route} and redirected to / (role mismatch)`;
+        : `a ${role} logged in is denied /${route} and bounced to their own /${role} (role mismatch)`;
 
       test(label, async ({ page }) => {
         const creds = users[role];
@@ -59,15 +59,19 @@ test.describe("AUTH-07: role-versus-route denial matrix", () => {
           await expect(page).toHaveURL(`/${route}`);
           await expect(page.getByText(HOME_BODY_COPY[route])).toBeVisible();
         } else {
-          await page.waitForURL("/");
-          await expect(page).toHaveURL("/");
-          await expect(page.getByText("Nothing here yet")).not.toBeVisible();
+          // The mismatch bounce now terminates on the VISITOR's own home
+          // (keyed off `role`, not `route`) since app/patient|doctor|admin's
+          // layout redirect("/") chains one hop further through the new
+          // auth-aware root router.
+          await page.waitForURL(`/${role}`);
+          await expect(page).toHaveURL(`/${role}`);
+          await expect(page.getByText(HOME_BODY_COPY[role])).toBeVisible();
         }
       });
     }
   }
 
-  test("defence in depth: a doctor session hitting /admin directly is denied at the layout guard behind the request gate", async ({
+  test("defence in depth: a doctor session hitting /admin directly is denied at the layout guard behind the request gate, and bounced to /doctor", async ({
     page,
   }) => {
     const creds = users.doctor;
@@ -79,7 +83,7 @@ test.describe("AUTH-07: role-versus-route denial matrix", () => {
     await page.waitForURL("/doctor");
 
     await page.goto("/admin");
-    await page.waitForURL("/");
-    await expect(page).toHaveURL("/");
+    await page.waitForURL("/doctor");
+    await expect(page).toHaveURL("/doctor");
   });
 });
