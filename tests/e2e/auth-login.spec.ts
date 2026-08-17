@@ -82,6 +82,22 @@ test.describe("AUTH-02: patient login", () => {
     await expect(page).toHaveURL("/patient");
   });
 
+  test("a backslash-prefixed from param never sends the browser off-site (T-EQS-03)", async ({
+    page,
+  }) => {
+    const user = await createTestUser("patient");
+
+    // %5C is the URL-encoded backslash — needed so it survives the address bar.
+    // A browser normalizes "/\evil.example.com" to "https://evil.example.com/".
+    await page.goto("/login?from=/%5Cevil.example.com");
+    await page.getByLabel("Email").fill(user.email);
+    await page.getByLabel("Password").fill(user.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+
+    await page.waitForURL("/patient");
+    await expect(page).toHaveURL("/patient");
+  });
+
   test("submitting a completely empty form shows inline required errors and makes no network call", async ({
     page,
   }) => {
