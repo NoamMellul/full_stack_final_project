@@ -73,6 +73,22 @@ test.describe("AUTH-01: patient signup", () => {
     expect(profile?.role).toBe("patient");
   });
 
+  test("a non-string email in the request body returns 400, not a 500 (T-EQS-04)", async ({
+    request,
+  }) => {
+    const response = await request.post("/api/auth/signup", {
+      data: {
+        email: 123,
+        password: TEST_PASSWORD,
+        fullName: "Non-String Email Tester",
+      },
+    });
+
+    expect(response.status()).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBe("Email is required.");
+  });
+
   test("submitting a completely empty form shows inline required errors and makes no network call", async ({
     page,
   }) => {
