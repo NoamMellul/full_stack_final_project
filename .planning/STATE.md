@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 06
 current_phase_name: Dashboards, Notifications & Localization
 status: verifying
-stopped_at: "Completed 06-10-PLAN.md (Phase 06 complete: 10/10 plans)"
-last_updated: "2026-08-13T17:38:06.231Z"
-last_activity: 2026-08-13
-last_activity_desc: Phase 06 execution resumed (wave continue)
+stopped_at: "Completed quick task 260817-eqs: fixed 6 auth/RLS security findings (T-EQS-01..06)"
+last_updated: "2026-08-17T08:08:18.290Z"
+last_activity: 2026-08-16
+last_activity_desc: "Completed quick task 260816-g33: role-aware in-app navigation bar"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -197,6 +197,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 06] Plan 06-09's full-suite closure run (311 passed/10 failed, 31.8min) hit only already-tracked shared-dev-DB/Supabase-Auth-under-load flakiness (WINDOWS.md id 11) across admin-doctor-crud.spec.ts, admin-doctor-link-account.spec.ts, appointment-reschedule.spec.ts:764 (afterAll cleanup timeout only) and seed-availability.spec.ts:170 -- none touch this plan's 10 files; all task-scoped specs passed cleanly
 - [Phase ?]: [Phase 06] Plan 06-10: repo-wide grep audit for physical-direction Tailwind utilities returned zero matches across app/ and components/ (excluding components/ui/) - the logical-property convention held mechanically for five phases; only tests/e2e/locale-switching.spec.ts was modified (5 new tests: 2 RTL geometry regressions for the favorite heart and notification popover, 3 backstop resolutions for favorites overflow/long-text and patient-dashboard error state)
 - [Phase ?]: [Phase 06] Plan 06-10 closes the phase: I18N-02 satisfied with mechanical evidence; RESEARCH Assumption A2 (router.refresh() sufficiency, 06-05) and A1 (Realtime auth hydration via getSession() await, 06-06) both have recorded dispositions; the doctor-dashboard null-count backstop resolved via code inspection (count ?? 0 fallback), not a live test, since a Server Component's direct Supabase query is unreachable by Playwright's page.route(); full-suite closure run 325 passed/1 failed (25.8min), the 1 failure the same recurring shared-dev-DB residue class as WINDOWS.md ids 1/3/5/7/8/10/11, now id 12
+- [Phase ?]: [Quick 260817-eqs] Closed critical profiles RLS self-escalation: new migration narrows profiles_insert_own WITH CHECK to id = auth.uid() AND role = 'patient', applied live to the linked remote project; is_admin() reads this exact table so a self-inserted role='admin' row was total authorization compromise
+- [Phase ?]: [Quick 260817-eqs] requireDoctor() now enforces must_change_password on every /api/doctor/* route (not just the (gated) page layout), closing a gap where an admin-issued temp password left the API reachable indefinitely; requireAdmin() brought to error-handling parity with requirePatient()/requireDoctor() (500 on a profiles lookup error instead of a masked 403)
+- [Phase ?]: [Quick 260817-eqs] safeRedirectPath rejects any backslash (closes the /\evil.example.com browser-normalization open-redirect bypass); validateEmail/validatePassword/validateFullName typeof-guard non-string input; doctor-requests and login routes guard request.json() with try/catch + null-body normalization, mirroring app/api/appointments/route.ts's existing pattern
 
 ### Pending Todos
 
@@ -225,6 +228,7 @@ None yet.
 | 260813-w0r | Fix Base UI nativeButton console warning: components/ui/button.tsx derives nativeButton from render presence (10 render={<Link/>} call sites fixed centrally); 10 Playwright selectors realigned to the resulting accessible-role flip (link -> button) | 2026-08-13 | 295d2aa | [260813-w0r-fix-base-ui-nativebutton-console-warning](./quick/260813-w0r-fix-base-ui-nativebutton-console-warning/) |
 | 260816-etv | `/` becomes an auth-aware router (anon -> /login, authenticated -> /patient, /doctor or /admin via new lib/auth/role-home.ts, shared with app/login/page.tsx); realigned 6 specs (17 stale root-URL assertions) and removed 10 dead create-next-app scaffold dictionary keys | 2026-08-16 | f028c44 | [260816-etv-make-an-auth-aware-router-app-page-tsx-r](./quick/260816-etv-make-an-auth-aware-router-app-page-tsx-r/) |
 | 260816-g33 | Role-aware in-app navigation bar: new components/site-nav.tsx (desktop links + mobile hamburger menu via the existing Popover primitive) wired into components/site-header.tsx, role-specific link sets for patient/doctor/admin plus an anon Search-only set, 11 new nav.* dictionary keys | 2026-08-16 | 47c99f1 | [260816-g33-add-a-role-aware-in-app-navigation-bar-s](./quick/260816-g33-add-a-role-aware-in-app-navigation-bar-s/) |
+| 260817-eqs | Closed critical profiles RLS role-escalation (new migration narrows profiles_insert_own to role='patient') plus 5 defence-in-depth findings: must_change_password enforced in requireDoctor() for /api/doctor/*, backslash rejection in safeRedirectPath, typeof guards in validateEmail/validatePassword/validateFullName, requireAdmin() 500-on-error parity with sibling guards, try/catch around request.json() in doctor-requests+login | 2026-08-17 | 2ed784a | [260817-eqs-fix-critical-rls-privilege-escalation-ga](./quick/260817-eqs-fix-critical-rls-privilege-escalation-ga/) |
 
 ## Deferred Items
 
@@ -236,6 +240,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-13T17:38:06.197Z
-Stopped at: Completed 06-10-PLAN.md (Phase 06 complete: 10/10 plans)
+Last session: 2026-08-17T08:07:15.443Z
+Stopped at: Completed quick task 260817-eqs: fixed 6 auth/RLS security findings (T-EQS-01..06)
 Resume file: None
