@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 06
 current_phase_name: Dashboards, Notifications & Localization
 status: verifying
-stopped_at: "Completed quick task 260817-eqs: fixed 6 auth/RLS security findings (T-EQS-01..06)"
-last_updated: "2026-08-17T08:08:18.290Z"
-last_activity: 2026-08-16
-last_activity_desc: "Completed quick task 260816-g33: role-aware in-app navigation bar"
+stopped_at: "Completed quick task 260817-fhm: fixed 4 UI/quality findings (notification badge, specialty i18n, admin appointments doctor filter, with-Dr-Dr duplicate)"
+last_updated: "2026-08-17T08:45:00.000Z"
+last_activity: 2026-08-17
+last_activity_desc: "Completed quick task 260817-eqs: fixed 6 auth/RLS security findings (T-EQS-01..06)"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -200,6 +200,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Quick 260817-eqs] Closed critical profiles RLS self-escalation: new migration narrows profiles_insert_own WITH CHECK to id = auth.uid() AND role = 'patient', applied live to the linked remote project; is_admin() reads this exact table so a self-inserted role='admin' row was total authorization compromise
 - [Phase ?]: [Quick 260817-eqs] requireDoctor() now enforces must_change_password on every /api/doctor/* route (not just the (gated) page layout), closing a gap where an admin-issued temp password left the API reachable indefinitely; requireAdmin() brought to error-handling parity with requirePatient()/requireDoctor() (500 on a profiles lookup error instead of a masked 403)
 - [Phase ?]: [Quick 260817-eqs] safeRedirectPath rejects any backslash (closes the /\evil.example.com browser-normalization open-redirect bypass); validateEmail/validatePassword/validateFullName typeof-guard non-string input; doctor-requests and login routes guard request.json() with try/catch + null-body normalization, mirroring app/api/appointments/route.ts's existing pattern
+- [Phase ?]: [Quick 260817-fhm] notification-bell.tsx's unread badge/dots now clear in-session when the popover opens (snapshot-then-reconcile via Promise.allSettled + functional setRows, so a live Realtime insert mid-flight is never clobbered); new lib/i18n/specialty.ts localizes specialty names to Hebrew across every patient/doctor-facing surface (search cards, filters, profile, favorites, doctor-request dialog) while admin stays English-only by design
+- [Phase ?]: [Quick 260817-fhm] admin appointments doctor filter now sourced from the requireAdmin()-gated GET /api/admin/doctors instead of a direct browser-client table query, with a visible error+retry state on a failed load; patient_dashboard/patient_appointments with_doctor_prefix de-duplicated ("with Dr." -> "with") since every doctor's full_name already carries the title, closing the "with Dr. Dr. {name}" display bug
+- [Phase ?]: [Quick 260817-fhm] executor hit an account-level API session limit after all 4 commits landed but before its own verification pass/SUMMARY.md; orchestrator completed verification manually (tsc/eslint clean, 68/68 targeted Playwright tests including all 3 new cases) and wrote the SUMMARY.md retroactively
 
 ### Pending Todos
 
@@ -229,6 +232,7 @@ None yet.
 | 260816-etv | `/` becomes an auth-aware router (anon -> /login, authenticated -> /patient, /doctor or /admin via new lib/auth/role-home.ts, shared with app/login/page.tsx); realigned 6 specs (17 stale root-URL assertions) and removed 10 dead create-next-app scaffold dictionary keys | 2026-08-16 | f028c44 | [260816-etv-make-an-auth-aware-router-app-page-tsx-r](./quick/260816-etv-make-an-auth-aware-router-app-page-tsx-r/) |
 | 260816-g33 | Role-aware in-app navigation bar: new components/site-nav.tsx (desktop links + mobile hamburger menu via the existing Popover primitive) wired into components/site-header.tsx, role-specific link sets for patient/doctor/admin plus an anon Search-only set, 11 new nav.* dictionary keys | 2026-08-16 | 47c99f1 | [260816-g33-add-a-role-aware-in-app-navigation-bar-s](./quick/260816-g33-add-a-role-aware-in-app-navigation-bar-s/) |
 | 260817-eqs | Closed critical profiles RLS role-escalation (new migration narrows profiles_insert_own to role='patient') plus 5 defence-in-depth findings: must_change_password enforced in requireDoctor() for /api/doctor/*, backslash rejection in safeRedirectPath, typeof guards in validateEmail/validatePassword/validateFullName, requireAdmin() 500-on-error parity with sibling guards, try/catch around request.json() in doctor-requests+login | 2026-08-17 | 2ed784a | [260817-eqs-fix-critical-rls-privilege-escalation-ga](./quick/260817-eqs-fix-critical-rls-privilege-escalation-ga/) |
+| 260817-fhm | Fixed 4 UI/quality findings from the visual+code review: notification unread badge now clears in-session on popover open, new lib/i18n/specialty.ts localizes specialty names to Hebrew across all patient/doctor-facing surfaces, admin appointments doctor filter routed through the admin-gated API with visible error+retry, "with Dr. Dr. {name}" duplicate title fixed via dictionary de-duplication | 2026-08-17 | 163b37d | [260817-fhm-fix-4-ui-quality-findings-notification-b](./quick/260817-fhm-fix-4-ui-quality-findings-notification-b/) |
 
 ## Deferred Items
 
@@ -240,6 +244,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-17T08:07:15.443Z
-Stopped at: Completed quick task 260817-eqs: fixed 6 auth/RLS security findings (T-EQS-01..06)
+Last session: 2026-08-17T08:45:00.000Z
+Stopped at: Completed quick task 260817-fhm: fixed 4 UI/quality findings (notification badge, specialty i18n, admin appointments doctor filter, with-Dr-Dr duplicate)
 Resume file: None
