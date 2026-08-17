@@ -28,10 +28,12 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import InitialsAvatar from "@/components/initials-avatar";
+import PaginationNav from "@/components/pagination-nav";
 import TempPasswordDialog from "@/components/admin/temp-password-dialog";
 import { createClient } from "@/lib/supabase/client";
 import { validateEmail } from "@/lib/validation/auth";
 import { validateDoctorInput, validateDoctorPatch } from "@/lib/validation/doctor";
+import { ADMIN_PAGE_SIZE } from "@/lib/validation/pagination";
 
 const TABLE_COLUMN_COUNT = 7;
 
@@ -264,31 +266,43 @@ export default function DoctorsPageClient() {
   // "loading" only covers the very first GET — later refreshes (post-submit,
   // Retry) update `doctors` in place without re-showing the skeleton rows.
   const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [isPageFetching, setIsPageFetching] = useState(false);
 
-  const loadDoctors = useCallback(async () => {
+  const loadDoctors = useCallback(async (targetPage: number) => {
+    setIsPageFetching(true);
     try {
-      const response = await fetch("/api/admin/doctors");
+      const response = await fetch(`/api/admin/doctors?page=${targetPage}`);
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error ?? "Could not load doctors. Please refresh the page.");
       }
-      setDoctors(data.doctors as DoctorListRow[]);
+      const rows = data.doctors as DoctorListRow[];
+      setDoctors(rows);
+      setPage(targetPage);
+      // Two admin-doctor-crud.spec.ts tests stub this endpoint with a body
+      // that has `doctors` but no `total` — this fallback keeps the count
+      // caption accurate for those fixtures.
+      setTotal(typeof data.total === "number" ? data.total : rows.length);
       setListStatus("ready");
     } catch {
       setListStatus("error");
+    } finally {
+      setIsPageFetching(false);
     }
   }, []);
 
   useEffect(() => {
     async function initialLoad() {
-      await loadDoctors();
+      await loadDoctors(1);
     }
     void initialLoad();
   }, [loadDoctors]);
 
   function handleRetry() {
     setListStatus("loading");
-    void loadDoctors();
+    void loadDoctors(page);
   }
 
   useEffect(() => {
@@ -366,7 +380,10 @@ export default function DoctorsPageClient() {
       }
 
       resetForm();
-      await loadDoctors();
+      // A new doctor sorts to the top under created_at descending — return
+      // to page 1 so it's visible even if the admin submitted from a later
+      // page.
+      await loadDoctors(1);
     } catch {
       setApiError("Could not save doctor. Please try again.");
     } finally {
@@ -450,7 +467,8 @@ export default function DoctorsPageClient() {
       }
 
       closeEditDialog();
-      await loadDoctors();
+      // Stay on the page the admin was on.
+      await loadDoctors(page);
     } catch {
       setEditApiError("Could not save doctor. Please try again.");
     } finally {
@@ -529,7 +547,8 @@ export default function DoctorsPageClient() {
       const doctorName = linkingDoctor.full_name;
       closeLinkDialog();
       setTempPasswordInfo({ password: data.tempPassword, doctorName });
-      await loadDoctors();
+      // Stay on the page the admin was on.
+      await loadDoctors(page);
     } catch {
       setLinkApiError("Could not create a login for this doctor. Please try again.");
     } finally {
@@ -679,7 +698,7 @@ export default function DoctorsPageClient() {
       <div className="flex flex-col gap-2">
         {listStatus === "ready" ? (
           <p className="text-sm text-muted-foreground">
-            {doctors.length === 1 ? "1 doctor" : `${doctors.length} doctors`}
+            {total === 1 ? "1 doctor" : `${total} doctors`}
           </p>
         ) : null}
 
@@ -813,6 +832,19 @@ export default function DoctorsPageClient() {
             )}
           </Table>
         </div>
+
+        {listStatus === "ready" ? (
+          <PaginationNav
+            page={page}
+            pageCount={Math.max(1, Math.ceil(total / ADMIN_PAGE_SIZE))}
+            onPageChange={(targetPage) => void loadDoctors(targetPage)}
+            disabled={isPageFetching}
+            navLabel="Doctors pagination"
+            previousLabel="Previous page"
+            nextLabel="Next page"
+            pageLabelPrefix="Page"
+          />
+        ) : null}
       </div>
     </div>
   );
