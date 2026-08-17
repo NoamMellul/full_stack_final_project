@@ -43,6 +43,31 @@ export async function createTestUser(
   return { id: data.user.id, email, password: TEST_PASSWORD };
 }
 
+// Auth user with NO profiles row. createTestUser() always inserts one, which
+// would make a later self-escalation insert fail on the primary-key conflict
+// (23505) instead of the RLS policy (42501) — a false pass that proves
+// nothing. Used by tests/e2e/profiles-rls-escalation.spec.ts.
+export async function createBareAuthUser(
+  role: "patient" | "doctor" | "admin",
+): Promise<{ id: string; email: string; password: string }> {
+  const admin = testAdminClient();
+  const email = uniqueTestEmail(role);
+
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password: TEST_PASSWORD,
+    email_confirm: true,
+  });
+
+  if (error || !data.user) {
+    throw new Error(`Failed to create bare test ${role} user: ${error?.message}`);
+  }
+
+  createdUserIds.push(data.user.id);
+
+  return { id: data.user.id, email, password: TEST_PASSWORD };
+}
+
 export async function deleteTestUserByEmail(email: string): Promise<void> {
   const admin = testAdminClient();
 
