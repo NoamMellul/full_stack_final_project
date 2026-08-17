@@ -154,19 +154,51 @@ export default function NotificationBell({
   const unreadCount = rows.filter((row) => row.read_at === null).length;
   const badgeLabel = unreadCount > 9 ? BADGE_OVERFLOW_LABEL : String(unreadCount);
 
+  async function markReadOnOpen(unreadIds: string[]) {
+    // Fire all reads together and resolve exactly which ids the server
+    // actually confirmed — Promise.allSettled so one rejected/erroring
+    // request never blocks the others from updating local state.
+    const results = await Promise.allSettled(
+      unreadIds.map(async (id) => {
+        const response = await fetch(`/api/notifications/${id}/read`, { method: "PATCH" });
+        if (!response.ok) throw new Error("mark-read failed");
+        return id;
+      }),
+    );
+    const succeededIds = new Set(
+      results
+        .filter((result): result is PromiseFulfilledResult<string> => result.status === "fulfilled")
+        .map((result) => result.value),
+    );
+    if (succeededIds.size === 0) return;
+
+    // Functional updater (never the captured `rows` array) so a live
+    // insert landing mid-flight is not clobbered. Only succeeded ids move
+    // to read; a rejected or non-ok id stays unread and is retried on the
+    // next open.
+    setRows((current) =>
+      current.map((row) =>
+        succeededIds.has(row.id) && row.read_at === null
+          ? { ...row, read_at: new Date().toISOString() }
+          : row,
+      ),
+    );
+  }
+
   function handleOpenChange(nextOpen: boolean) {
     setOpen(nextOpen);
 
     if (nextOpen) {
-      // Snapshot the currently-listed unread ids at open time, fire one
-      // fire-and-forget PATCH per id (idempotent endpoint), and do not
-      // block the render. A notification arriving live while the dropdown
-      // is already open is deliberately excluded from this snapshot — it
-      // stays visually unread until the next open.
+      // Snapshot the currently-listed unread ids at open time — a
+      // notification arriving live while the dropdown is already open is
+      // deliberately excluded from this snapshot, so it stays visually
+      // unread until the next open. The actual PATCH requests and local
+      // state update happen asynchronously in markReadOnOpen(); this
+      // handler itself must stay synchronous (Base UI's onOpenChange must
+      // not receive a promise).
       const unreadIds = rows.filter((row) => row.read_at === null).map((row) => row.id);
-      for (const id of unreadIds) {
-        void fetch(`/api/notifications/${id}/read`, { method: "PATCH" });
-      }
+      if (unreadIds.length === 0) return;
+      void markReadOnOpen(unreadIds);
     }
   }
 

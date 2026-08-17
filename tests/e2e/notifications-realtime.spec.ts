@@ -276,6 +276,27 @@ test.describe("NOTIF-01/02/03/04: notifications on booking, cancel, reschedule",
   );
 
   test(
+    "the unread badge clears after opening the bell, without a page reload",
+    async ({ page }) => {
+      const patient = await createTestUser("patient");
+      await insertTestNotification({ userId: patient.id, type: "appointment_booked" });
+      await insertTestNotification({ userId: patient.id, type: "appointment_booked" });
+
+      await loginAsPatient(page, patient);
+      await page.goto("/patient");
+
+      const badge = page.getByTestId("notification-badge");
+      await expect(badge).toHaveText("2");
+
+      await page.getByRole("button", { name: "Notifications" }).click();
+      await expect(badge).toBeHidden();
+
+      await page.reload();
+      await expect(badge).toBeHidden();
+    },
+  );
+
+  test(
     "one user never receives another user's notification",
     async ({ page }) => {
       const viewer = await createTestUser("patient");
