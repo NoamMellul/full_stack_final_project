@@ -23,12 +23,21 @@ export async function requireAdmin(): Promise<AdminGuardResult> {
     };
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
+  if (profileError) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Something went wrong. Please try again." },
+        { status: 500 },
+      ),
+    };
+  }
   if (profile?.role !== "admin") {
     return {
       ok: false,
