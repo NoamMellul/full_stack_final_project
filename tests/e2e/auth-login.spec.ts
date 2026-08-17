@@ -127,4 +127,25 @@ test.describe("AUTH-02: patient login", () => {
     await expect(page).toHaveURL("/login");
     await expect(page.getByRole("button", { name: "Log in" })).toBeEnabled();
   });
+
+  test("a malformed JSON body returns 400 with the byte-identical generic error, not a 500 (T-EQS-06)", async ({
+    request,
+  }) => {
+    // A raw Buffer (unlike a string `data`) is always sent byte-for-byte —
+    // Playwright's fetch client otherwise treats a non-parsable string paired
+    // with a JSON content-type as a value to be JSON.stringify()'d, which
+    // would silently produce a *valid* JSON string body and defeat this case
+    // (precedent: appointment-booking.spec.ts test 9).
+    const response = await request.post("/api/auth/login", {
+      headers: { "Content-Type": "application/json" },
+      data: Buffer.from("{ not json", "utf8"),
+    });
+
+    expect(response.status()).toBe(400);
+    const body = await response.json();
+    // Byte-identical to the wrong-password error — preserves the non-oracle
+    // guarantee (T-01-08): a parse error must never be a distinguishable
+    // response-shape signal.
+    expect(body.error).toBe(GENERIC_ERROR);
+  });
 });

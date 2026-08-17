@@ -7,9 +7,22 @@ import { validateDoctorRequestInput } from "@/lib/validation/doctor-request";
 // requireX() guard. Authorization is the doctor_requests_insert_public RLS
 // policy itself (with check (status = 'pending')), not this handler.
 export async function POST(request: Request) {
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
 
-  const validationError = validateDoctorRequestInput(body);
+  // A body of the literal 4 bytes `null` parses successfully above (no
+  // exception -- `null` is valid JSON), so without this normalization a
+  // null `body` would reach validateDoctorRequestInput's `body.fullName`
+  // read and throw (code review WR-01, mirrored from app/api/appointments/route.ts).
+  if (typeof body !== "object" || body === null) {
+    body = {};
+  }
+
+  const validationError = validateDoctorRequestInput(body as Record<string, unknown>);
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }

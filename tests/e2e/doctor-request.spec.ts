@@ -156,6 +156,22 @@ test.describe("doctor request: anonymous submission", () => {
     if (pendingRow?.id) trackDoctorRequestId(pendingRow.id);
   });
 
+  test("6. a malformed JSON body returns 400, not a 500 (T-EQS-06)", async ({ request }) => {
+    // A raw Buffer (unlike a string `data`) is always sent byte-for-byte —
+    // Playwright's fetch client otherwise treats a non-parsable string paired
+    // with a JSON content-type as a value to be JSON.stringify()'d, which
+    // would silently produce a *valid* JSON string body and defeat this case
+    // (precedent: appointment-booking.spec.ts test 9).
+    const response = await request.post("/api/doctor-requests", {
+      headers: { "Content-Type": "application/json" },
+      data: Buffer.from("{ not json", "utf8"),
+    });
+
+    expect(response.status()).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBe("Invalid request body.");
+  });
+
   test("5. submitting an empty full name shows the translated required-field error with no network request", async ({
     page,
   }) => {
