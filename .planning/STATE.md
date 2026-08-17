@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 06
 current_phase_name: Dashboards, Notifications & Localization
 status: verifying
-stopped_at: "Completed quick task 260817-lar: paginated /admin/doctors and /admin/users (opt-in, 25/page)"
-last_updated: "2026-08-17T09:45:00.000Z"
+stopped_at: "Completed quick task 260817-nlg: cleaned up 389 orphaned doctors + 260 test accounts + 229/156 test specialties/locations from the shared dev database"
+last_updated: "2026-08-17T10:45:00.000Z"
 last_activity: 2026-08-17
-last_activity_desc: "Completed quick task 260817-fhm: fixed 4 UI/quality findings (notification badge, specialty i18n, admin appointments doctor filter, with-Dr-Dr duplicate)"
+last_activity_desc: "Completed quick task 260817-lar: paginated /admin/doctors and /admin/users (opt-in, 25/page)"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -205,6 +205,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [Quick 260817-fhm] executor hit an account-level API session limit after all 4 commits landed but before its own verification pass/SUMMARY.md; orchestrator completed verification manually (tsc/eslint clean, 68/68 targeted Playwright tests including all 3 new cases) and wrote the SUMMARY.md retroactively
 - [Phase ?]: [Quick 260817-lar] /admin/doctors and /admin/users tables now paginate at 25 rows/page (new lib/validation/pagination.ts + shared components/pagination-nav.tsx extracted from search-results.tsx's condensed-pagination nav); pagination is opt-in per request (unparameterized GET still returns every row) so /admin/appointments' doctor-filter dropdown keeps working off the full catalog without modification
 - [Phase ?]: [Quick 260817-lar] Two admin-doctor-crud.spec.ts route stubs anticipated-and-fixed: Playwright's glob dialect treats `?` as a single-char wildcard, so `page.route("**/api/admin/doctors", ...)` stopped matching once the client started sending `?page=N` -- replaced with a regex; 65/65 targeted Playwright tests passed (admin-oversight-views, admin-doctor-crud, admin-doctor-status, admin-doctor-link-account, search-sort-pagination, new admin-pagination.spec.ts)
+- [Phase ?]: [Quick 260817-nlg] New scripts/cleanup-test-residue.ts (dry-run by default, --apply to execute) removed 389 orphaned doctors/260 test accounts/229 specialties/156 locations/65 appointments accumulated from crashed Playwright runs and manual admin-UI debugging; whitelist built verbatim from scripts/seed.ts's demo catalog since doctors.is_demo defaults to true for every insert and cannot discriminate seed vs. test-fixture rows; database independently re-verified at exactly 12/12/12 + 6 real profiles after execution, resolving the long-tracked shared-dev-DB residue blocker
 
 ### Pending Todos
 
@@ -212,7 +213,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- Shared remote dev database holds accumulated Playwright test residue in specialties/locations/doctors (test-created rows never cleaned up across Phase 02 plans 01-05) — not a defect in 02-06's seed script, which correctly seeded and idempotently re-ran its own 12/12/12 demo rows; a project reset or manual cleanup before final demo/grading would present a cleaner catalog
+- ~~Shared remote dev database holds accumulated Playwright test residue in specialties/locations/doctors~~ — **RESOLVED by Quick 260817-nlg** (2026-08-17): 389 orphaned doctors, 260 test accounts, 229 specialties, 156 locations, 65 stale appointments removed via new `scripts/cleanup-test-residue.ts`; database independently re-verified at exactly 12/12/12 seed rows + 6 real profiles. The seed-availability.spec.ts:170 slot-count flake (WINDOWS.md ids 1/3/5/7/8/10/11/12) persisted through a post-cleanup smoke test and remains open — it concerns availability_slots distribution on the kept seed doctors, not the doctor/specialty/location residue this cleanup targeted.
 - ⚠️ [Phase 3] Task 3 acceptance-criterion 'temporarily remove security_invoker/is_active and confirm assertion 2 fails' could not be executed: sandbox classifier blocked all npx supabase db query --linked calls (even read-only). Substituted with grep of the applied migration + a clean npx supabase db advisors --linked report. Recorded as coverage D7 (human_judgment: true) in 03-01-SUMMARY.md for optional human follow-up.
 - ⚠️ [Phase 3] Two non-blocking code-review warnings left unfixed by design (03-REVIEW.md WR-02, WR-03; confirmed still open in 03-VERIFICATION.md's re-verification): out-of-range search pages report a fabricated `total: 0` instead of the real count, and the doctor-profile upcoming-slots query has no `.limit()`. Neither violates a locked must-have; worth a look if a later phase touches either endpoint.
 - ⚠️ [Phase 4] Phase 4 has no `04-VERIFICATION.md`, `04-SECURITY.md`, or `04-UAT.md` — it was executed and its ROADMAP checkbox is now corrected to complete, but it never went through the same closing gates (goal-backward verification, security threat sign-off, UAT) that Phase 5 just did. Not a known defect — Phase 5's own booking flow exercises the availability infrastructure Phase 4 built, and its concurrency tests passed — but the formal artifacts don't exist. Worth backfilling via `/gsd-secure-phase 04` + a Phase 4 verifier pass before the defense if time allows.
@@ -236,6 +237,7 @@ None yet.
 | 260817-eqs | Closed critical profiles RLS role-escalation (new migration narrows profiles_insert_own to role='patient') plus 5 defence-in-depth findings: must_change_password enforced in requireDoctor() for /api/doctor/*, backslash rejection in safeRedirectPath, typeof guards in validateEmail/validatePassword/validateFullName, requireAdmin() 500-on-error parity with sibling guards, try/catch around request.json() in doctor-requests+login | 2026-08-17 | 2ed784a | [260817-eqs-fix-critical-rls-privilege-escalation-ga](./quick/260817-eqs-fix-critical-rls-privilege-escalation-ga/) |
 | 260817-fhm | Fixed 4 UI/quality findings from the visual+code review: notification unread badge now clears in-session on popover open, new lib/i18n/specialty.ts localizes specialty names to Hebrew across all patient/doctor-facing surfaces, admin appointments doctor filter routed through the admin-gated API with visible error+retry, "with Dr. Dr. {name}" duplicate title fixed via dictionary de-duplication | 2026-08-17 | 163b37d | [260817-fhm-fix-4-ui-quality-findings-notification-b](./quick/260817-fhm-fix-4-ui-quality-findings-notification-b/) |
 | 260817-lar | Paginated /admin/doctors and /admin/users (25 rows/page): new lib/validation/pagination.ts + shared components/pagination-nav.tsx (extracted from search-results.tsx), opt-in per-request pagination on GET /api/admin/doctors and GET /api/admin/users so the unparameterized admin-appointments doctor-filter dropdown keeps working unchanged | 2026-08-17 | c7a81a6 | [260817-lar-add-pagination-to-admin-doctors-and-admi](./quick/260817-lar-add-pagination-to-admin-doctors-and-admi/) |
+| 260817-nlg | Cleaned up accumulated Playwright/manual-debug test residue from the shared dev database via new reusable scripts/cleanup-test-residue.ts (whitelist-based, dry-run by default): removed 389 orphaned doctors, 260 test/debug accounts, 229 test specialties, 156 test locations, 65 stale appointments; database independently re-verified at exactly the 12/12/12 seed catalog + 6 real profiles | 2026-08-17 | 7c68b44 | [260817-nlg-clean-up-accumulated-playwright-manual-d](./quick/260817-nlg-clean-up-accumulated-playwright-manual-d/) |
 
 ## Deferred Items
 
@@ -247,6 +249,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-17T09:45:00.000Z
-Stopped at: Completed quick task 260817-lar: paginated /admin/doctors and /admin/users (opt-in, 25/page)
+Last session: 2026-08-17T10:45:00.000Z
+Stopped at: Completed quick task 260817-nlg: cleaned up 389 orphaned doctors + 260 test accounts + 229/156 test specialties/locations from the shared dev database
 Resume file: None
