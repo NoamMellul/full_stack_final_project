@@ -10,8 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import FavoriteToggle from "@/components/favorite-toggle";
 import InitialsAvatar from "@/components/initials-avatar";
 import type { DoctorSearchResult } from "@/components/search/doctor-card";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { specialtyLabel } from "@/lib/i18n/specialty";
 import { formatJerusalemDayHeading, formatJerusalemTime } from "@/lib/timezone";
 
 // Matches GET /api/patient/favorites's response entries. `doctor` reuses
@@ -53,6 +54,7 @@ function FavoriteRow({
   onRemoved: () => void;
 }) {
   const t = useT();
+  const locale = useLocale();
   const [photoFailed, setPhotoFailed] = useState(false);
   const doctor = entry.doctor;
   const showPhoto = Boolean(doctor.photo_url) && !photoFailed;
@@ -76,7 +78,9 @@ function FavoriteRow({
         </div>
 
         <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-          <span className="truncate">{doctor.specialty_name_en}</span>
+          <span className="truncate">
+            {specialtyLabel(locale, doctor.specialty_name_en, doctor.specialty_name_he)}
+          </span>
           <span className="truncate">
             {doctor.neighborhood}, {doctor.city}
           </span>

@@ -12,12 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { specialtyLabel } from "@/lib/i18n/specialty";
 import { createClient } from "@/lib/supabase/client";
 import { jerusalemDayKey } from "@/lib/timezone";
 
-type OptionRow = { id: string; label: string };
+type SpecialtyOptionRow = { id: string; nameEn: string; nameHe: string | null };
 
 type SearchFiltersProps = {
   nameValue: string;
@@ -70,22 +71,32 @@ export default function SearchFilters({
   onFilterChange,
 }: SearchFiltersProps) {
   const t = useT();
-  const [specialties, setSpecialties] = useState<OptionRow[]>([]);
+  const locale = useLocale();
+  const [specialties, setSpecialties] = useState<SpecialtyOptionRow[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
 
   // Loaded once from the browser client — specialties/locations are public
   // reference data under `select using (true)` RLS (mirrors
   // components/admin/doctors-page-client.tsx's option-loading effect).
+  //
+  // Both raw name fields are kept in state (not a pre-resolved label):
+  // this effect has an empty dependency array and never re-runs on a locale
+  // switch, so resolving through specialtyLabel() has to happen at render
+  // time in every consumer below, not here.
   useEffect(() => {
     async function loadOptions() {
       const supabase = createClient();
       const [specialtiesRes, locationsRes] = await Promise.all([
-        supabase.from("specialties").select("id,name_en").order("name_en"),
+        supabase.from("specialties").select("id,name_en,name_he").order("name_en"),
         supabase.from("locations").select("neighborhood").order("neighborhood"),
       ]);
 
       setSpecialties(
-        (specialtiesRes.data ?? []).map((row) => ({ id: row.id, label: row.name_en })),
+        (specialtiesRes.data ?? []).map((row) => ({
+          id: row.id,
+          nameEn: row.name_en,
+          nameHe: row.name_he,
+        })),
       );
 
       const uniqueNeighborhoods = Array.from(
@@ -106,7 +117,10 @@ export default function SearchFilters({
   // without ever having opened the popup (required for D-13's reload/share
   // parity — otherwise the trigger briefly/permanently shows the raw id).
   const specialtyItems: Record<string, string> = Object.fromEntries(
-    specialties.map((option) => [option.id, option.label]),
+    specialties.map((option) => [
+      option.id,
+      specialtyLabel(locale, option.nameEn, option.nameHe),
+    ]),
   );
   const neighborhoodItems: Record<string, string> = Object.fromEntries(
     neighborhoods.map((option) => [option, option]),
@@ -157,7 +171,7 @@ export default function SearchFilters({
           <SelectContent>
             {specialties.map((option) => (
               <SelectItem key={option.id} value={option.id}>
-                {option.label}
+                {specialtyLabel(locale, option.nameEn, option.nameHe)}
               </SelectItem>
             ))}
           </SelectContent>

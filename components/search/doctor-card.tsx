@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import FavoriteToggle from "@/components/favorite-toggle";
 import InitialsAvatar from "@/components/initials-avatar";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { specialtyLabel } from "@/lib/i18n/specialty";
 import { formatJerusalemDayHeading, formatJerusalemTime } from "@/lib/timezone";
 
 // Shared by search-results.tsx and app/search/page.tsx — exported from here
@@ -51,6 +52,7 @@ export default function DoctorCard({
   isFavorited = false,
 }: DoctorCardProps) {
   const t = useT();
+  const locale = useLocale();
   // Flips true if the external photo_url 404s/fails to load — falls back to
   // InitialsAvatar rather than a broken-image glyph (UI-SPEC partial state).
   const [photoFailed, setPhotoFailed] = useState(false);
@@ -83,7 +85,9 @@ export default function DoctorCard({
         </div>
 
         <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-          <span className="truncate">{doctor.specialty_name_en}</span>
+          <span className="truncate">
+            {specialtyLabel(locale, doctor.specialty_name_en, doctor.specialty_name_he)}
+          </span>
           <span className="truncate">
             {doctor.neighborhood}, {doctor.city}
           </span>

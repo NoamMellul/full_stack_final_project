@@ -18,8 +18,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import FavoriteToggle from "@/components/favorite-toggle";
 import InitialsAvatar from "@/components/initials-avatar";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { specialtyLabel } from "@/lib/i18n/specialty";
 import { createClient } from "@/lib/supabase/client";
 import { formatJerusalemDayHeading, formatJerusalemTime, jerusalemDayKey } from "@/lib/timezone";
 
@@ -95,6 +96,7 @@ function DoctorProfileSkeleton() {
 
 function DoctorProfilePageInner() {
   const t = useT();
+  const locale = useLocale();
   const params = useParams<{ id: string }>();
   const id = params.id;
   const router = useRouter();
@@ -297,7 +299,9 @@ function DoctorProfilePageInner() {
       </div>
 
       <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-        {doctor.specialty ? <span>{doctor.specialty.name_en}</span> : null}
+        {doctor.specialty ? (
+          <span>{specialtyLabel(locale, doctor.specialty.name_en, doctor.specialty.name_he)}</span>
+        ) : null}
         {addressParts.length > 0 ? <span>{addressParts.join(", ")}</span> : null}
       </div>
 
@@ -368,7 +372,9 @@ function DoctorProfilePageInner() {
           {selectedSlot ? (
             <div className="flex flex-col gap-2 text-sm">
               <span className="font-semibold">{doctor.full_name}</span>
-              {doctor.specialty ? <span>{doctor.specialty.name_en}</span> : null}
+              {doctor.specialty ? (
+                <span>{specialtyLabel(locale, doctor.specialty.name_en, doctor.specialty.name_he)}</span>
+              ) : null}
               <span>
                 {formatJerusalemDayHeading(selectedSlot.start_at)},{" "}
                 {formatJerusalemTime(selectedSlot.start_at)}–

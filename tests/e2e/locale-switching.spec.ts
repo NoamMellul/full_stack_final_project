@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import heDict from "../../dictionaries/he.json";
+import { cleanupTestSlots, createTestSlots } from "./helpers/availability";
 import { cleanupTestFavorites, createTestFavorite } from "./helpers/favorites";
 import { cleanupTestNotifications, insertTestNotification } from "./helpers/notifications";
 import {
@@ -202,10 +203,48 @@ test.describe("I18N-02: RTL geometry regression tests (favorite heart, notificat
 // eyeballed observation.
 test.describe("06-10: UI-SPEC backstop resolution (favorites overflow, long text, dashboard errors)", () => {
   test.afterAll(async () => {
+    await cleanupTestSlots();
     await cleanupTestFavorites();
     await cleanupTestReferenceData();
     await cleanupTestUsers();
   });
+
+  test(
+    "specialty names render in the active locale on the search results",
+    async ({ page, context }) => {
+      const specialty = await createTestSpecialty();
+      const location = await createTestLocation();
+      const doctor = await createTestDoctor({
+        specialtyId: specialty.id,
+        locationId: location.id,
+        isActive: true,
+      });
+      const start = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+      const end = new Date(start.getTime() + 30 * 60 * 1000);
+      await createTestSlots(doctor.id, [{ startAt: start, endAt: end }]);
+
+      await context.addCookies([
+        { name: LOCALE_COOKIE_NAME, value: "he", url: "http://localhost:3000" },
+      ]);
+      await page.goto("/search");
+      await page.getByLabel("שם הרופא").fill(doctor.fullName);
+      await page.waitForURL((url) => url.searchParams.get("q") === doctor.fullName);
+
+      const heCard = page.locator('[data-slot="card"]', { hasText: doctor.fullName });
+      await expect(heCard.getByText(specialty.nameHe)).toBeVisible();
+      await expect(heCard.getByText(specialty.nameEn)).not.toBeVisible();
+
+      await context.addCookies([
+        { name: LOCALE_COOKIE_NAME, value: "en", url: "http://localhost:3000" },
+      ]);
+      await page.goto("/search");
+      await page.getByLabel("Doctor name").fill(doctor.fullName);
+      await page.waitForURL((url) => url.searchParams.get("q") === doctor.fullName);
+
+      const enCard = page.locator('[data-slot="card"]', { hasText: doctor.fullName });
+      await expect(enCard.getByText(specialty.nameEn)).toBeVisible();
+    },
+  );
 
   test(
     "the /patient/favorites list scrolls naturally at a large favorited-doctor count in both directions",

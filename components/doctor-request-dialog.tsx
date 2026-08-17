@@ -15,7 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useT } from "@/lib/i18n/locale-provider";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
+import { specialtyLabel } from "@/lib/i18n/specialty";
 import { translateValidationMessage } from "@/lib/i18n/validation-messages";
 import { createClient } from "@/lib/supabase/client";
 import { validateDoctorRequestInput } from "@/lib/validation/doctor-request";
@@ -26,6 +27,7 @@ type SpecialtyOption = { id: string; name_en: string; name_he: string };
 // sibling immediately after the login form's closing tag on /login.
 export default function DoctorRequestDialog() {
   const t = useT();
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [specialties, setSpecialties] = useState<SpecialtyOption[]>([]);
   const specialtiesLoadedRef = useRef(false);
@@ -185,7 +187,7 @@ export default function DoctorRequestDialog() {
                 <SelectContent>
                   {specialties.map((option) => (
                     <SelectItem key={option.id} value={option.id}>
-                      {option.name_en}
+                      {specialtyLabel(locale, option.name_en, option.name_he)}
                     </SelectItem>
                   ))}
                 </SelectContent>
