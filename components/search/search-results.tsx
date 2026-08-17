@@ -1,12 +1,11 @@
 "use client";
 
-import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/lib/i18n/locale-provider";
 import { PAGE_SIZE } from "@/lib/validation/search";
 import DoctorCard, { type DoctorSearchResult } from "@/components/search/doctor-card";
+import PaginationNav from "@/components/pagination-nav";
 
 type SearchResultsProps = {
   status: "loading" | "error" | "ready";
@@ -18,35 +17,6 @@ type SearchResultsProps = {
   favoriteViewerRole: "patient" | "anonymous" | "hidden";
   favoritedDoctorIds: Set<string>;
 };
-
-// Standard condensed pagination: always show page 1, page `pageCount`, the
-// current page and one neighbour on each side; collapse any gap spanning
-// more than one number into a single "ellipsis" entry. Returns a list of
-// page numbers and the string "ellipsis" for gaps — pageCount <= 7 always
-// renders every number, no condensation needed.
-function buildPageItems(page: number, pageCount: number): Array<number | "ellipsis"> {
-  if (pageCount <= 7) {
-    return Array.from({ length: pageCount }, (_, index) => index + 1);
-  }
-
-  const items: Array<number | "ellipsis"> = [1];
-
-  const rangeStart = Math.max(2, page - 1);
-  const rangeEnd = Math.min(pageCount - 1, page + 1);
-
-  if (rangeStart > 2) {
-    items.push("ellipsis");
-  }
-  for (let n = rangeStart; n <= rangeEnd; n++) {
-    items.push(n);
-  }
-  if (rangeEnd < pageCount - 1) {
-    items.push("ellipsis");
-  }
-
-  items.push(pageCount);
-  return items;
-}
 
 export default function SearchResults({
   status,
@@ -93,7 +63,6 @@ export default function SearchResults({
   }
 
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const pageItems = buildPageItems(page, pageCount);
   const controlsDisabled = status !== "ready";
 
   return (
@@ -112,71 +81,16 @@ export default function SearchResults({
           />
         ))}
       </div>
-      {pageCount > 1 ? (
-        <nav
-          aria-label={t("search.results.pagination_nav_label")}
-          className="flex items-center justify-center gap-1"
-        >
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            className="relative after:absolute after:-inset-2"
-            aria-label={t("search.results.previous_page_aria")}
-            disabled={page === 1 || controlsDisabled}
-            onClick={() => onPageChange(page - 1)}
-          >
-            <ChevronLeftIcon />
-          </Button>
-          {pageItems.map((item, index) =>
-            item === "ellipsis" ? (
-              <span
-                key={`ellipsis-${index}`}
-                aria-hidden="true"
-                className="flex size-7 items-center justify-center text-muted-foreground"
-              >
-                <MoreHorizontalIcon className="size-4" />
-              </span>
-            ) : item === page ? (
-              <Button
-                key={item}
-                type="button"
-                variant="default"
-                size="icon-sm"
-                aria-label={`${t("search.results.page_aria_prefix")} ${item}`}
-                aria-current="page"
-                disabled={controlsDisabled}
-                onClick={() => onPageChange(item)}
-              >
-                {item}
-              </Button>
-            ) : (
-              <Button
-                key={item}
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                aria-label={`${t("search.results.page_aria_prefix")} ${item}`}
-                disabled={controlsDisabled}
-                onClick={() => onPageChange(item)}
-              >
-                {item}
-              </Button>
-            ),
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            className="relative after:absolute after:-inset-2"
-            aria-label={t("search.results.next_page_aria")}
-            disabled={page === pageCount || controlsDisabled}
-            onClick={() => onPageChange(page + 1)}
-          >
-            <ChevronRightIcon />
-          </Button>
-        </nav>
-      ) : null}
+      <PaginationNav
+        page={page}
+        pageCount={pageCount}
+        onPageChange={onPageChange}
+        disabled={controlsDisabled}
+        navLabel={t("search.results.pagination_nav_label")}
+        previousLabel={t("search.results.previous_page_aria")}
+        nextLabel={t("search.results.next_page_aria")}
+        pageLabelPrefix={t("search.results.page_aria_prefix")}
+      />
     </div>
   );
 }
