@@ -38,6 +38,7 @@ type DoctorProfile = {
   full_name: string;
   bio: string | null;
   photo_url: string | null;
+  phone: string | null;
   is_demo: boolean;
   specialty: { id: string; name_en: string; name_he: string } | null;
   location: { id: string; city: string; neighborhood: string; address: string | null } | null;
@@ -269,6 +270,7 @@ function DoctorProfilePageInner() {
 
   const showPhoto = Boolean(doctor.photo_url) && !photoFailed;
   const bio = doctor.bio?.trim();
+  const phone = doctor.phone?.trim();
   const slotGroups = groupSlotsByJerusalemDay(upcomingSlots);
 
   return (
@@ -303,6 +305,12 @@ function DoctorProfilePageInner() {
           <span>{specialtyLabel(locale, doctor.specialty.name_en, doctor.specialty.name_he)}</span>
         ) : null}
         {addressParts.length > 0 ? <span>{addressParts.join(", ")}</span> : null}
+        {phone ? (
+          <span className="flex items-center gap-1">
+            <span>{t("doctor_profile.phone_label")}:</span>
+            <span dir="ltr">{phone}</span>
+          </span>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap gap-1">

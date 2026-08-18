@@ -60,6 +60,7 @@ export async function createTestDoctor(opts: {
   locationId: string;
   bio?: string;
   photoUrl?: string;
+  phone?: string;
   isActive?: boolean;
   profileId?: string;
 }): Promise<{ id: string; fullName: string }> {
@@ -74,6 +75,7 @@ export async function createTestDoctor(opts: {
       location_id: opts.locationId,
       bio: opts.bio ?? null,
       photo_url: opts.photoUrl ?? null,
+      phone: opts.phone ?? null,
       is_active: opts.isActive ?? false,
       profile_id: opts.profileId ?? null,
     })

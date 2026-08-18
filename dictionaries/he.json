@@ -66,6 +66,7 @@
   "doctor_profile.no_description": "לא סופק תיאור.",
   "doctor_profile.not_found_body": "פרופיל הרופא הזה אינו קיים או אינו פעיל עוד.",
   "doctor_profile.not_found_heading": "הרופא לא נמצא",
+  "doctor_profile.phone_label": "טלפון",
   "doctor_profile.select_slot": "בחירת מועד זה",
   "doctor_request.cta": "רופאים? שלחו בקשה להצטרפות",
   "doctor_request.dialog_description": "שלחו לנו את פרטיכם ומנהל המערכת יחזור אליכם. החשבונות נוצרים על ידי הצוות שלנו — טופס זה אינו יוצר חשבון.",

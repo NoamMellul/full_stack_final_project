@@ -267,3 +267,72 @@ test.describe("S44 admin: edit an existing doctor's phone", () => {
     expect(data?.phone).toBe("03-111-2222");
   });
 });
+
+test.describe("S44 public: doctor profile phone display", () => {
+  // Drives the DEFAULT anonymous context with no login helper — /doctors/[id]
+  // is a public, unauthenticated surface (matches tests/e2e/doctor-profile.spec.ts).
+  let specialty: { id: string; nameEn: string };
+  let location: { id: string; city: string; neighborhood: string };
+  let doctorWithPhone: { id: string; fullName: string };
+  let doctorWithoutPhone: { id: string; fullName: string };
+
+  test.beforeAll(async () => {
+    specialty = await createTestSpecialty();
+    location = await createTestLocation();
+
+    doctorWithPhone = await createTestDoctor({
+      fullName: `S44 Public Phone ${Date.now()}`,
+      specialtyId: specialty.id,
+      locationId: location.id,
+      phone: "03-777-8888",
+      isActive: true,
+    });
+
+    doctorWithoutPhone = await createTestDoctor({
+      fullName: `S44 Public No Phone ${Date.now()}`,
+      specialtyId: specialty.id,
+      locationId: location.id,
+      isActive: true,
+    });
+  });
+
+  test.afterAll(async () => {
+    await cleanupTestReferenceData();
+  });
+
+  test("an active doctor with a phone shows the phone label and the number", async ({ page }) => {
+    await page.goto(`/doctors/${doctorWithPhone.id}`);
+
+    await expect(page.getByText("Phone:")).toBeVisible();
+    await expect(page.locator("main").getByText("03-777-8888")).toBeVisible();
+  });
+
+  test("an active doctor with no phone renders no phone label at all", async ({ page }) => {
+    await page.goto(`/doctors/${doctorWithoutPhone.id}`);
+
+    await expect(page.getByText("Phone:")).toHaveCount(0);
+  });
+
+  test("the rendered phone is plain text — no link role, no anchor wraps it", async ({ page }) => {
+    await page.goto(`/doctors/${doctorWithPhone.id}`);
+
+    const phoneText = page.locator("main").getByText("03-777-8888");
+    await expect(phoneText).toBeVisible();
+    const wrappingAnchors = page.locator("main a").filter({ hasText: "03-777-8888" });
+    await expect(wrappingAnchors).toHaveCount(0);
+  });
+
+  test("switching to Hebrew shows the Hebrew phone label with the number still reading left-to-right", async ({
+    page,
+  }) => {
+    await page.goto(`/doctors/${doctorWithPhone.id}`);
+    await expect(page.getByText("Phone:")).toBeVisible();
+
+    await page.getByRole("button", { name: "עברית" }).click();
+
+    await expect(page.getByText("טלפון:")).toBeVisible();
+    const phoneNode = page.locator("main").getByText("03-777-8888");
+    await expect(phoneNode).toBeVisible();
+    await expect(phoneNode).toHaveAttribute("dir", "ltr");
+  });
+});

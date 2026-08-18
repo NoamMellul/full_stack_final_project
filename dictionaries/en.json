@@ -66,6 +66,7 @@
   "doctor_profile.no_description": "No description provided.",
   "doctor_profile.not_found_body": "This doctor profile doesn't exist or is no longer active.",
   "doctor_profile.not_found_heading": "Doctor not found",
+  "doctor_profile.phone_label": "Phone",
   "doctor_profile.select_slot": "Select this slot",
   "doctor_request.cta": "Are you a doctor? Request to join",
   "doctor_request.dialog_description": "Send us your details and an administrator will get back to you. Accounts are created by our team — this form does not create one.",
