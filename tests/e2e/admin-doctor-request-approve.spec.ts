@@ -110,4 +110,133 @@ test.describe("admin doctor request approve shortcut", () => {
     expect(createdDoctor?.location_id).toBe(location.id);
     expect(createdDoctor?.profile_id).not.toBeNull();
   });
+
+  // QUICK-260818-q5a Task 2: edge cases — a no-specialty request, a plain
+  // visit with no privileged side effect, and both actions coexisting.
+
+  test("2. a request with no specialty approves cleanly: name/email prefill, specialty trigger shows its placeholder", async ({
+    page,
+  }) => {
+    const fullName = `No Specialty Approve Doctor ${Date.now()}`;
+    const email = uniqueTestEmail("approve-no-specialty");
+    await createTestDoctorRequest({
+      fullName,
+      email,
+      specialtyId: null,
+    });
+
+    await loginAsAdmin(page);
+    await page.goto("/admin/doctor-requests");
+
+    const row = page.getByRole("row").filter({ hasText: fullName });
+    await row.getByRole("button", { name: `Approve request for ${fullName}` }).click();
+    await page.waitForURL(/\/admin\/doctors\?/);
+
+    await expect(page.locator("#create-fullName")).toHaveValue(fullName);
+    await expect(page.locator("#create-specialtyId")).toContainText("Select a specialty");
+
+    await page.locator("#create-specialtyId").click();
+    await page.getByRole("option", { name: specialty.nameEn }).click();
+    await page.locator("#create-locationId").click();
+    await page
+      .getByRole("option", { name: `${location.neighborhood}, ${location.city}` })
+      .click();
+    await page.getByRole("button", { name: "Save doctor" }).click();
+
+    const linkDialog = page.getByRole("dialog");
+    await expect(linkDialog).toBeVisible();
+    await expect(linkDialog.getByLabel("Email")).toHaveValue(email);
+
+    trackLinkedAccountEmail(email);
+    const admin = testAdminClient();
+    const { data: createdDoctor } = await admin
+      .from("doctors")
+      .select("id")
+      .eq("full_name", fullName)
+      .single();
+    if (createdDoctor) trackDoctorId(createdDoctor.id);
+
+    await linkDialog.getByRole("button", { name: "Generate temporary password" }).click();
+    await expect(page.getByText("Login created")).toBeVisible();
+    await page.getByRole("button", { name: "Done" }).click();
+  });
+
+  test("3. a plain visit to /admin/doctors with no approve params has no privileged side effect", async ({
+    page,
+  }) => {
+    await loginAsAdmin(page);
+
+    let patchToDoctorRequests = false;
+    page.on("request", (request) => {
+      if (
+        request.url().includes("/api/admin/doctor-requests") &&
+        request.method() === "PATCH"
+      ) {
+        patchToDoctorRequests = true;
+      }
+    });
+
+    await page.goto("/admin/doctors");
+    await expect(page.locator("#create-fullName")).toHaveValue("");
+
+    const doctorName = `Plain Visit Doctor ${Date.now()}`;
+    await page.getByLabel("Full name").fill(doctorName);
+    await page.getByLabel("Specialty").click();
+    await page.getByRole("option", { name: specialty.nameEn }).click();
+    await page.getByLabel("Location").click();
+    await page
+      .getByRole("option", { name: `${location.neighborhood}, ${location.city}` })
+      .click();
+    await page.getByRole("button", { name: "Save doctor" }).click();
+
+    await expect(page.getByText(doctorName)).toBeVisible();
+
+    const admin = testAdminClient();
+    const { data: createdDoctor } = await admin
+      .from("doctors")
+      .select("id")
+      .eq("full_name", doctorName)
+      .single();
+    if (createdDoctor) trackDoctorId(createdDoctor.id);
+
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    expect(patchToDoctorRequests).toBe(false);
+  });
+
+  test("4. a pending row exposes both actions; a reviewed row exposes neither", async ({
+    page,
+  }) => {
+    const pendingName = `Both Actions Pending Doctor ${Date.now()}`;
+    const reviewedName = `Both Actions Reviewed Doctor ${Date.now()}`;
+    await createTestDoctorRequest({
+      fullName: pendingName,
+      email: uniqueTestEmail("approve-both-actions-pending"),
+      specialtyId: specialty.id,
+    });
+    await createTestDoctorRequest({
+      fullName: reviewedName,
+      email: uniqueTestEmail("approve-both-actions-reviewed"),
+      specialtyId: specialty.id,
+      status: "reviewed",
+    });
+
+    await loginAsAdmin(page);
+    await page.goto("/admin/doctor-requests");
+
+    const pendingRow = page.getByRole("row").filter({ hasText: pendingName });
+    await expect(
+      pendingRow.getByRole("button", { name: `Approve request for ${pendingName}` }),
+    ).toBeVisible();
+    await expect(
+      pendingRow.getByRole("button", { name: `Mark reviewed for ${pendingName}` }),
+    ).toBeVisible();
+
+    const reviewedRow = page.getByRole("row").filter({ hasText: reviewedName });
+    await expect(
+      reviewedRow.getByRole("button", { name: `Approve request for ${reviewedName}` }),
+    ).toHaveCount(0);
+    await expect(
+      reviewedRow.getByRole("button", { name: `Mark reviewed for ${reviewedName}` }),
+    ).toHaveCount(0);
+  });
 });
