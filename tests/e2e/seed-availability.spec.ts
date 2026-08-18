@@ -11,9 +11,12 @@ import { testAdminClient } from "./helpers/supabase-admin";
 // fixtures of its own and performs no cleanup, since it never deletes seeded
 // rows.
 //
-// These names mirror scripts/seed.ts's DOCTORS / DOCTORS_WITHOUT_SLOTS
-// constants (not imported: importing scripts/seed.ts would re-execute its
-// top-level `main().catch(...)` seed run as a side effect of module load).
+// This is a deliberate stable subset of scripts/seed.ts's DOCTORS catalog
+// (not a full mirror — the catalog has since grown to 30 doctors), sufficient
+// to prove the shape rules this spec asserts. DOCTORS_WITHOUT_SLOTS is copied
+// verbatim, since it is exhaustive by construction (D-03) and never grows.
+// Not imported: importing scripts/seed.ts would re-execute its top-level
+// `main().catch(...)` seed run as a side effect of module load.
 const DOCTOR_NAMES = [
   "Dr. Noa Ben-David",
   "Dr. Avi Rosenberg",

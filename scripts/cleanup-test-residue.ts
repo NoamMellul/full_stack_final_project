@@ -5,7 +5,7 @@
 // killed before its afterAll hook ran).
 //
 // Safety model — a WHITELIST, not a blocklist: every row this script deletes
-// falls outside an explicit list of known-legitimate identifiers (the 12
+// falls outside an explicit list of known-legitimate identifiers (the 30
 // seed doctor names, 12 seed specialty names, 12 seed neighborhood names,
 // and 4 seed patient emails, all copied verbatim from scripts/seed.ts, plus
 // any explicitly-preserved email). Nothing is deleted by pattern-matching
@@ -47,7 +47,11 @@ const SEED_DOCTOR_NAMES = new Set([
   "Dr. Noa Ben-David", "Dr. Avi Rosenberg", "Dr. Michal Katz", "Dr. Yossi Peretz",
   "Dr. Tamar Levi", "Dr. Ronen Shapira", "Dr. Dana Avraham", "Dr. Eli Mizrahi",
   "Dr. Shira Cohen-Barak", "Dr. Omer Golan", "Dr. Liora Segal", "Dr. Amit Friedman",
-  "Dr. Yael Barnea",
+  "Dr. Yael Barnea", "Dr. Itai Shalev", "Dr. Roni Halevi", "Dr. Sivan Ashkenazi",
+  "Dr. Gilad Sharabi", "Dr. Maayan Doron", "Dr. Nadav Tzur", "Dr. Efrat Nagar",
+  "Dr. Boaz Harari", "Dr. Hila Vaknin", "Dr. Assaf Reuveni", "Dr. Talia Ben-Ari",
+  "Dr. Oren Malka", "Dr. Keren Elbaz", "Dr. Doron Sela", "Dr. Adi Zohar",
+  "Dr. Lior Amsalem", "Dr. Nitzan Kaplan",
 ]);
 const SEED_SPECIALTY_NAMES = new Set([
   "Family Medicine", "Cardiology", "Dermatology", "Pediatrics", "Gynecology",
