@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 06
 current_phase_name: Dashboards, Notifications & Localization
 status: verifying
-stopped_at: "Completed quick task 260817-nlg: cleaned up 389 orphaned doctors + 260 test accounts + 229/156 test specialties/locations from the shared dev database"
-last_updated: "2026-08-17T10:45:00.000Z"
-last_activity: 2026-08-17
-last_activity_desc: "Completed quick task 260817-lar: paginated /admin/doctors and /admin/users (opt-in, 25/page)"
+stopped_at: "Completed quick task 260818-sxi: grew scripts/seed.ts demo catalog from 12 to 30 fictional doctors, wired the phone field through the seed pipeline, synced cleanup-test-residue.ts whitelist, applied live (30 catalog doctors, 18 with phone)"
+last_updated: "2026-08-18T18:07:55.681Z"
+last_activity: 2026-08-18
+last_activity_desc: "Completed quick task 260818-s44: doctor phone number field (migration + admin CRUD + public profile display)"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 Phase: 06 (Dashboards, Notifications & Localization) — EXECUTING
 Plan: 10 of 10
 Status: Phase complete — ready for verification
-Last activity: 2026-08-18 - Completed quick task 260818-s44: doctor phone number field (migration + admin CRUD + public profile display)
+Last activity: 2026-08-18 - Completed quick task 260818-sxi: grew scripts/seed.ts demo catalog from 12 to 30 fictional doctors, wired the phone field through the seed pipeline
 
 Progress: [██████████] 100%
 
@@ -206,6 +206,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [Quick 260817-lar] /admin/doctors and /admin/users tables now paginate at 25 rows/page (new lib/validation/pagination.ts + shared components/pagination-nav.tsx extracted from search-results.tsx's condensed-pagination nav); pagination is opt-in per request (unparameterized GET still returns every row) so /admin/appointments' doctor-filter dropdown keeps working off the full catalog without modification
 - [Phase ?]: [Quick 260817-lar] Two admin-doctor-crud.spec.ts route stubs anticipated-and-fixed: Playwright's glob dialect treats `?` as a single-char wildcard, so `page.route("**/api/admin/doctors", ...)` stopped matching once the client started sending `?page=N` -- replaced with a regex; 65/65 targeted Playwright tests passed (admin-oversight-views, admin-doctor-crud, admin-doctor-status, admin-doctor-link-account, search-sort-pagination, new admin-pagination.spec.ts)
 - [Phase ?]: [Quick 260817-nlg] New scripts/cleanup-test-residue.ts (dry-run by default, --apply to execute) removed 389 orphaned doctors/260 test accounts/229 specialties/156 locations/65 appointments accumulated from crashed Playwright runs and manual admin-UI debugging; whitelist built verbatim from scripts/seed.ts's demo catalog since doctors.is_demo defaults to true for every insert and cannot discriminate seed vs. test-fixture rows; database independently re-verified at exactly 12/12/12 + 6 real profiles after execution, resolving the long-tracked shared-dev-DB residue blocker
+- [Phase ?]: [Quick 260818-sxi] Grew scripts/seed.ts's demo doctor catalog from 12 to 30 fictional Tel-Aviv doctors (2-3 per specialty, 2-3 per neighborhood) and wired the existing public.doctors.phone column through seedDoctors()/printSummary(); the original 12 doctors keep phone=NULL on the current dev DB (seedDoctors() never UPDATEs existing rows, D-01) while the 18 new doctors carry a fictional phone; scripts/cleanup-test-residue.ts whitelist synced to all 30 names in the same commits
 
 ### Pending Todos
 
@@ -240,6 +241,7 @@ None yet.
 | 260817-fhm | Fixed 4 UI/quality findings from the visual+code review: notification unread badge now clears in-session on popover open, new lib/i18n/specialty.ts localizes specialty names to Hebrew across all patient/doctor-facing surfaces, admin appointments doctor filter routed through the admin-gated API with visible error+retry, "with Dr. Dr. {name}" duplicate title fixed via dictionary de-duplication | 2026-08-17 | 163b37d | [260817-fhm-fix-4-ui-quality-findings-notification-b](./quick/260817-fhm-fix-4-ui-quality-findings-notification-b/) |
 | 260817-lar | Paginated /admin/doctors and /admin/users (25 rows/page): new lib/validation/pagination.ts + shared components/pagination-nav.tsx (extracted from search-results.tsx), opt-in per-request pagination on GET /api/admin/doctors and GET /api/admin/users so the unparameterized admin-appointments doctor-filter dropdown keeps working unchanged | 2026-08-17 | c7a81a6 | [260817-lar-add-pagination-to-admin-doctors-and-admi](./quick/260817-lar-add-pagination-to-admin-doctors-and-admi/) |
 | 260817-nlg | Cleaned up accumulated Playwright/manual-debug test residue from the shared dev database via new reusable scripts/cleanup-test-residue.ts (whitelist-based, dry-run by default): removed 389 orphaned doctors, 260 test/debug accounts, 229 test specialties, 156 test locations, 65 stale appointments; database independently re-verified at exactly the 12/12/12 seed catalog + 6 real profiles | 2026-08-17 | 7c68b44 | [260817-nlg-clean-up-accumulated-playwright-manual-d](./quick/260817-nlg-clean-up-accumulated-playwright-manual-d/) |
+| 260818-sxi | Grew scripts/seed.ts's demo doctor catalog from 12 to 30 fictional Tel-Aviv doctors (2-3 per specialty, 2-3 per neighborhood) and wired the existing public.doctors.phone column through seedDoctors()/printSummary(); original 12 doctors keep phone=NULL on the dev DB (D-01, no UPDATE) while the 18 new doctors carry a fictional phone; scripts/cleanup-test-residue.ts whitelist synced to all 30 names | 2026-08-18 | c9a9900 | [260818-sxi-enrich-scripts-seed-ts-with-additional-f](./quick/260818-sxi-enrich-scripts-seed-ts-with-additional-f/) |
 
 ## Deferred Items
 
@@ -251,6 +253,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-17T10:45:00.000Z
-Stopped at: Completed quick task 260817-nlg: cleaned up 389 orphaned doctors + 260 test accounts + 229/156 test specialties/locations from the shared dev database
+Last session: 2026-08-18T18:07:29.953Z
+Stopped at: Completed quick task 260818-sxi: grew scripts/seed.ts demo catalog from 12 to 30 fictional doctors, wired the phone field through the seed pipeline, synced cleanup-test-residue.ts whitelist, applied live (30 catalog doctors, 18 with phone)
 Resume file: None
