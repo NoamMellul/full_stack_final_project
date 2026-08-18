@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ const submittedFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 export default function DoctorRequestsPageClient() {
+  const router = useRouter();
   const [requests, setRequests] = useState<DoctorRequestRow[]>([]);
   // "loading" only covers the very first GET — later refreshes (post-mark-
   // reviewed, Retry) update `requests` in place without re-showing the
@@ -59,6 +61,21 @@ export default function DoctorRequestsPageClient() {
   function handleRetry() {
     setListStatus("loading");
     void loadRequests();
+  }
+
+  // Builds the prefill hop for the /admin/doctors create form. Uses
+  // URLSearchParams (never manual string concatenation) since names carry
+  // spaces and emails carry `@`. specialtyId is omitted entirely when the
+  // request has no specialty, never emitted as an empty string.
+  function handleApprove(request: DoctorRequestRow) {
+    const params = new URLSearchParams();
+    params.set("prefillName", request.full_name);
+    params.set("prefillEmail", request.email);
+    params.set("requestId", request.id);
+    if (request.specialty) {
+      params.set("prefillSpecialtyId", request.specialty.id);
+    }
+    router.push(`/admin/doctors?${params.toString()}`);
   }
 
   async function handleMarkReviewed(request: DoctorRequestRow) {
@@ -164,16 +181,26 @@ export default function DoctorRequestsPageClient() {
                   </TableCell>
                   <TableCell>
                     {request.status === "pending" ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={markingId === request.id}
-                        aria-label={`Mark reviewed for ${request.full_name}`}
-                        onClick={() => void handleMarkReviewed(request)}
-                      >
-                        Mark reviewed
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          aria-label={`Approve request for ${request.full_name}`}
+                          onClick={() => handleApprove(request)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={markingId === request.id}
+                          aria-label={`Mark reviewed for ${request.full_name}`}
+                          onClick={() => void handleMarkReviewed(request)}
+                        >
+                          Mark reviewed
+                        </Button>
+                      </div>
                     ) : null}
                   </TableCell>
                 </TableRow>

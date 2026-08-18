@@ -105,6 +105,20 @@ function DoctorFormFields({
   locations: OptionRow[];
   languages: LanguageOption[];
 }) {
+  // `items` maps handed to each Select so Select.Value can resolve the
+  // trigger's display label from a value that was set programmatically
+  // (the Approve prefill) without the popup ever having opened. Without
+  // this, a prefilled specialty renders as a raw uuid in the trigger until
+  // the popup is opened — mirrors components/search/search-filters.tsx's
+  // specialtyItems/neighborhoodItems pattern. Also fixes the same latent
+  // issue in the edit dialog.
+  const specialtyItems: Record<string, string> = Object.fromEntries(
+    specialties.map((option) => [option.id, option.label]),
+  );
+  const locationItems: Record<string, string> = Object.fromEntries(
+    locations.map((option) => [option.id, option.label]),
+  );
+
   return (
     <>
       <div className="flex flex-col gap-2">
@@ -124,7 +138,11 @@ function DoctorFormFields({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor={`${idPrefix}-specialtyId`}>Specialty</Label>
-        <Select value={specialtyId} onValueChange={(value) => onSpecialtyIdChange(value ?? "")}>
+        <Select
+          items={specialtyItems}
+          value={specialtyId}
+          onValueChange={(value) => onSpecialtyIdChange(value ?? "")}
+        >
           <SelectTrigger
             id={`${idPrefix}-specialtyId`}
             aria-invalid={fieldErrors.specialtyId ? true : undefined}
@@ -146,7 +164,11 @@ function DoctorFormFields({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor={`${idPrefix}-locationId`}>Location</Label>
-        <Select value={locationId} onValueChange={(value) => onLocationIdChange(value ?? "")}>
+        <Select
+          items={locationItems}
+          value={locationId}
+          onValueChange={(value) => onLocationIdChange(value ?? "")}
+        >
           <SelectTrigger
             id={`${idPrefix}-locationId`}
             aria-invalid={fieldErrors.locationId ? true : undefined}
@@ -216,18 +238,32 @@ function DoctorFormFields({
   );
 }
 
-export default function DoctorsPageClient() {
+type Prefill = { fullName: string; specialtyId: string; email: string; requestId: string };
+
+export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
   const [doctors, setDoctors] = useState<DoctorListRow[]>([]);
   const [specialties, setSpecialties] = useState<OptionRow[]>([]);
   const [locations, setLocations] = useState<OptionRow[]>([]);
   const [languages, setLanguages] = useState<LanguageOption[]>([]);
 
-  const [fullName, setFullName] = useState("");
-  const [specialtyId, setSpecialtyId] = useState("");
+  // Seeded once from `prefill` at mount via the useState initializer — never
+  // re-synced by an effect, so nothing can clobber a later in-page edit.
+  // locationId is deliberately left empty: doctors.location_id is NOT NULL
+  // and a doctor_requests row carries no location, so the admin must pick
+  // one.
+  const [fullName, setFullName] = useState(() => prefill?.fullName ?? "");
+  const [specialtyId, setSpecialtyId] = useState(() => prefill?.specialtyId ?? "");
   const [locationId, setLocationId] = useState("");
   const [languageIds, setLanguageIds] = useState<string[]>([]);
   const [bio, setBio] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+
+  // Non-null only when the create form was entered via Approve — makes
+  // every downstream behaviour (auto-open Link account, auto-PATCH the
+  // request) conditional on having entered through that path.
+  const [approveContext, setApproveContext] = useState<{ requestId: string; email: string } | null>(
+    () => (prefill?.requestId ? { requestId: prefill.requestId, email: prefill.email } : null),
+  );
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
@@ -379,7 +415,18 @@ export default function DoctorsPageClient() {
         return;
       }
 
+      // Full DoctorListRow, same shape as the list endpoint — the exact row
+      // to hand the Link account dialog rather than searching for it in the
+      // freshly reloaded (and paginated) table.
+      const createdDoctor = data.doctor as DoctorListRow;
       resetForm();
+
+      // Open the dialog before awaiting the list refresh so the admin isn't
+      // left staring at a fetch.
+      if (approveContext) {
+        openLinkDialog(createdDoctor, approveContext.email);
+      }
+
       // A new doctor sorts to the top under created_at descending — return
       // to page 1 so it's visible even if the admin submitted from a later
       // page.
@@ -505,9 +552,9 @@ export default function DoctorsPageClient() {
     }
   }
 
-  function openLinkDialog(doctor: DoctorListRow) {
+  function openLinkDialog(doctor: DoctorListRow, presetEmail?: string) {
     setLinkingDoctor(doctor);
-    setLinkEmail("");
+    setLinkEmail(presetEmail ?? "");
     setLinkFieldError(null);
     setLinkApiError(null);
   }
@@ -546,7 +593,32 @@ export default function DoctorsPageClient() {
 
       const doctorName = linkingDoctor.full_name;
       closeLinkDialog();
+      // The temporary password is one-time and unrecoverable — it must
+      // already be on screen before the auto-PATCH below can possibly fail,
+      // so a failing PATCH can never take the password off screen with it.
       setTempPasswordInfo({ password: data.tempPassword, doctorName });
+
+      if (approveContext) {
+        const { requestId } = approveContext;
+        // Null out before firing so this can only ever fire once per
+        // approve, even if something re-renders this handler.
+        setApproveContext(null);
+        try {
+          const patchResponse = await fetch(`/api/admin/doctor-requests/${requestId}`, {
+            method: "PATCH",
+          });
+          setStatusMessage(
+            patchResponse.ok
+              ? "Doctor request marked reviewed."
+              : "Doctor created and linked, but the request was not marked reviewed. Mark it reviewed manually on the Doctor requests page.",
+          );
+        } catch {
+          setStatusMessage(
+            "Doctor created and linked, but the request was not marked reviewed. Mark it reviewed manually on the Doctor requests page.",
+          );
+        }
+      }
+
       // Stay on the page the admin was on.
       await loadDoctors(page);
     } catch {
