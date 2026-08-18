@@ -35,13 +35,14 @@ import { validateEmail } from "@/lib/validation/auth";
 import { validateDoctorInput, validateDoctorPatch } from "@/lib/validation/doctor";
 import { ADMIN_PAGE_SIZE } from "@/lib/validation/pagination";
 
-const TABLE_COLUMN_COUNT = 7;
+const TABLE_COLUMN_COUNT = 8;
 
 type DoctorListRow = {
   id: string;
   full_name: string;
   bio: string | null;
   photo_url: string | null;
+  phone: string | null;
   is_active: boolean;
   is_demo: boolean;
   profile_id: string | null;
@@ -54,7 +55,14 @@ type DoctorListRow = {
 type OptionRow = { id: string; label: string };
 type LanguageOption = { id: string; code: string };
 
-type FieldName = "fullName" | "specialtyId" | "locationId" | "photoUrl" | "bio" | "languageIds";
+type FieldName =
+  | "fullName"
+  | "specialtyId"
+  | "locationId"
+  | "photoUrl"
+  | "bio"
+  | "phone"
+  | "languageIds";
 type FieldErrors = Partial<Record<FieldName, string>>;
 
 const FIELD_BY_MESSAGE: Record<string, FieldName> = {
@@ -63,6 +71,8 @@ const FIELD_BY_MESSAGE: Record<string, FieldName> = {
   "Location is required.": "locationId",
   "Photo URL must be a valid http(s) URL.": "photoUrl",
   "Bio must be text.": "bio",
+  "Phone number must be text.": "phone",
+  "Phone number must be 20 characters or fewer.": "phone",
   "Languages must be a list of language ids.": "languageIds",
 };
 
@@ -80,6 +90,8 @@ function DoctorFormFields({
   onToggleLanguage,
   bio,
   onBioChange,
+  phone,
+  onPhoneChange,
   photoUrl,
   onPhotoUrlChange,
   fieldErrors,
@@ -98,6 +110,8 @@ function DoctorFormFields({
   onToggleLanguage: (id: string) => void;
   bio: string;
   onBioChange: (value: string) => void;
+  phone: string;
+  onPhoneChange: (value: string) => void;
   photoUrl: string;
   onPhotoUrlChange: (value: string) => void;
   fieldErrors: FieldErrors;
@@ -221,6 +235,21 @@ function DoctorFormFields({
       </div>
 
       <div className="flex flex-col gap-2">
+        <Label htmlFor={`${idPrefix}-phone`}>Phone</Label>
+        <Input
+          id={`${idPrefix}-phone`}
+          name="phone"
+          type="text"
+          value={phone}
+          onChange={(e) => onPhoneChange(e.target.value)}
+          aria-invalid={fieldErrors.phone ? true : undefined}
+        />
+        {fieldErrors.phone ? (
+          <p className="text-sm font-normal text-destructive">{fieldErrors.phone}</p>
+        ) : null}
+      </div>
+
+      <div className="flex flex-col gap-2">
         <Label htmlFor={`${idPrefix}-photoUrl`}>Photo URL</Label>
         <Input
           id={`${idPrefix}-photoUrl`}
@@ -256,6 +285,7 @@ export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
   const [locationId, setLocationId] = useState("");
   const [languageIds, setLanguageIds] = useState<string[]>([]);
   const [bio, setBio] = useState("");
+  const [phone, setPhone] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
 
   // Non-null only when the create form was entered via Approve — makes
@@ -376,6 +406,7 @@ export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
     setLocationId("");
     setLanguageIds([]);
     setBio("");
+    setPhone("");
     setPhotoUrl("");
     setFieldErrors({});
   }
@@ -389,6 +420,7 @@ export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
       specialtyId,
       locationId,
       bio,
+      phone,
       photoUrl,
       languageIds,
     };
@@ -648,6 +680,8 @@ export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
               onToggleLanguage={toggleLanguage}
               bio={bio}
               onBioChange={setBio}
+              phone={phone}
+              onPhoneChange={setPhone}
               photoUrl={photoUrl}
               onPhotoUrlChange={setPhotoUrl}
               fieldErrors={fieldErrors}
@@ -693,6 +727,11 @@ export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
                 onToggleLanguage={toggleEditLanguage}
                 bio={editBio}
                 onBioChange={setEditBio}
+                // TODO(S44 Task 2): wired to real editPhone/setEditPhone state
+                // in the follow-up commit — placeholder only keeps this file
+                // compiling for Task 1's tracer verify.
+                phone=""
+                onPhoneChange={() => {}}
                 photoUrl={editPhotoUrl}
                 onPhotoUrlChange={setEditPhotoUrl}
                 fieldErrors={editFieldErrors}
@@ -785,6 +824,7 @@ export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
                 <TableHead>Name</TableHead>
                 <TableHead>Specialty</TableHead>
                 <TableHead>Location</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Bio</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Link status</TableHead>
@@ -853,6 +893,7 @@ export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
                     <TableCell className="max-w-32 truncate">
                       {doctor.location ? `${doctor.location.neighborhood}, ${doctor.location.city}` : ""}
                     </TableCell>
+                    <TableCell className="max-w-32 truncate">{doctor.phone ?? ""}</TableCell>
                     <TableCell className="max-w-48 truncate">{doctor.bio ?? ""}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
