@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 Phase: 06 (Dashboards, Notifications & Localization) — EXECUTING
 Plan: 10 of 10
 Status: Phase complete — ready for verification
-Last activity: 2026-08-16 - Completed quick task 260816-g33: role-aware in-app navigation bar
+Last activity: 2026-08-18 - Completed quick task 260818-q5a: doctor-request Approve shortcut + admin nav de-duplication
 
 Progress: [██████████] 100%
 
@@ -233,6 +233,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260813-w0r | Fix Base UI nativeButton console warning: components/ui/button.tsx derives nativeButton from render presence (10 render={<Link/>} call sites fixed centrally); 10 Playwright selectors realigned to the resulting accessible-role flip (link -> button) | 2026-08-13 | 295d2aa | [260813-w0r-fix-base-ui-nativebutton-console-warning](./quick/260813-w0r-fix-base-ui-nativebutton-console-warning/) |
 | 260816-etv | `/` becomes an auth-aware router (anon -> /login, authenticated -> /patient, /doctor or /admin via new lib/auth/role-home.ts, shared with app/login/page.tsx); realigned 6 specs (17 stale root-URL assertions) and removed 10 dead create-next-app scaffold dictionary keys | 2026-08-16 | f028c44 | [260816-etv-make-an-auth-aware-router-app-page-tsx-r](./quick/260816-etv-make-an-auth-aware-router-app-page-tsx-r/) |
+| 260818-q5a | Doctor-request Approve shortcut (prefills the /admin/doctors create form with name/specialty/email, auto-links the account, auto-marks the request reviewed) + removed the duplicated admin link set from the top SiteNav, leaving AdminNav as the single admin section nav | 2026-08-18 | 55e1ab5 | [260818-q5a-two-admin-ux-fixes-doctor-request-approv](./quick/260818-q5a-two-admin-ux-fixes-doctor-request-approv/) |
 | 260816-g33 | Role-aware in-app navigation bar: new components/site-nav.tsx (desktop links + mobile hamburger menu via the existing Popover primitive) wired into components/site-header.tsx, role-specific link sets for patient/doctor/admin plus an anon Search-only set, 11 new nav.* dictionary keys | 2026-08-16 | 47c99f1 | [260816-g33-add-a-role-aware-in-app-navigation-bar-s](./quick/260816-g33-add-a-role-aware-in-app-navigation-bar-s/) |
 | 260817-eqs | Closed critical profiles RLS role-escalation (new migration narrows profiles_insert_own to role='patient') plus 5 defence-in-depth findings: must_change_password enforced in requireDoctor() for /api/doctor/*, backslash rejection in safeRedirectPath, typeof guards in validateEmail/validatePassword/validateFullName, requireAdmin() 500-on-error parity with sibling guards, try/catch around request.json() in doctor-requests+login | 2026-08-17 | 2ed784a | [260817-eqs-fix-critical-rls-privilege-escalation-ga](./quick/260817-eqs-fix-critical-rls-privilege-escalation-ga/) |
 | 260817-fhm | Fixed 4 UI/quality findings from the visual+code review: notification unread badge now clears in-session on popover open, new lib/i18n/specialty.ts localizes specialty names to Hebrew across all patient/doctor-facing surfaces, admin appointments doctor filter routed through the admin-gated API with visible error+retry, "with Dr. Dr. {name}" duplicate title fixed via dictionary de-duplication | 2026-08-17 | 163b37d | [260817-fhm-fix-4-ui-quality-findings-notification-b](./quick/260817-fhm-fix-4-ui-quality-findings-notification-b/) |
