@@ -306,6 +306,7 @@ export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
   const [editLocationId, setEditLocationId] = useState("");
   const [editLanguageIds, setEditLanguageIds] = useState<string[]>([]);
   const [editBio, setEditBio] = useState("");
+  const [editPhone, setEditPhone] = useState("");
   const [editPhotoUrl, setEditPhotoUrl] = useState("");
   const [editFieldErrors, setEditFieldErrors] = useState<FieldErrors>({});
   const [editApiError, setEditApiError] = useState<string | null>(null);
@@ -477,6 +478,7 @@ export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
     setEditLocationId(doctor.location?.id ?? "");
     setEditLanguageIds(doctor.languages.map((language) => language.id));
     setEditBio(doctor.bio ?? "");
+    setEditPhone(doctor.phone ?? "");
     setEditPhotoUrl(doctor.photo_url ?? "");
     setEditFieldErrors({});
     setEditApiError(null);
@@ -501,6 +503,7 @@ export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
     if (editSpecialtyId !== (original.specialty?.id ?? "")) payload.specialtyId = editSpecialtyId;
     if (editLocationId !== (original.location?.id ?? "")) payload.locationId = editLocationId;
     if (editBio !== (original.bio ?? "")) payload.bio = editBio;
+    if (editPhone !== (original.phone ?? "")) payload.phone = editPhone;
     if (editPhotoUrl !== (original.photo_url ?? "")) payload.photoUrl = editPhotoUrl;
 
     const originalLanguageIds = [...original.languages.map((language) => language.id)].sort();
@@ -727,11 +730,8 @@ export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
                 onToggleLanguage={toggleEditLanguage}
                 bio={editBio}
                 onBioChange={setEditBio}
-                // TODO(S44 Task 2): wired to real editPhone/setEditPhone state
-                // in the follow-up commit — placeholder only keeps this file
-                // compiling for Task 1's tracer verify.
-                phone=""
-                onPhoneChange={() => {}}
+                phone={editPhone}
+                onPhoneChange={setEditPhone}
                 photoUrl={editPhotoUrl}
                 onPhotoUrlChange={setEditPhotoUrl}
                 fieldErrors={editFieldErrors}

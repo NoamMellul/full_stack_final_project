@@ -4,6 +4,7 @@ import { testAdminClient } from "./helpers/supabase-admin";
 import { cleanupTestUsers, createTestUser } from "./helpers/test-users";
 import {
   cleanupTestReferenceData,
+  createTestDoctor,
   createTestLocation,
   createTestSpecialty,
   trackDoctorId,
@@ -147,5 +148,122 @@ test.describe("S44 admin: create doctor with and without a phone", () => {
     const admin = testAdminClient();
     const { data } = await admin.from("doctors").select("id").eq("full_name", doctorName);
     expect(data ?? []).toHaveLength(0);
+  });
+});
+
+test.describe("S44 admin: edit an existing doctor's phone", () => {
+  let adminCreds: { email: string; password: string };
+  let specialty: { id: string; nameEn: string };
+  let location: { id: string; city: string; neighborhood: string };
+
+  test.beforeAll(async () => {
+    const admin = await createTestUser("admin");
+    adminCreds = { email: admin.email, password: admin.password };
+    specialty = await createTestSpecialty();
+    location = await createTestLocation();
+  });
+
+  test.afterAll(async () => {
+    await cleanupTestUsers();
+    await cleanupTestReferenceData();
+  });
+
+  async function loginAsAdmin(page: import("@playwright/test").Page) {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(adminCreds.email);
+    await page.getByLabel("Password").fill(adminCreds.password);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await page.waitForURL("/admin");
+  }
+
+  test("adding a phone to a doctor with none saves it to the table row and the DB", async ({
+    page,
+  }) => {
+    const doctor = await createTestDoctor({
+      fullName: `S44 Edit Add Phone ${Date.now()}`,
+      specialtyId: specialty.id,
+      locationId: location.id,
+    });
+
+    await loginAsAdmin(page);
+    await page.goto("/admin/doctors");
+
+    const row = page.getByRole("row").filter({ hasText: doctor.fullName });
+    await row.getByRole("button", { name: `Edit ${doctor.fullName}` }).click();
+
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Phone").fill("052-123-4567");
+    await dialog.getByRole("button", { name: "Save changes" }).click();
+
+    await expect(dialog).toHaveCount(0);
+    await expect(row.getByText("052-123-4567")).toBeVisible();
+
+    const admin = testAdminClient();
+    const { data } = await admin.from("doctors").select("phone").eq("id", doctor.id).single();
+    expect(data?.phone).toBe("052-123-4567");
+  });
+
+  test("clearing an existing phone stores NULL, not an empty string", async ({ page }) => {
+    const doctor = await createTestDoctor({
+      fullName: `S44 Edit Clear Phone ${Date.now()}`,
+      specialtyId: specialty.id,
+      locationId: location.id,
+    });
+    // createTestDoctor has no phone option yet (added in Task 3) — set it
+    // directly so this fixture starts from a known non-null state.
+    await testAdminClient().from("doctors").update({ phone: "03-555-9999" }).eq("id", doctor.id);
+
+    await loginAsAdmin(page);
+    await page.goto("/admin/doctors");
+
+    const row = page.getByRole("row").filter({ hasText: doctor.fullName });
+    await row.getByRole("button", { name: `Edit ${doctor.fullName}` }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByLabel("Phone")).toHaveValue("03-555-9999");
+    await dialog.getByLabel("Phone").fill("");
+    await dialog.getByRole("button", { name: "Save changes" }).click();
+
+    await expect(dialog).toHaveCount(0);
+
+    const admin = testAdminClient();
+    const { data } = await admin.from("doctors").select("phone").eq("id", doctor.id).single();
+    expect(data?.phone).toBeNull();
+  });
+
+  test("editing only the bio leaves the stored phone untouched (partial-update contract)", async ({
+    page,
+  }) => {
+    const doctor = await createTestDoctor({
+      fullName: `S44 Edit Bio Only ${Date.now()}`,
+      specialtyId: specialty.id,
+      locationId: location.id,
+    });
+    // createTestDoctor has no phone option yet (added in Task 3) — set it
+    // directly so this fixture starts from a known non-null state.
+    await testAdminClient().from("doctors").update({ phone: "03-111-2222" }).eq("id", doctor.id);
+
+    await loginAsAdmin(page);
+    await page.goto("/admin/doctors");
+
+    const row = page.getByRole("row").filter({ hasText: doctor.fullName });
+    await row.getByRole("button", { name: `Edit ${doctor.fullName}` }).click();
+
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Bio").fill("Updated bio only.");
+
+    const response = page.waitForResponse(
+      (res) => res.url().includes(`/api/admin/doctors/${doctor.id}`) && res.request().method() === "PATCH",
+    );
+    await dialog.getByRole("button", { name: "Save changes" }).click();
+    const patchResponse = await response;
+    const patchRequestBody = patchResponse.request().postDataJSON();
+    expect(patchRequestBody).not.toHaveProperty("phone");
+
+    await expect(dialog).toHaveCount(0);
+
+    const admin = testAdminClient();
+    const { data } = await admin.from("doctors").select("phone").eq("id", doctor.id).single();
+    expect(data?.phone).toBe("03-111-2222");
   });
 });
