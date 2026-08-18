@@ -6,12 +6,12 @@ import { cleanupTestUsers, createTestUser } from "./helpers/test-users";
 type Role = "patient" | "doctor" | "admin";
 type Credentials = { email: string; password: string };
 
-const ROLES: Role[] = ["patient", "doctor", "admin"];
-
 // Mirrors components/site-nav.tsx's NAV_LINKS exactly — label + href, in
-// order. Task 2's per-role tests are the full-list, in-order proof that the
-// component and this table agree.
-const ROLE_LINKS: Record<Role, { label: string; href: string }[]> = {
+// order. Admin is deliberately absent: quick 260818-q5a removed the admin
+// header nav entirely (admin navigation lives solely in
+// components/admin/admin-nav.tsx). Per-role tests are the full-list,
+// in-order proof that the component and this table agree.
+const ROLE_LINKS: Record<"patient" | "doctor", { label: string; href: string }[]> = {
   patient: [
     { label: "Dashboard", href: "/patient" },
     { label: "Search", href: "/search" },
@@ -23,16 +23,12 @@ const ROLE_LINKS: Record<Role, { label: string; href: string }[]> = {
     { label: "Appointments", href: "/doctor/appointments" },
     { label: "Schedule", href: "/doctor/schedule" },
   ],
-  admin: [
-    { label: "Dashboard", href: "/admin" },
-    { label: "Appointments", href: "/admin/appointments" },
-    { label: "Doctors", href: "/admin/doctors" },
-    { label: "Doctor requests", href: "/admin/doctor-requests" },
-    { label: "Locations", href: "/admin/locations" },
-    { label: "Specialties", href: "/admin/specialties" },
-    { label: "Users", href: "/admin/users" },
-  ],
 };
+
+// Roles that render a header nav at all — admin does not (see ROLE_LINKS
+// comment), so it's excluded from both per-role loops below while still
+// getting a fixture user via beforeAll's `users` record.
+const ROLES_WITH_HEADER_LINKS: ("patient" | "doctor")[] = ["patient", "doctor"];
 
 async function loginAs(page: Page, creds: Credentials, role: Role) {
   await page.goto("/login");
@@ -104,7 +100,7 @@ test.describe("site nav: a patient reaches /patient/appointments by clicking", (
     await expect(page.getByTestId("site-nav-menu")).not.toBeVisible();
   });
 
-  for (const role of ROLES) {
+  for (const role of ROLES_WITH_HEADER_LINKS) {
     test(`per-role exact link set: a signed-in ${role} sees exactly their own links, in order`, async ({
       page,
     }) => {
@@ -116,7 +112,7 @@ test.describe("site nav: a patient reaches /patient/appointments by clicking", (
     });
   }
 
-  for (const role of ROLES) {
+  for (const role of ROLES_WITH_HEADER_LINKS) {
     test(`per-role click-through: a signed-in ${role} reaches every one of their links by clicking`, async ({
       page,
     }) => {
@@ -130,6 +126,31 @@ test.describe("site nav: a patient reaches /patient/appointments by clicking", (
       }
     });
   }
+
+  test("admin: no Main navigation landmark and no mobile Menu button; the Admin sections bar lists all seven destinations in order", async ({
+    page,
+  }) => {
+    await loginAs(page, users.admin, "admin");
+
+    await expect(page.getByRole("navigation", { name: "Main navigation" })).toHaveCount(0);
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.reload();
+    await expect(page.getByRole("button", { name: "Menu", exact: true })).toHaveCount(0);
+
+    const sectionNav = page.getByRole("navigation", { name: "Admin sections" });
+    await expect(sectionNav).toBeVisible();
+    const texts = await sectionNav.getByRole("link").allInnerTexts();
+    expect(texts.map((text) => text.trim())).toEqual([
+      "Dashboard",
+      "Doctors",
+      "Doctor requests",
+      "Specialties",
+      "Locations",
+      "Users",
+      "Appointments",
+    ]);
+  });
 
   test("anonymous visitor sees exactly Search, no Dashboard link, on /login and /search", async ({
     page,

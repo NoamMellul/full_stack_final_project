@@ -328,17 +328,16 @@ test.describe("doctor request: admin triage", () => {
     expect(newerIndex).toBeLessThan(olderIndex);
   });
 
-  test("g. both navs: the header nav link navigates, and the /admin section bar marks exactly the new page current", async ({
+  test("g. the /admin section bar navigates and marks exactly the new page current", async ({
     page,
   }) => {
     await loginAsAdmin(page);
     await page.goto("/admin");
 
-    const headerNav = page.getByRole("navigation", { name: "Main navigation" });
-    await headerNav.getByRole("link", { name: "Doctor requests", exact: true }).click();
+    const sectionNav = page.getByRole("navigation", { name: "Admin sections" });
+    await sectionNav.getByRole("link", { name: "Doctor requests", exact: true }).click();
     await page.waitForURL("/admin/doctor-requests");
 
-    const sectionNav = page.getByRole("navigation", { name: "Admin sections" });
     await expect(
       sectionNav.getByRole("link", { name: "Doctor requests", exact: true }),
     ).toHaveAttribute("aria-current", "page");

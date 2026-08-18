@@ -8,6 +8,11 @@
 // This link table is presentational only: every destination re-enforces
 // its own authorization in its route layout and behind
 // lib/supabase/proxy.ts, so rendering a link here grants nothing.
+//
+// Admin navigation lives solely in components/admin/admin-nav.tsx, mounted
+// by app/admin/layout.tsx for the whole /admin subtree. This file used to
+// render the same set of seven admin links a second time in the header —
+// quick 260818-q5a removed that duplication.
 
 import { Menu } from "lucide-react";
 import Link from "next/link";
@@ -21,7 +26,7 @@ import { useT } from "@/lib/i18n/locale-provider";
 
 type NavLink = { href: string; labelKey: TranslationKey };
 
-const NAV_LINKS: Record<"patient" | "doctor" | "admin", NavLink[]> = {
+const NAV_LINKS: Record<"patient" | "doctor", NavLink[]> = {
   patient: [
     { href: "/patient", labelKey: "nav.dashboard" },
     { href: "/search", labelKey: "nav.search" },
@@ -33,15 +38,6 @@ const NAV_LINKS: Record<"patient" | "doctor" | "admin", NavLink[]> = {
     { href: "/doctor/appointments", labelKey: "nav.appointments" },
     { href: "/doctor/schedule", labelKey: "nav.schedule" },
   ],
-  admin: [
-    { href: "/admin", labelKey: "nav.dashboard" },
-    { href: "/admin/appointments", labelKey: "nav.appointments" },
-    { href: "/admin/doctors", labelKey: "nav.doctors" },
-    { href: "/admin/doctor-requests", labelKey: "nav.doctor_requests" },
-    { href: "/admin/locations", labelKey: "nav.locations" },
-    { href: "/admin/specialties", labelKey: "nav.specialties" },
-    { href: "/admin/users", labelKey: "nav.users" },
-  ],
 };
 
 const ANON_LINKS: NavLink[] = [{ href: "/search", labelKey: "nav.search" }];
@@ -51,7 +47,16 @@ export default function SiteNav({ role }: { role: "patient" | "doctor" | "admin"
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const links = role ? NAV_LINKS[role] : ANON_LINKS;
+  // An admin resolves to an empty array — admin navigation lives solely in
+  // components/admin/admin-nav.tsx (see header comment).
+  const links = role === "admin" ? [] : role ? NAV_LINKS[role] : ANON_LINKS;
+
+  // Render nothing at all rather than an empty nav landmark or a hamburger
+  // that opens an empty popover — both read worse than the duplication
+  // being removed.
+  if (links.length === 0) {
+    return null;
+  }
 
   return (
     <>
