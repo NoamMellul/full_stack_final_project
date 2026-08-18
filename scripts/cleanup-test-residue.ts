@@ -47,6 +47,7 @@ const SEED_DOCTOR_NAMES = new Set([
   "Dr. Noa Ben-David", "Dr. Avi Rosenberg", "Dr. Michal Katz", "Dr. Yossi Peretz",
   "Dr. Tamar Levi", "Dr. Ronen Shapira", "Dr. Dana Avraham", "Dr. Eli Mizrahi",
   "Dr. Shira Cohen-Barak", "Dr. Omer Golan", "Dr. Liora Segal", "Dr. Amit Friedman",
+  "Dr. Yael Barnea",
 ]);
 const SEED_SPECIALTY_NAMES = new Set([
   "Family Medicine", "Cardiology", "Dermatology", "Pediatrics", "Gynecology",
