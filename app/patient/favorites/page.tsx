@@ -1,5 +1,6 @@
 "use client";
 
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -78,7 +79,7 @@ function FavoriteRow({
         </div>
 
         <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-          <span className="truncate">
+          <span className="truncate font-medium text-primary">
             {specialtyLabel(locale, doctor.specialty_name_en, doctor.specialty_name_he)}
           </span>
           <span className="truncate">
@@ -90,7 +91,7 @@ function FavoriteRow({
           {doctor.language_codes.map((code) => {
             const key = LANGUAGE_KEY_BY_CODE[code];
             return (
-              <Badge key={code} variant="secondary">
+              <Badge key={code} variant="secondary" className="bg-primary/10 text-primary">
                 {key ? t(key) : code}
               </Badge>
             );
@@ -186,6 +187,7 @@ export default function PatientFavoritesPage() {
               {t("patient_favorites.empty_body")}
             </p>
             <Button className="min-h-11" render={<Link href="/search" />}>
+              <Search aria-hidden="true" />
               {t("patient_favorites.find_doctor_cta")}
             </Button>
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -139,6 +140,7 @@ export default function SignupPage() {
               </Alert>
             ) : null}
             <Button type="submit" disabled={isSubmitting} className="w-full">
+              <UserPlus aria-hidden="true" />
               {isSubmitting ? t("auth.signup.submitting") : t("auth.signup.submit")}
             </Button>
             <p className="text-center text-sm">

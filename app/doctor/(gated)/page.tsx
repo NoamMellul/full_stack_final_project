@@ -1,3 +1,4 @@
+import { CalendarDays, CalendarPlus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -13,6 +14,16 @@ const STAT_CAPTION_KEYS = [
   "doctor_dashboard.available_caption",
 ] as const satisfies readonly TranslationKey[];
 
+// The identical class string below is applied to BOTH the skeleton and the
+// real stat-card blocks (06-UI-REVIEW.md fix 2) so the loading and loaded
+// states are pixel-identical apart from the number itself. Expressed as an
+// inline-start border width plus an all-sides primary border color plus a
+// light primary tint — never a per-side border-color utility, since
+// tailwind-merge does not reliably model those and the base-layer
+// `* { @apply border-border ... }` rule would otherwise win and paint the
+// bar gray. Kept as a literal string at each call site (not a shared
+// constant) so the two blocks visibly carry the same treatment in the diff.
+
 // Same 32px/600 value + 14px/600 caption stat-card markup as
 // app/admin/page.tsx, shown while both count queries resolve behind the
 // Suspense boundary below (UI-SPEC loading). Takes `t` as a prop (rather
@@ -22,7 +33,7 @@ function DoctorDashboardStatsSkeleton({ t }: { t: (key: TranslationKey) => strin
   return (
     <div className="grid grid-cols-2 gap-8">
       {STAT_CAPTION_KEYS.map((captionKey) => (
-        <Card key={captionKey} className="bg-secondary">
+        <Card key={captionKey} className="border-s-4 border-primary bg-primary/5">
           <CardContent className="flex flex-col gap-2">
             <Skeleton className="h-[32px] w-16" />
             <span className="text-sm leading-[1.4] font-semibold">{t(captionKey)}</span>
@@ -93,9 +104,11 @@ async function DoctorDashboardStats() {
   return (
     <div className="grid grid-cols-2 gap-8">
       {cards.map((card) => (
-        <Card key={card.captionKey} className="bg-secondary">
+        <Card key={card.captionKey} className="border-s-4 border-primary bg-primary/5">
           <CardContent className="flex flex-col gap-2">
-            <span className="text-[32px] leading-[1.2] font-semibold">{card.value}</span>
+            <span className="text-[32px] leading-[1.2] font-semibold text-primary">
+              {card.value}
+            </span>
             <span className="text-sm leading-[1.4] font-semibold">{t(card.captionKey)}</span>
           </CardContent>
         </Card>
@@ -117,9 +130,11 @@ export default async function DoctorDashboardPage() {
 
         <div className="flex items-center gap-2">
           <Button render={<Link href="/doctor/schedule" />}>
+            <CalendarPlus aria-hidden="true" />
             {t("doctor_dashboard.manage_schedule")}
           </Button>
           <Button variant="outline" render={<Link href="/doctor/appointments" />}>
+            <CalendarDays aria-hidden="true" />
             {t("doctor_dashboard.my_appointments")}
           </Button>
         </div>

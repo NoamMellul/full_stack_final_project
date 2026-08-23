@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarDays, Heart, Search } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -115,6 +116,7 @@ export default function PatientDashboardPage() {
                 {t("patient_dashboard.empty_body")}
               </p>
               <Button className="min-h-11" render={<Link href="/search" />}>
+                <Search aria-hidden="true" />
                 {t("patient_dashboard.find_doctor_cta")}
               </Button>
             </div>
@@ -129,6 +131,7 @@ export default function PatientDashboardPage() {
 
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" className="min-h-11" render={<Link href="/search" />}>
+            <Search aria-hidden="true" />
             {t("patient_dashboard.search_doctors_link")}
           </Button>
           <Button
@@ -136,6 +139,7 @@ export default function PatientDashboardPage() {
             className="min-h-11"
             render={<Link href="/patient/favorites" />}
           >
+            <Heart aria-hidden="true" />
             {t("patient_dashboard.favorites_link")}
           </Button>
           <Button
@@ -143,6 +147,7 @@ export default function PatientDashboardPage() {
             className="min-h-11"
             render={<Link href="/patient/appointments" />}
           >
+            <CalendarDays aria-hidden="true" />
             {t("patient_dashboard.appointment_history_link")}
           </Button>
         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { LogIn } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -124,6 +125,7 @@ function LoginForm() {
               </Alert>
             ) : null}
             <Button type="submit" disabled={isSubmitting} className="w-full">
+              <LogIn aria-hidden="true" />
               {isSubmitting ? t("auth.login.submitting") : t("auth.login.submit")}
             </Button>
             <p className="text-center text-sm">
