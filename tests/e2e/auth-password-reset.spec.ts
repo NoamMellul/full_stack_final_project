@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import enDict from "../../dictionaries/en.json";
+import heDict from "../../dictionaries/he.json";
 import {
   TEST_PASSWORD,
   cleanupTestUsers,
@@ -13,6 +14,7 @@ const NEW_PASSWORD = "BrandNewPassw0rd!";
 // single-character wildcard, which silently broke two admin route stubs in
 // quick 260817-lar the moment a query string appeared.
 const RECOVER_ENDPOINT = /\/auth\/v1\/recover/;
+const LOCALE_COOKIE_NAME = "locale";
 
 test.describe("EUO: forgot / reset password", () => {
   test.afterAll(async () => {
@@ -167,5 +169,63 @@ test.describe("EUO: forgot / reset password", () => {
     await expect(page.getByText(enDict["auth.reset_password.mismatch_error"])).toBeVisible();
 
     expect(changePasswordRequestCount).toBe(0);
+  });
+
+  test("the forgot-password link is discoverable from /login", async ({ page }) => {
+    await page.goto("/login");
+    await page
+      .getByRole("link", { name: enDict["auth.login.forgot_password_link"] })
+      .click();
+
+    await expect(page).toHaveURL("/forgot-password");
+    await expect(page.getByText(enDict["auth.forgot_password.title"])).toBeVisible();
+  });
+
+  test("the outbound recover request carries the submitted email and the hardcoded same-origin redirect target (T-EUO-03)", async ({
+    page,
+  }) => {
+    let capturedBody: unknown;
+    let capturedUrl = "";
+    await page.route(RECOVER_ENDPOINT, (route) => {
+      capturedBody = route.request().postDataJSON();
+      capturedUrl = route.request().url();
+      return route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+    });
+
+    await page.goto("/forgot-password");
+    await page.getByLabel(enDict["auth.forgot_password.email_label"]).fill("payload-check@example.com");
+    await page.getByRole("button", { name: enDict["auth.forgot_password.submit"] }).click();
+    await expect(page.getByText(enDict["auth.forgot_password.sent_title"])).toBeVisible();
+
+    // supabase-js sends redirectTo as a `redirect_to` query parameter on the
+    // recover request, not in the JSON body — assert against the URL, not
+    // the body.
+    expect((capturedBody as { email?: string } | undefined)?.email).toBe(
+      "payload-check@example.com",
+    );
+    expect(decodeURIComponent(capturedUrl)).toContain("http://localhost:3000/reset-password");
+  });
+
+  test("/forgot-password renders in Hebrew under dir=rtl", async ({ page, context }) => {
+    await context.addCookies([
+      { name: LOCALE_COOKIE_NAME, value: "he", url: "http://localhost:3000" },
+    ]);
+    await page.goto("/forgot-password");
+
+    await expect(page.getByText(heDict["auth.forgot_password.title"])).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  });
+
+  test("/reset-password with no token renders the invalid-link state in Hebrew under dir=rtl", async ({
+    page,
+    context,
+  }) => {
+    await context.addCookies([
+      { name: LOCALE_COOKIE_NAME, value: "he", url: "http://localhost:3000" },
+    ]);
+    await page.goto("/reset-password");
+
+    await expect(page.getByText(heDict["auth.reset_password.invalid_link_title"])).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   });
 });
