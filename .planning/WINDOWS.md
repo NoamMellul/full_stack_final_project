@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 15
+open_count: 16
 waived_count: 0
 fixed_count: 0
-total_count: 15
-last_updated: 2026-08-16T09:25:44.541Z
+total_count: 16
+last_updated: 2026-08-23T14:37:43.428Z
 ---
 
 # Broken Windows Ledger
@@ -30,6 +30,7 @@ last_updated: 2026-08-16T09:25:44.541Z
 | 13 | quick-260813-w0r | deviation | tests/e2e/admin-doctor-crud.spec.ts,tests/e2e/admin-doctor-link-account.spec.ts,tests/e2e/admin-doctor-status.spec.ts,tests/e2e/admin-oversight-views.spec.ts,tests/e2e/admin-reference-data.spec.ts,tests/e2e/admin-route-protection.spec.ts,tests/e2e/appointment-reschedule.spec.ts,tests/e2e/seed-availability.spec.ts |  | Quick task 260813-w0r's Task 3 full-suite closure run (309 passed/19 failed, 40.2min) hit 19 failures unrelated to this task's Button nativeButton fix and its 10 mechanically-realigned role selectors: admin-doctor-crud.spec.ts:37 (new-doctor-appears timeout, same as WINDOWS id 11), 7 admin-doctor-link-account.spec.ts cascading failures (Login created text missing, doctorEmail undefined, wrong 409/400 status codes, mustChangeAfterLink undefined -- byte-identical class to WINDOWS id 11), 3 new admin-doctor-status.spec.ts failures (activation/deactivation confirmation text missing, anonymous-read count 0) and 1 admin-oversight-views.spec.ts failure (duplicate-name row count 0) and 2 admin-reference-data.spec.ts failures (UI-created specialty text missing, location-edit response timeout) -- all consistent with the admin-cluster Supabase-Auth/Admin-API-under-load flakiness class first logged in WINDOWS id 11, worsened here by an unusually long session (this task's own isolated re-runs of appointment-cancel/appointment-history/appointment-booking specs plus this 40.2min full sweep, all against the same shared dev project); admin-route-protection.spec.ts:230 is the same recurring class as WINDOWS ids 2/4; appointment-reschedule.spec.ts (3 failures: dialog toBeHidden, count 1 vs null, slot status available vs null) is the same class as WINDOWS id 9 and was independently re-verified passing 10/10 in isolation during this task's Task 2 verification; seed-availability.spec.ts:170 (doctor slot count 3<6) is the same recurring shared-dev-DB residue class as WINDOWS ids 1/3/5/7/8/10/11/12. Zero failures touch a Button's rendered role, accessible name, or activation -- all 6 spec files this task modified (patient-dashboard, patient-favorites, doctor-profile, appointment-booking, appointment-history, appointment-cancel) were independently re-verified passing cleanly in isolation before this full-suite run. | open |  | 2026-08-16T07:38:06.358Z |  |
 | 14 | quick-260816-etv | deviation | tests/e2e/seed-availability.spec.ts | 170 | Task 3's full-suite closure run (332 passed/1 failed, 27.5min) hit 1 failure unrelated to this task's routing/dictionary changes: seed-availability.spec.ts:170 (doctor slot count 3<6), the same recurring shared-dev-DB residue class as WINDOWS ids 1/3/5/7/8/10/11/12/13. Confirmed by isolated re-run of the spec alone (identical failure, 7 passed/1 failed). No navigation, URL-terminus, or translation failure occurred anywhere in the suite. | open |  | 2026-08-16T08:32:23.470Z |  |
 | 15 | quick-260816-g33 | deviation | tests/e2e/seed-availability.spec.ts | 170 | Task 3's full-suite closure run (343 passed/1 failed, 32.1min) hit 1 failure unrelated to this task's nav changes: seed-availability.spec.ts:170 (doctor slot count 3<6), the same recurring shared-dev-DB residue class as WINDOWS ids 1/3/5/7/8/10/11/12/13/14. All 11 of this task's own site-nav.spec.ts tests (Task 1's two-viewport tracer plus Task 2's per-role/anonymous/active-marker/Hebrew expansion) passed cleanly. Beats the 332/1 baseline recorded by the prior quick task (260816-etv). | open |  | 2026-08-16T09:25:44.541Z |  |
+| 16 | 06 | deviation | tests/e2e/appointment-cancel.spec.ts,tests/e2e/doctor-phone.spec.ts,tests/e2e/seed-availability.spec.ts |  | Quick task 260823-mn1's full-suite closure run (410 passed/3 failed, 40.3min) hit 3 failures unrelated to this styling-only task's 12 files (accent token, CTA icons, status-badge/doctor-card accents): appointment-cancel.spec.ts:206 (APPT-07 re-booking, same cascading class as WINDOWS ids 9/10, independently re-verified 18/18 clean in isolation twice), doctor-phone.spec.ts:98 (getByLabel('Phone') strict-mode violation against 5 elements from accumulated test-residue doctors named 'S44 No Phone'/'S44 With Phone', independently re-verified 11/11 clean in isolation -- a new manifestation of the long-tracked shared-dev-DB residue class), seed-availability.spec.ts:173 (doctor slot count 3<6, same recurring residue class as WINDOWS ids 1/3/5/7/8/10/11/12). Targeted 96-test regression sweep for this task's own files passed 92/96 (same appointment-cancel cascade), 96/96 in isolation. | open |  | 2026-08-23T14:37:43.428Z |  |
 
 ````json
 [
@@ -211,6 +212,18 @@ last_updated: 2026-08-16T09:25:44.541Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-16T09:25:44.541Z",
+    "resolved_at": null
+  },
+  {
+    "id": 16,
+    "kind": "deviation",
+    "phase": "06",
+    "file": "tests/e2e/appointment-cancel.spec.ts,tests/e2e/doctor-phone.spec.ts,tests/e2e/seed-availability.spec.ts",
+    "line": null,
+    "description": "Quick task 260823-mn1's full-suite closure run (410 passed/3 failed, 40.3min) hit 3 failures unrelated to this styling-only task's 12 files (accent token, CTA icons, status-badge/doctor-card accents): appointment-cancel.spec.ts:206 (APPT-07 re-booking, same cascading class as WINDOWS ids 9/10, independently re-verified 18/18 clean in isolation twice), doctor-phone.spec.ts:98 (getByLabel('Phone') strict-mode violation against 5 elements from accumulated test-residue doctors named 'S44 No Phone'/'S44 With Phone', independently re-verified 11/11 clean in isolation -- a new manifestation of the long-tracked shared-dev-DB residue class), seed-availability.spec.ts:173 (doctor slot count 3<6, same recurring residue class as WINDOWS ids 1/3/5/7/8/10/11/12). Targeted 96-test regression sweep for this task's own files passed 92/96 (same appointment-cancel cascade), 96/96 in isolation.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-23T14:37:43.428Z",
     "resolved_at": null
   }
 ]

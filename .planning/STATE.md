@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 06
 current_phase_name: Dashboards, Notifications & Localization
 status: verifying
-stopped_at: "Completed quick task 260823-euo: self-service forgot/reset password flow for all roles on Supabase Auth, with a new app/auth/confirm/route.ts token_hash bridge fixing a real PKCE/implicit-grant defect"
-last_updated: "2026-08-23T09:58:45.000Z"
+stopped_at: "Completed quick task 260823-mn1: closed 06-UI-REVIEW.md's Color pillar BLOCKER with a hued teal-blue --primary/--ring token (light+dark), applied to stat cards, CTA icons, chips, and status-badge accent bars"
+last_updated: "2026-08-23T15:40:00.000Z"
 last_activity: 2026-08-23
-last_activity_desc: "Completed quick task 260823-euo: forgot/reset password flow (Supabase Auth + Resend SMTP, /forgot-password + /reset-password + /auth/confirm bridge route, 21 i18n keys x2, 10 new Playwright tests)"
+last_activity_desc: "Completed quick task 260823-mn1: applied top 3 UI-REVIEW fixes (brand accent color token, deliberate CTA/stat-card/chip application, appointment status-badge accents) to fix the grayscale-only monotony"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 Phase: 06 (Dashboards, Notifications & Localization) — EXECUTING
 Plan: 10 of 10
 Status: Phase complete — ready for verification
-Last activity: 2026-08-23 - Completed quick task 260823-euo: self-service forgot/reset password flow for all roles on Supabase Auth, with a new app/auth/confirm/route.ts token_hash bridge fixing a real PKCE/implicit-grant defect
+Last activity: 2026-08-23 - Completed quick task 260823-mn1: applied top 3 UI-REVIEW fixes (brand accent color token, deliberate CTA/stat-card/chip application, appointment status-badge accents) to fix the grayscale-only monotony
 
 Progress: [██████████] 100%
 
@@ -208,6 +208,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [Quick 260817-nlg] New scripts/cleanup-test-residue.ts (dry-run by default, --apply to execute) removed 389 orphaned doctors/260 test accounts/229 specialties/156 locations/65 appointments accumulated from crashed Playwright runs and manual admin-UI debugging; whitelist built verbatim from scripts/seed.ts's demo catalog since doctors.is_demo defaults to true for every insert and cannot discriminate seed vs. test-fixture rows; database independently re-verified at exactly 12/12/12 + 6 real profiles after execution, resolving the long-tracked shared-dev-DB residue blocker
 - [Phase ?]: [Quick 260818-sxi] Grew scripts/seed.ts's demo doctor catalog from 12 to 30 fictional Tel-Aviv doctors (2-3 per specialty, 2-3 per neighborhood) and wired the existing public.doctors.phone column through seedDoctors()/printSummary(); the original 12 doctors keep phone=NULL on the current dev DB (seedDoctors() never UPDATEs existing rows, D-01) while the 18 new doctors carry a fictional phone; scripts/cleanup-test-residue.ts whitelist synced to all 30 names in the same commits
 - [Phase ?]: [Quick 260823-euo] Added app/auth/confirm/route.ts (new Route Handler, nothing existing modified) that authenticates a Supabase recovery token_hash via verifyOtp() and redirects to a hardcoded /reset-password — required because @supabase/ssr's browser client hardcodes flowType: "pkce" and auth-js 2.112.0 throws AuthPKCEGrantCodeExchangeError on the implicit #access_token= hash that admin.generateLink() (and real email-scanner-prefetched links) produce; /reset-password itself reuses the existing unmodified POST /api/auth/change-password for the actual password update
+- [Phase ?]: [Quick 260823-mn1] Gave the app a real brand accent color: --primary/--ring in app/globals.css moved from a zero-chroma near-black grayscale to Tailwind v4's cyan-700 (light)/cyan-400 (dark), both WCAG-AA-passing against their existing --primary-foreground; since components/ui/button.tsx's default variant is bg-primary text-primary-foreground, this single token edit recolored every default Button app-wide with zero call-site changes. lib/appointments.ts's appointmentBadge() gained an additive accentClassName field (labelKey/variant frozen, preserving T-06-40); cancelled-badge accent is a documented one-step extension of 06-UI-SPEC.md's destructive-reservation rule (border-only, text stays neutral). 06-UI-SPEC.md amended to retire its stale "no brand hue exists" claim.
 
 ### Pending Todos
 
@@ -244,6 +245,7 @@ None yet.
 | 260817-nlg | Cleaned up accumulated Playwright/manual-debug test residue from the shared dev database via new reusable scripts/cleanup-test-residue.ts (whitelist-based, dry-run by default): removed 389 orphaned doctors, 260 test/debug accounts, 229 test specialties, 156 test locations, 65 stale appointments; database independently re-verified at exactly the 12/12/12 seed catalog + 6 real profiles | 2026-08-17 | 7c68b44 | [260817-nlg-clean-up-accumulated-playwright-manual-d](./quick/260817-nlg-clean-up-accumulated-playwright-manual-d/) |
 | 260818-sxi | Grew scripts/seed.ts's demo doctor catalog from 12 to 30 fictional Tel-Aviv doctors (2-3 per specialty, 2-3 per neighborhood) and wired the existing public.doctors.phone column through seedDoctors()/printSummary(); original 12 doctors keep phone=NULL on the dev DB (D-01, no UPDATE) while the 18 new doctors carry a fictional phone; scripts/cleanup-test-residue.ts whitelist synced to all 30 names | 2026-08-18 | c9a9900 | [260818-sxi-enrich-scripts-seed-ts-with-additional-f](./quick/260818-sxi-enrich-scripts-seed-ts-with-additional-f/) |
 | 260823-euo | Self-service "forgot password" flow for all three roles on top of Supabase Auth (Resend SMTP configured live in the Supabase dashboard): /forgot-password (non-enumerating) + /reset-password pages, /login link, reuses the existing POST /api/auth/change-password unmodified; new app/auth/confirm/route.ts token_hash->session bridge route fixing a real defect where @supabase/ssr's PKCE-only browser client rejects implicit-grant recovery links (affects admin.generateLink() and real email-scanner-prefetched links alike); 21 new i18n keys x2 languages, 10 new Playwright tests, 65/65 regression sweep clean | 2026-08-23 | 70a6823 | [260823-euo-implement-a-forgot-password-flow-for-pat](./quick/260823-euo-implement-a-forgot-password-flow-for-pat/) |
+| 260823-mn1 | Closed 06-UI-REVIEW.md's Color pillar BLOCKER (grayscale-only monotony): hued teal-blue --primary/--ring token in app/globals.css for both light and dark (Tailwind v4 cyan-700/cyan-400, WCAG-AA contrast), applied deliberately to doctor-dashboard stat cards, 9 CTA icons (aria-hidden, accessible names unchanged), favorites/doctor-card language chips + specialty line, and appointment status-badge accent bars via an additive AppointmentBadge.accentClassName field (labelKey/variant untouched, T-06-40 preserved); new tests/e2e/visual-accent.spec.ts proves the accent via live computed-style reads, not source CSS; 410/413 full regression sweep passed, 3 failures independently re-verified as the pre-existing shared-dev-DB residue class (WINDOWS.md id 16), unrelated to this task | 2026-08-23 | a444a1c | [260823-mn1-apply-the-top-3-fixes-from-planning-phas](./quick/260823-mn1-apply-the-top-3-fixes-from-planning-phas/) |
 
 ## Deferred Items
 
