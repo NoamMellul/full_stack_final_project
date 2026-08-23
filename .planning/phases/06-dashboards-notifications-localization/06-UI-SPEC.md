@@ -117,6 +117,14 @@ every prior phase. This phase introduces **zero new semantic colors** — it reu
 | Accent (10%) | `--primary` (`oklch(0.205 0 0)` near-black) | Reserved for: the **filled** favorite heart icon (favorited state, both entry points), the notification unread indicator dot and unread-count badge on the bell, the doctor dashboard's single "Manage my schedule" CTA, and each dashboard/favorites page's single empty-state CTA ("Find a doctor") |
 | Destructive | `--destructive` (`oklch(0.577 0.245 27.325)` red) | **Unchanged from Phase 5 — reserved for appointment-cancellation actions only.** This phase introduces no new destructive actions: removing a favorite is a low-stakes, instantly-reversible toggle (the same heart click, un-filled), so it is **not** styled destructive — using red for it would dilute red's established "irreversible-ish, needs a confirm" meaning from Phase 5 |
 
+> **Amendment (2026-08-23, quick task 260823-mn1):** the sentence above stating "no brand hue
+> exists in this project's tokens" is now stale. Per 06-UI-REVIEW.md fix 1 (Color pillar
+> BLOCKER), `--primary` is now a hued teal-blue in both modes —
+> `oklch(0.52 0.105 223.128)` in `:root`, `oklch(0.789 0.154 211.53)` in `.dark` — with `--ring`
+> updated to match. The accent-budget discipline below (one `default`-variant action per screen,
+> the two-semantic-color rule) is unchanged and still governs where the now-hued `--primary`
+> may appear.
+
 Accent discipline: **exactly one prominent (`default`-variant) action per screen**, continuing Phase
 4/5's rule. Concretely:
 - `/patient/dashboard`: no `default`-variant button when upcoming appointments exist (quick-link
