@@ -86,7 +86,11 @@ function AppointmentRow({
           {appointment.patient?.full_name ?? t("doctor_appointments.unknown_patient")}
         </span>
       </div>
-      {badge ? <Badge variant={badge.variant}>{t(badge.labelKey)}</Badge> : null}
+      {badge ? (
+        <Badge variant={badge.variant} className={badge.accentClassName}>
+          {t(badge.labelKey)}
+        </Badge>
+      ) : null}
       {canCancel && slot ? (
         <Button
           type="button"

@@ -125,7 +125,11 @@ function AppointmentRow({
           {appointment.doctor?.full_name ?? t("patient_appointments.unknown_doctor")}
         </span>
       </div>
-      {badge ? <Badge variant={badge.variant}>{t(badge.labelKey)}</Badge> : null}
+      {badge ? (
+        <Badge variant={badge.variant} className={badge.accentClassName}>
+          {t(badge.labelKey)}
+        </Badge>
+      ) : null}
       {canManage && slot ? (
         <Button
           type="button"

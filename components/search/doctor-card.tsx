@@ -1,5 +1,6 @@
 "use client";
 
+import { Stethoscope } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -85,7 +86,7 @@ export default function DoctorCard({
         </div>
 
         <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-          <span className="truncate">
+          <span className="truncate font-medium text-primary">
             {specialtyLabel(locale, doctor.specialty_name_en, doctor.specialty_name_he)}
           </span>
           <span className="truncate">
@@ -97,7 +98,7 @@ export default function DoctorCard({
           {doctor.language_codes.map((code) => {
             const key = LANGUAGE_KEY_BY_CODE[code];
             return (
-              <Badge key={code} variant="secondary">
+              <Badge key={code} variant="secondary" className="bg-primary/10 text-primary">
                 {key ? t(key) : code}
               </Badge>
             );
@@ -119,6 +120,7 @@ export default function DoctorCard({
           className="w-fit min-h-11 px-4"
           render={<Link href={`/doctors/${doctor.id}`} />}
         >
+          <Stethoscope aria-hidden="true" />
           {t("doctor_card.view_profile")}
         </Button>
       </CardContent>

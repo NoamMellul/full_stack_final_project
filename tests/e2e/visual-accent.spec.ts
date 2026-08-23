@@ -100,3 +100,20 @@ test.describe("MN1: brand accent token paints hued in light and dark, end-to-end
     await expect(page.getByRole("button", { name: "Log in" })).toBeVisible();
   });
 });
+
+test.describe("MN1: doctor-card chip accent on the public /search page", () => {
+  // Public unauthenticated surface (no fixture, no login needed) — gives the
+  // chip treatment a real automated gate rather than a visual-only one.
+  test("a doctor-card language chip reads as accent-colored", async ({ page }) => {
+    await page.goto("/search");
+
+    const card = page.locator('[data-slot="card"]').first();
+    await expect(card).toBeVisible();
+
+    const chip = card.getByText(/^(English|Hebrew)$/).first();
+    await expect(chip).toBeVisible();
+
+    const color = await chip.evaluate((el) => getComputedStyle(el).color);
+    expect(isHued(color), `language chip text color was not hued: "${color}"`).toBe(true);
+  });
+});
