@@ -61,7 +61,7 @@ function FavoriteRow({
   const showPhoto = Boolean(doctor.photo_url) && !photoFailed;
 
   return (
-    <Card className="relative">
+    <Card className="relative shadow-sm">
       <CardContent className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           {showPhoto ? (

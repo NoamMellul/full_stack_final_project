@@ -23,6 +23,8 @@ const STAT_CAPTION_KEYS = [
 // `* { @apply border-border ... }` rule would otherwise win and paint the
 // bar gray. Kept as a literal string at each call site (not a shared
 // constant) so the two blocks visibly carry the same treatment in the diff.
+// A subtle elevation is now layered on top of that treatment for depth, per
+// the 06-UI-REVIEW.md re-audit's Closing Recommendation 1.
 
 // Same 32px/600 value + 14px/600 caption stat-card markup as
 // app/admin/page.tsx, shown while both count queries resolve behind the
@@ -33,7 +35,7 @@ function DoctorDashboardStatsSkeleton({ t }: { t: (key: TranslationKey) => strin
   return (
     <div className="grid grid-cols-2 gap-8">
       {STAT_CAPTION_KEYS.map((captionKey) => (
-        <Card key={captionKey} className="border-s-4 border-primary bg-primary/5">
+        <Card key={captionKey} className="border-s-4 border-primary bg-primary/5 shadow-sm">
           <CardContent className="flex flex-col gap-2">
             <Skeleton className="h-[32px] w-16" />
             <span className="text-sm leading-[1.4] font-semibold">{t(captionKey)}</span>
@@ -104,7 +106,7 @@ async function DoctorDashboardStats() {
   return (
     <div className="grid grid-cols-2 gap-8">
       {cards.map((card) => (
-        <Card key={card.captionKey} className="border-s-4 border-primary bg-primary/5">
+        <Card key={card.captionKey} className="border-s-4 border-primary bg-primary/5 shadow-sm">
           <CardContent className="flex flex-col gap-2">
             <span className="text-[32px] leading-[1.2] font-semibold text-primary">
               {card.value}
