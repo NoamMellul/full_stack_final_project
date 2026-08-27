@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 Phase: 06 (Dashboards, Notifications & Localization) — EXECUTING
 Plan: 10 of 10
 Status: Phase complete — ready for verification
-Last activity: 2026-08-27 - Phase 6 formally CLOSED: WR-01/WR-02 human-decision items resolved (quick task 260827-isc), 06-VERIFICATION.md status flipped human_needed -> passed, 06-UAT.md status flipped testing -> complete (2/2 tests pass), ROADMAP.md Phase 6 checkbox checked
+Last activity: 2026-08-27 - Phase 6 formally CLOSED: WR-01/WR-02 human-decision items resolved (quick task 260827-isc), 06-VERIFICATION.md status flipped human_needed -> passed, 06-UAT.md status flipped testing -> complete (2/2 tests pass), 06-SECURITY.md created via /gsd-secure-phase (59/59 threats closed across all 10 phase plans + 3 quick tasks, threats_open: 0), ROADMAP.md Phase 6 checkbox checked. Phase 6 is now the first phase with a complete verification+UAT+security closing trio (Phase 5 has all three; Phase 4 still lacks all three, tracked in Blockers/Concerns).
 
 Progress: [██████████] 100%
 
