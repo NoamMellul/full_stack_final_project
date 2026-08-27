@@ -3,17 +3,18 @@ status: testing
 phase: 06-dashboards-notifications-localization
 source: [06-VERIFICATION.md]
 started: 2026-08-13T19:35:00Z
-updated: 2026-08-13T19:35:00Z
+updated: 2026-08-27T00:00:00Z
 ---
 
 ## Current Test
 
-number: 1
-name: Notification bell badge/unread-dot clears on reopen without full page reload
+number: 2
+name: Realtime notification payload does not leak the withheld `message` column over the wire
 expected: |
-  Ideally the badge count and per-row bold/dot treatment reflect the marked-as-read
-  state on reopen (ADR-style UX expectation), since the PATCH calls fired on first
-  open succeeded server-side.
+  Inspect the WebSocket frames (or React DevTools state) delivered to the browser for
+  a `postgres_changes` INSERT event on `public.notifications`. Ideally the frame would
+  carry only the columns needed for client rendering (id, type, related_appointment_id,
+  read_at, created_at, user_id).
 awaiting: user response
 
 ## Tests
@@ -32,7 +33,17 @@ why_human: |
   silently defeats the "mark-all-on-open" interaction documented in the route
   handler's own comment. Needs a human product decision: acceptable for phase
   sign-off, or follow-up fix required?
-result: [pending]
+resolution: |
+  Already fixed by commit 163b37d (quick task 260817-fhm, 2026-08-17), before this
+  item was even filed. Re-confirmed by direct code read (quick task 260827-isc,
+  2026-08-27) with zero new edits to components/notification-bell.tsx: markReadOnOpen
+  awaits Promise.allSettled over the per-id PATCH calls and applies a functional
+  setRows update to only the server-confirmed ids; handleOpenChange snapshots unread
+  ids synchronously at open time. Resolved by a landed code fix with automated proof,
+  not a human eyeball pass.
+result: pass
+source: automated
+proving_test: "the unread badge clears after opening the bell, without a page reload"
 
 ### 2. Realtime notification payload does not leak the withheld `message` column over the wire
 expected: |
@@ -52,14 +63,29 @@ why_human: |
   product/security decision: acceptable transport-level exposure for this
   low-sensitivity audit field, or should a column-list publication be applied as a
   follow-up?
+update_260827_isc: |
+  supabase/migrations/20260827120000_scope_notifications_realtime_columns.sql applied
+  live (db push --linked) and independently confirmed correct at the Postgres catalog
+  level (pg_publication_tables shows exactly the 6 intended columns, message absent).
+  A new wire-level Playwright test (tests/e2e/notifications-realtime.spec.ts,
+  "notifications publication withholds the message column from the wire", currently
+  test.fixme) still observed `message` in the live decoded payload across 5
+  consecutive runs spanning several minutes, each with a fresh channel and fresh
+  sentinel value. This points to the managed Realtime service's wal2json-based CDC
+  decoder, not the Postgres publication definition itself, as the remaining gap —
+  outside this session's CLI/application-level reach to fix or force-refresh. Still
+  needs a human product/security decision, now narrowed to: accept the DB-level fix
+  as delivered with wire-level exposure as a documented residual risk, or keep this
+  blocking until wire-level delivery is independently reconfirmed (possibly requiring
+  a Supabase-side project restart or a longer-elapsed re-test).
 result: [pending]
 
 ## Summary
 
 total: 2
-passed: 0
+passed: 1
 issues: 0
-pending: 2
+pending: 1
 skipped: 0
 blocked: 0
 
