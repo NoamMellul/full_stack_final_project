@@ -1,5 +1,5 @@
 ---
-status: testing
+status: complete
 phase: 06-dashboards-notifications-localization
 source: [06-VERIFICATION.md]
 started: 2026-08-13T19:35:00Z
@@ -8,14 +8,7 @@ updated: 2026-08-27T00:00:00Z
 
 ## Current Test
 
-number: 2
-name: Realtime notification payload does not leak the withheld `message` column over the wire
-expected: |
-  Inspect the WebSocket frames (or React DevTools state) delivered to the browser for
-  a `postgres_changes` INSERT event on `public.notifications`. Ideally the frame would
-  carry only the columns needed for client rendering (id, type, related_appointment_id,
-  read_at, created_at, user_id).
-awaiting: user response
+None — both tests resolved. See Test 2's `decision_260827` below for the human decision that closed this UAT round.
 
 ## Tests
 
@@ -78,14 +71,25 @@ update_260827_isc: |
   as delivered with wire-level exposure as a documented residual risk, or keep this
   blocking until wire-level delivery is independently reconfirmed (possibly requiring
   a Supabase-side project restart or a longer-elapsed re-test).
-result: [pending]
+decision_260827: |
+  Human decision: accepted as documented residual risk (not pursued further). The
+  Postgres publication catalog is correctly scoped (the authoritative boundary
+  Postgres itself enforces); the managed Realtime service's wire-level gap remains
+  unresolved pending a Supabase-side fix, but `message` is short, server-generated,
+  non-medical informational text, never rendered client-side by design (D-03) — so
+  practical exposure is minimal. A full project restart (the only known remaining
+  lever) was judged not worth the disruption for this risk level. Carried forward in
+  STATE.md Blockers/Concerns as an optional follow-up before a production deploy with
+  real user data.
+result: pass
+source: human_decision
 
 ## Summary
 
 total: 2
-passed: 1
+passed: 2
 issues: 0
-pending: 1
+pending: 0
 skipped: 0
 blocked: 0
 

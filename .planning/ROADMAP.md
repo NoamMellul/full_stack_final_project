@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Doctor Discovery — Search & Public Profiles** - Patients can find and evaluate doctors matching their criteria (completed 2026-08-08)
 - [x] **Phase 4: Doctor Availability Management** - Doctors control their own schedule with conflict-safe slot and block-period management (completed 2026-08-09)
 - [x] **Phase 5: Appointment Booking & Lifecycle** - Patients can book, cancel, and reschedule appointments with a guaranteed anti-double-booking constraint (completed 2026-08-11)
-- [ ] **Phase 6: Dashboards, Notifications & Localization** - Patients and doctors get a personalized home base with real-time updates, in a fully bilingual (Hebrew/English, RTL) interface
+- [x] **Phase 6: Dashboards, Notifications & Localization** - Patients and doctors get a personalized home base with real-time updates, in a fully bilingual (Hebrew/English, RTL) interface (completed 2026-08-27)
 
 ## Phase Details
 

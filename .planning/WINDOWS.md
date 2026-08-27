@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 16
+open_count: 17
 waived_count: 0
 fixed_count: 0
-total_count: 16
-last_updated: 2026-08-23T14:37:43.428Z
+total_count: 17
+last_updated: 2026-08-27T10:56:21.990Z
 ---
 
 # Broken Windows Ledger
@@ -31,6 +31,7 @@ last_updated: 2026-08-23T14:37:43.428Z
 | 14 | quick-260816-etv | deviation | tests/e2e/seed-availability.spec.ts | 170 | Task 3's full-suite closure run (332 passed/1 failed, 27.5min) hit 1 failure unrelated to this task's routing/dictionary changes: seed-availability.spec.ts:170 (doctor slot count 3<6), the same recurring shared-dev-DB residue class as WINDOWS ids 1/3/5/7/8/10/11/12/13. Confirmed by isolated re-run of the spec alone (identical failure, 7 passed/1 failed). No navigation, URL-terminus, or translation failure occurred anywhere in the suite. | open |  | 2026-08-16T08:32:23.470Z |  |
 | 15 | quick-260816-g33 | deviation | tests/e2e/seed-availability.spec.ts | 170 | Task 3's full-suite closure run (343 passed/1 failed, 32.1min) hit 1 failure unrelated to this task's nav changes: seed-availability.spec.ts:170 (doctor slot count 3<6), the same recurring shared-dev-DB residue class as WINDOWS ids 1/3/5/7/8/10/11/12/13/14. All 11 of this task's own site-nav.spec.ts tests (Task 1's two-viewport tracer plus Task 2's per-role/anonymous/active-marker/Hebrew expansion) passed cleanly. Beats the 332/1 baseline recorded by the prior quick task (260816-etv). | open |  | 2026-08-16T09:25:44.541Z |  |
 | 16 | 06 | deviation | tests/e2e/appointment-cancel.spec.ts,tests/e2e/doctor-phone.spec.ts,tests/e2e/seed-availability.spec.ts |  | Quick task 260823-mn1's full-suite closure run (410 passed/3 failed, 40.3min) hit 3 failures unrelated to this styling-only task's 12 files (accent token, CTA icons, status-badge/doctor-card accents): appointment-cancel.spec.ts:206 (APPT-07 re-booking, same cascading class as WINDOWS ids 9/10, independently re-verified 18/18 clean in isolation twice), doctor-phone.spec.ts:98 (getByLabel('Phone') strict-mode violation against 5 elements from accumulated test-residue doctors named 'S44 No Phone'/'S44 With Phone', independently re-verified 11/11 clean in isolation -- a new manifestation of the long-tracked shared-dev-DB residue class), seed-availability.spec.ts:173 (doctor slot count 3<6, same recurring residue class as WINDOWS ids 1/3/5/7/8/10/11/12). Targeted 96-test regression sweep for this task's own files passed 92/96 (same appointment-cancel cascade), 96/96 in isolation. | open |  | 2026-08-23T14:37:43.428Z |  |
+| 17 | 06 | unrun-verify | tests/e2e/notifications-realtime.spec.ts | 142 | WR-02 wire-level proof (notifications Realtime publication withholds message column): DB catalog correctly scoped and applied live, but 5 consecutive live runs still showed message in the decoded postgres_changes payload -- test left as test.fixme pending Realtime-service-side investigation (quick 260827-isc) | open |  | 2026-08-27T10:56:21.990Z |  |
 
 ````json
 [
@@ -224,6 +225,18 @@ last_updated: 2026-08-23T14:37:43.428Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-23T14:37:43.428Z",
+    "resolved_at": null
+  },
+  {
+    "id": 17,
+    "kind": "unrun-verify",
+    "phase": "06",
+    "file": "tests/e2e/notifications-realtime.spec.ts",
+    "line": 142,
+    "description": "WR-02 wire-level proof (notifications Realtime publication withholds message column): DB catalog correctly scoped and applied live, but 5 consecutive live runs still showed message in the decoded postgres_changes payload -- test left as test.fixme pending Realtime-service-side investigation (quick 260827-isc)",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-27T10:56:21.990Z",
     "resolved_at": null
   }
 ]

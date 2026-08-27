@@ -4,11 +4,11 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 06
 current_phase_name: Dashboards, Notifications & Localization
-status: verifying
-stopped_at: "Completed quick task 260827-gy6: closed the 3 remaining polish-level items from the re-audited 06-UI-REVIEW.md (17/24, no blockers) — card elevation, 12px dense-list spacing, RTL-investigated vertical header gradient"
-last_updated: "2026-08-27T11:05:00.000Z"
+status: complete
+stopped_at: "Phase 6 formally closed 2026-08-27: WR-01/WR-02 human-decision items resolved (quick task 260827-isc), 06-VERIFICATION.md and 06-UAT.md both flipped to passed/complete, ROADMAP.md checkbox checked"
+last_updated: "2026-08-27T12:00:00.000Z"
 last_activity: 2026-08-27
-last_activity_desc: "Completed quick task 260827-gy6: UI polish pass (shadow-sm on stat cards/favorites, gap-2->gap-3 on 10 dense containers, RTL-safe vertical header gradient)"
+last_activity_desc: "Closed Phase 6: resolved WR-01 (already fixed, documented) and WR-02 (Postgres-catalog fix applied live + wire-level managed-service gap accepted as residual risk) via quick task 260827-isc; 06-VERIFICATION.md/06-UAT.md flipped to passed/complete"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 Phase: 06 (Dashboards, Notifications & Localization) — EXECUTING
 Plan: 10 of 10
 Status: Phase complete — ready for verification
-Last activity: 2026-08-27 - Completed quick task 260827-gy6: UI polish pass (shadow-sm on stat cards/favorites, gap-2->gap-3 on 10 dense containers, RTL-safe vertical header gradient) — closes out the 06-UI-REVIEW.md audit loop (14/24 -> 17/24 -> polish applied)
+Last activity: 2026-08-27 - Phase 6 formally CLOSED: WR-01/WR-02 human-decision items resolved (quick task 260827-isc), 06-VERIFICATION.md status flipped human_needed -> passed, 06-UAT.md status flipped testing -> complete (2/2 tests pass), ROADMAP.md Phase 6 checkbox checked
 
 Progress: [██████████] 100%
 
@@ -218,6 +218,7 @@ None yet.
 
 ### Blockers/Concerns
 
+- ⚠️ [Phase 6, accepted 2026-08-27] The Postgres publication for `public.notifications` is correctly scoped to 6 columns (excludes `message`), confirmed at the Postgres catalog level, but Supabase's managed Realtime service (wal2json-based CDC decoder) still delivered `message` in 5 consecutive live wire-level test runs after the fix — an infrastructure-layer gap with no CLI-available remedy (only known lever: a full Supabase dashboard project restart). Human-accepted as a documented residual risk since `message` is non-medical, server-generated, never-rendered informational text. Worth a manual re-check (or a project restart) before a production deploy with real user data; not a concern for demo/grading.
 - ~~Shared remote dev database holds accumulated Playwright test residue in specialties/locations/doctors~~ — **RESOLVED by Quick 260817-nlg** (2026-08-17): 389 orphaned doctors, 260 test accounts, 229 specialties, 156 locations, 65 stale appointments removed via new `scripts/cleanup-test-residue.ts`; database independently re-verified at exactly 12/12/12 seed rows + 6 real profiles. The seed-availability.spec.ts:170 slot-count flake (WINDOWS.md ids 1/3/5/7/8/10/11/12) persisted through a post-cleanup smoke test and remains open — it concerns availability_slots distribution on the kept seed doctors, not the doctor/specialty/location residue this cleanup targeted.
 - ⚠️ [Phase 3] Task 3 acceptance-criterion 'temporarily remove security_invoker/is_active and confirm assertion 2 fails' could not be executed: sandbox classifier blocked all npx supabase db query --linked calls (even read-only). Substituted with grep of the applied migration + a clean npx supabase db advisors --linked report. Recorded as coverage D7 (human_judgment: true) in 03-01-SUMMARY.md for optional human follow-up.
 - ⚠️ [Phase 3] Two non-blocking code-review warnings left unfixed by design (03-REVIEW.md WR-02, WR-03; confirmed still open in 03-VERIFICATION.md's re-verification): out-of-range search pages report a fabricated `total: 0` instead of the real count, and the doctor-profile upcoming-slots query has no `.limit()`. Neither violates a locked must-have; worth a look if a later phase touches either endpoint.
@@ -249,6 +250,7 @@ None yet.
 | 260823-euo | Self-service "forgot password" flow for all three roles on top of Supabase Auth (Resend SMTP configured live in the Supabase dashboard): /forgot-password (non-enumerating) + /reset-password pages, /login link, reuses the existing POST /api/auth/change-password unmodified; new app/auth/confirm/route.ts token_hash->session bridge route fixing a real defect where @supabase/ssr's PKCE-only browser client rejects implicit-grant recovery links (affects admin.generateLink() and real email-scanner-prefetched links alike); 21 new i18n keys x2 languages, 10 new Playwright tests, 65/65 regression sweep clean | 2026-08-23 | 70a6823 | [260823-euo-implement-a-forgot-password-flow-for-pat](./quick/260823-euo-implement-a-forgot-password-flow-for-pat/) |
 | 260823-mn1 | Closed 06-UI-REVIEW.md's Color pillar BLOCKER (grayscale-only monotony): hued teal-blue --primary/--ring token in app/globals.css for both light and dark (Tailwind v4 cyan-700/cyan-400, WCAG-AA contrast), applied deliberately to doctor-dashboard stat cards, 9 CTA icons (aria-hidden, accessible names unchanged), favorites/doctor-card language chips + specialty line, and appointment status-badge accent bars via an additive AppointmentBadge.accentClassName field (labelKey/variant untouched, T-06-40 preserved); new tests/e2e/visual-accent.spec.ts proves the accent via live computed-style reads, not source CSS; 410/413 full regression sweep passed, 3 failures independently re-verified as the pre-existing shared-dev-DB residue class (WINDOWS.md id 16), unrelated to this task | 2026-08-23 | a444a1c | [260823-mn1-apply-the-top-3-fixes-from-planning-phas](./quick/260823-mn1-apply-the-top-3-fixes-from-planning-phas/) |
 | 260827-gy6 | Closed the 3 remaining polish items from the re-audited 06-UI-REVIEW.md (17/24, no blockers): shadow-sm elevation on doctor-dashboard stat cards + favorites rows; gap-2->gap-3 (8px->12px) on 10 real dense list/section/skeleton containers across 4 files (corrected the audit's stale AppointmentRow/DashboardAppointmentRow pointer — those already rendered at 12px); RTL-investigated vertical bg-linear-to-b header gradient replacing the flat bg-secondary fill, after empirically confirming a horizontal gradient's background-image does NOT mirror under dir=rtl (CSS gradient stops are not direction-aware); new tests/e2e/visual-polish.spec.ts proves elevation and gradient via live computed styles; 415/418 full regression sweep passed, all 3 failures independently reconfirmed pre-existing/transient (WINDOWS.md tracked class), zero regressions from this task | 2026-08-27 | 254ac57 | [260827-gy6-apply-the-3-remaining-polish-level-fixes](./quick/260827-gy6-apply-the-3-remaining-polish-level-fixes/) |
+| 260827-isc | Closed Phase 6's 2 remaining human-decision items (WR-01, WR-02) from 06-VERIFICATION.md/06-UAT.md. WR-01 (notification badge stale until reload) confirmed already fixed by commit 163b37d (260817-fhm), documented only, zero new edits. WR-02 (Realtime publication leaking `message` column): new migration 20260827120000_scope_notifications_realtime_columns.sql applied live, re-scopes supabase_realtime's notifications publication to 6 explicit columns, independently confirmed correct at the Postgres catalog level (pg_publication_tables). A wire-level test found the managed Realtime service still delivers `message` despite the correct catalog (infrastructure-layer gap, no CLI fix available) — human-accepted 2026-08-27 as a documented residual risk (non-medical, server-generated, never-rendered text). 06-VERIFICATION.md flipped human_needed->passed, 06-UAT.md flipped testing->complete | 2026-08-27 | 76de002 | [260827-isc-close-out-the-2-human-decision-items-wr-](./quick/260827-isc-close-out-the-2-human-decision-items-wr-/) |
 
 ## Deferred Items
 
