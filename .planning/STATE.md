@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 06
 current_phase_name: Dashboards, Notifications & Localization
 status: verifying
-stopped_at: "Completed quick task 260823-mn1: closed 06-UI-REVIEW.md's Color pillar BLOCKER with a hued teal-blue --primary/--ring token (light+dark), applied to stat cards, CTA icons, chips, and status-badge accent bars"
-last_updated: "2026-08-23T15:40:00.000Z"
-last_activity: 2026-08-23
-last_activity_desc: "Completed quick task 260823-mn1: applied top 3 UI-REVIEW fixes (brand accent color token, deliberate CTA/stat-card/chip application, appointment status-badge accents) to fix the grayscale-only monotony"
+stopped_at: "Completed quick task 260827-gy6: closed the 3 remaining polish-level items from the re-audited 06-UI-REVIEW.md (17/24, no blockers) — card elevation, 12px dense-list spacing, RTL-investigated vertical header gradient"
+last_updated: "2026-08-27T11:05:00.000Z"
+last_activity: 2026-08-27
+last_activity_desc: "Completed quick task 260827-gy6: UI polish pass (shadow-sm on stat cards/favorites, gap-2->gap-3 on 10 dense containers, RTL-safe vertical header gradient)"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 Phase: 06 (Dashboards, Notifications & Localization) — EXECUTING
 Plan: 10 of 10
 Status: Phase complete — ready for verification
-Last activity: 2026-08-23 - Completed quick task 260823-mn1: applied top 3 UI-REVIEW fixes (brand accent color token, deliberate CTA/stat-card/chip application, appointment status-badge accents) to fix the grayscale-only monotony
+Last activity: 2026-08-27 - Completed quick task 260827-gy6: UI polish pass (shadow-sm on stat cards/favorites, gap-2->gap-3 on 10 dense containers, RTL-safe vertical header gradient) — closes out the 06-UI-REVIEW.md audit loop (14/24 -> 17/24 -> polish applied)
 
 Progress: [██████████] 100%
 
@@ -209,6 +209,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Quick 260818-sxi] Grew scripts/seed.ts's demo doctor catalog from 12 to 30 fictional Tel-Aviv doctors (2-3 per specialty, 2-3 per neighborhood) and wired the existing public.doctors.phone column through seedDoctors()/printSummary(); the original 12 doctors keep phone=NULL on the current dev DB (seedDoctors() never UPDATEs existing rows, D-01) while the 18 new doctors carry a fictional phone; scripts/cleanup-test-residue.ts whitelist synced to all 30 names in the same commits
 - [Phase ?]: [Quick 260823-euo] Added app/auth/confirm/route.ts (new Route Handler, nothing existing modified) that authenticates a Supabase recovery token_hash via verifyOtp() and redirects to a hardcoded /reset-password — required because @supabase/ssr's browser client hardcodes flowType: "pkce" and auth-js 2.112.0 throws AuthPKCEGrantCodeExchangeError on the implicit #access_token= hash that admin.generateLink() (and real email-scanner-prefetched links) produce; /reset-password itself reuses the existing unmodified POST /api/auth/change-password for the actual password update
 - [Phase ?]: [Quick 260823-mn1] Gave the app a real brand accent color: --primary/--ring in app/globals.css moved from a zero-chroma near-black grayscale to Tailwind v4's cyan-700 (light)/cyan-400 (dark), both WCAG-AA-passing against their existing --primary-foreground; since components/ui/button.tsx's default variant is bg-primary text-primary-foreground, this single token edit recolored every default Button app-wide with zero call-site changes. lib/appointments.ts's appointmentBadge() gained an additive accentClassName field (labelKey/variant frozen, preserving T-06-40); cancelled-badge accent is a documented one-step extension of 06-UI-SPEC.md's destructive-reservation rule (border-only, text stays neutral). 06-UI-SPEC.md amended to retire its stale "no brand hue exists" claim.
+- [Phase ?]: Re-audited 06-UI-REVIEW.md after 260823-mn1 landed: score rose 14/24 -> 17/24, Color pillar BLOCKER resolved (1/4 -> 3/4), RTL/contrast/accent-consistency all confirmed clean, zero blockers remain — the 3 items surfaced were polish-only, closed by 260827-gy6.
+- [Phase ?]: [Quick 260827-gy6] CSS gradient stops (Tailwind's --tw-gradient-* custom properties) do NOT mirror under dir=rtl the way logical padding/margin utilities do -- empirically confirmed via a throwaway spec (byte-identical computed background-image in ltr vs rtl for a horizontal gradient) before choosing a vertical bg-linear-to-b axis for the site-header gradient instead, which has no RTL ambiguity at all. Worth remembering for any future gradient work: horizontal `bg-linear-to-r`/`to-l` gradients need an explicit RTL check, they are not auto-safe like logical spacing utilities.
 
 ### Pending Todos
 
@@ -246,6 +248,7 @@ None yet.
 | 260818-sxi | Grew scripts/seed.ts's demo doctor catalog from 12 to 30 fictional Tel-Aviv doctors (2-3 per specialty, 2-3 per neighborhood) and wired the existing public.doctors.phone column through seedDoctors()/printSummary(); original 12 doctors keep phone=NULL on the dev DB (D-01, no UPDATE) while the 18 new doctors carry a fictional phone; scripts/cleanup-test-residue.ts whitelist synced to all 30 names | 2026-08-18 | c9a9900 | [260818-sxi-enrich-scripts-seed-ts-with-additional-f](./quick/260818-sxi-enrich-scripts-seed-ts-with-additional-f/) |
 | 260823-euo | Self-service "forgot password" flow for all three roles on top of Supabase Auth (Resend SMTP configured live in the Supabase dashboard): /forgot-password (non-enumerating) + /reset-password pages, /login link, reuses the existing POST /api/auth/change-password unmodified; new app/auth/confirm/route.ts token_hash->session bridge route fixing a real defect where @supabase/ssr's PKCE-only browser client rejects implicit-grant recovery links (affects admin.generateLink() and real email-scanner-prefetched links alike); 21 new i18n keys x2 languages, 10 new Playwright tests, 65/65 regression sweep clean | 2026-08-23 | 70a6823 | [260823-euo-implement-a-forgot-password-flow-for-pat](./quick/260823-euo-implement-a-forgot-password-flow-for-pat/) |
 | 260823-mn1 | Closed 06-UI-REVIEW.md's Color pillar BLOCKER (grayscale-only monotony): hued teal-blue --primary/--ring token in app/globals.css for both light and dark (Tailwind v4 cyan-700/cyan-400, WCAG-AA contrast), applied deliberately to doctor-dashboard stat cards, 9 CTA icons (aria-hidden, accessible names unchanged), favorites/doctor-card language chips + specialty line, and appointment status-badge accent bars via an additive AppointmentBadge.accentClassName field (labelKey/variant untouched, T-06-40 preserved); new tests/e2e/visual-accent.spec.ts proves the accent via live computed-style reads, not source CSS; 410/413 full regression sweep passed, 3 failures independently re-verified as the pre-existing shared-dev-DB residue class (WINDOWS.md id 16), unrelated to this task | 2026-08-23 | a444a1c | [260823-mn1-apply-the-top-3-fixes-from-planning-phas](./quick/260823-mn1-apply-the-top-3-fixes-from-planning-phas/) |
+| 260827-gy6 | Closed the 3 remaining polish items from the re-audited 06-UI-REVIEW.md (17/24, no blockers): shadow-sm elevation on doctor-dashboard stat cards + favorites rows; gap-2->gap-3 (8px->12px) on 10 real dense list/section/skeleton containers across 4 files (corrected the audit's stale AppointmentRow/DashboardAppointmentRow pointer — those already rendered at 12px); RTL-investigated vertical bg-linear-to-b header gradient replacing the flat bg-secondary fill, after empirically confirming a horizontal gradient's background-image does NOT mirror under dir=rtl (CSS gradient stops are not direction-aware); new tests/e2e/visual-polish.spec.ts proves elevation and gradient via live computed styles; 415/418 full regression sweep passed, all 3 failures independently reconfirmed pre-existing/transient (WINDOWS.md tracked class), zero regressions from this task | 2026-08-27 | 254ac57 | [260827-gy6-apply-the-3-remaining-polish-level-fixes](./quick/260827-gy6-apply-the-3-remaining-polish-level-fixes/) |
 
 ## Deferred Items
 
