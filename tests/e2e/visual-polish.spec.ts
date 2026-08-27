@@ -95,3 +95,58 @@ test.describe("GY6: card elevation", () => {
     },
   );
 });
+
+test.describe("GY6: header gradient and RTL non-mirroring", () => {
+  test(
+    "header computed background-image is a real linear-gradient",
+    async ({ page }) => {
+      await page.goto("/login");
+      const header = page.getByRole("banner");
+      const backgroundImage = await header.evaluate((el) => getComputedStyle(el).backgroundImage);
+      expect(
+        backgroundImage.includes("linear-gradient") && backgroundImage !== "none",
+        `header computed background-image was not a real linear-gradient: "${backgroundImage}"`,
+      ).toBe(true);
+    },
+  );
+
+  test(
+    "header computed background-color is fully transparent",
+    async ({ page }) => {
+      await page.goto("/login");
+      const header = page.getByRole("banner");
+      const backgroundColor = await header.evaluate((el) => getComputedStyle(el).backgroundColor);
+      expect(
+        backgroundColor,
+        `header computed background-color was not transparent: "${backgroundColor}"`,
+      ).toBe("rgba(0, 0, 0, 0)");
+    },
+  );
+
+  test(
+    "header gradient is byte-identical under dir=ltr and dir=rtl",
+    async ({ page }) => {
+      await page.goto("/login");
+      const header = page.getByRole("banner");
+      const ltrImage = await header.evaluate((el) => getComputedStyle(el).backgroundImage);
+
+      // Reuses locale-switching.spec.ts's exact idiom (click the עברית
+      // button, await html[dir=rtl]) rather than hand-setting the cookie.
+      // This assertion is BOTH the correctness proof for choosing the
+      // vertical gradient axis AND the recorded evidence that a horizontal
+      // axis would not have mirrored under RTL: CSS gradients are not
+      // writing-direction aware, so a vertical (top-to-bottom) gradient is
+      // identical in both directions by construction, while a horizontal
+      // `to right` gradient would have stayed physically left-to-right under
+      // dir=rtl instead of flipping to fade from the reading origin.
+      await page.getByRole("button", { name: "עברית" }).click();
+      await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+      const rtlImage = await header.evaluate((el) => getComputedStyle(el).backgroundImage);
+
+      expect(
+        rtlImage,
+        `header gradient differed between dir=ltr ("${ltrImage}") and dir=rtl ("${rtlImage}")`,
+      ).toBe(ltrImage);
+    },
+  );
+});

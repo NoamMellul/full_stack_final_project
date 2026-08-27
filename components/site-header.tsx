@@ -36,7 +36,7 @@ export default async function SiteHeader() {
       : null;
 
   return (
-    <header className="flex items-center justify-between gap-4 border-b border-border bg-secondary px-4 py-3 sm:px-6">
+    <header className="flex items-center justify-between gap-4 border-b border-border bg-linear-to-b from-secondary to-secondary/70 px-4 py-3 sm:px-6">
       <div className="flex items-center gap-4">
         <Link href="/" className="text-lg font-semibold">
           MedRDV
