@@ -17,7 +17,7 @@ import { formatJerusalemDayHeading, formatJerusalemTime } from "@/lib/timezone";
 // rather than an import, since that file keeps its skeleton private.
 function UpcomingSummarySkeleton() {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {[0, 1, 2].map((row) => (
         <Skeleton key={row} className="h-6 w-full" />
       ))}
@@ -101,7 +101,7 @@ export default function PatientDashboardPage() {
       <h1 className="text-2xl font-semibold">{t("patient_dashboard.title")}</h1>
 
       <div className="mt-8 flex flex-col gap-8">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           <h2 className="text-lg font-semibold">{t("patient_dashboard.upcoming_heading")}</h2>
 
           {listStatus === "loading" ? (

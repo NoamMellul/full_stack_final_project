@@ -70,7 +70,7 @@ function groupSlotsByJerusalemDay(slots: PickerSlot[]): PickerSlotDayGroup[] {
 
 function AppointmentListSkeleton() {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {[0, 1, 2].map((row) => (
         <Skeleton key={row} className="h-6 w-full" />
       ))}
@@ -518,7 +518,7 @@ function PatientAppointmentsPageInner() {
       ) : (
         <div className="flex flex-col gap-6">
           {upcoming.length > 0 ? (
-            <div className="flex flex-col gap-2" data-testid="upcoming-section">
+            <div className="flex flex-col gap-3" data-testid="upcoming-section">
               <h2 className="text-lg font-semibold">
                 {t("patient_appointments.upcoming_heading")}
               </h2>
@@ -536,7 +536,7 @@ function PatientAppointmentsPageInner() {
           ) : null}
 
           {past.length > 0 ? (
-            <div className="flex flex-col gap-2" data-testid="past-section">
+            <div className="flex flex-col gap-3" data-testid="past-section">
               <h2 className="text-lg font-semibold">{t("patient_appointments.past_heading")}</h2>
               <div className="flex flex-col gap-3">
                 {past.map((appointment) => (

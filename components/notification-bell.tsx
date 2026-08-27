@@ -232,7 +232,7 @@ export default function NotificationBell({
         </PopoverHeader>
         <div className="max-h-96 overflow-y-auto">
           {status === "loading" ? (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
             </div>
@@ -248,7 +248,7 @@ export default function NotificationBell({
               {t("notifications.empty")}
             </p>
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-3">
               {rows.map((row) => {
                 const unread = row.read_at === null;
                 return (
