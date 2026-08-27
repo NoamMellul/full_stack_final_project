@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
 import { cleanupTestAppointments, createTestAppointment } from "./helpers/appointments";
@@ -107,6 +109,76 @@ test.describe("NOTIF-01/02/03/04: notifications on booking, cancel, reschedule",
     const notification = await insertTestNotification({ userId: patient.id });
 
     await expect.poll(() => receivedId, { timeout: 55000 }).toBe(notification.id);
+
+    await admin.removeChannel(channel);
+  });
+
+  // Closes 06-REVIEW.md WR-02 at the wire, not just at render level: a
+  // service-role subscriber has full column privileges on the table, so
+  // publication scope is the ONLY mechanism that can narrow its payload —
+  // which is what makes this a genuine transport-level proof rather than a
+  // proxy for one. The sentinel body value is a fresh randomUUID() per run
+  // so it can never coincidentally match another fixture row in the shared
+  // dev database.
+  //
+  // test.fixme (quick task 260827-isc): the underlying migration
+  // (20260827120000_scope_notifications_realtime_columns.sql) IS applied —
+  // `select attnames from pg_publication_tables where tablename =
+  // 'notifications'` on the linked project returns exactly
+  // {id,user_id,type,related_appointment_id,read_at,created_at}, confirming
+  // the Postgres catalog is correctly scoped. This assertion nonetheless
+  // failed on 5 consecutive live runs across several minutes (including a
+  // fresh channel + fresh sentinel each time, ruling out a client-side
+  // cache): the decoded postgres_changes payload still carried `message`.
+  // The managed Realtime service's wal2json-based CDC decoder for this
+  // project may be caching the pre-ALTER column list independently of
+  // Postgres's own catalog, or may not honor publication column-list
+  // restrictions at all for this decoding path — neither is fixable from
+  // the CLI/application layer available to this executor. Flagged as an
+  // open finding in 06-VERIFICATION.md/06-UAT.md rather than papered over
+  // by stripping the field client-side (the explicitly rejected weaker
+  // fallback). Re-enable by flipping back to `test(` once the payload is
+  // confirmed to carry exactly the 6 published columns.
+  test.fixme("notifications publication withholds the message column from the wire", async () => {
+    const patient = await createTestUser("patient");
+    const admin = testAdminClient();
+    const sentinel = `wr02-sentinel-${randomUUID()}`;
+
+    let received: Record<string, unknown> | null = null;
+    const channel = admin.channel("notifications-realtime-withholds").on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "notifications" },
+      (payload) => {
+        received = payload.new as Record<string, unknown>;
+      },
+    );
+
+    await new Promise<void>((resolve, reject) => {
+      channel.subscribe((status, err) => {
+        if (status === "SUBSCRIBED") {
+          resolve();
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          reject(
+            new Error(
+              `Realtime channel subscribe failed: ${status}${err ? ` (${err.message})` : ""}`,
+            ),
+          );
+        }
+      });
+    });
+
+    const notification = await insertTestNotification({ userId: patient.id, message: sentinel });
+
+    await expect
+      .poll(() => (received as { id: string } | null)?.id, { timeout: 55000 })
+      .toBe(notification.id);
+
+    const row = received as unknown as Record<string, unknown>;
+    expect(row.id).toBe(notification.id);
+    expect(Object.keys(row).sort()).toEqual(
+      ["created_at", "id", "read_at", "related_appointment_id", "type", "user_id"].sort(),
+    );
+    expect(JSON.stringify(row)).not.toContain(sentinel);
 
     await admin.removeChannel(channel);
   });
