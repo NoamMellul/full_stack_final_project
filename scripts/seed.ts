@@ -1,7 +1,7 @@
 // MedRDV — Idempotent demo-data seed script.
 //
 // Populates the full specialty catalog, the full Tel-Aviv neighborhood
-// catalog, 10-15 demo doctors spread across them with language
+// catalog, 30 demo doctors spread across them with language and phone
 // associations, and a handful of demo patient accounts.
 //
 // Safe to re-run: every step is an insert or upsert, guarded so a second run
@@ -87,16 +87,17 @@ const LOCATIONS: Array<{ city: string; neighborhood: string }> = [
 ];
 
 // ============================================================================
-// Demo doctors — 12 doctors (inside the 10-15 envelope), one per specialty
-// and one per neighborhood, so every specialty id and every location id
-// appears on at least one seeded doctor. Language mix is deliberate: every
-// third doctor speaks both languages, every third speaks Hebrew only, every
-// third speaks English only.
+// Demo doctors — 30 doctors, 2-3 per specialty and 2-3 per neighborhood, so
+// every specialty id and every location id appears on at least two seeded
+// doctors. Language mix is deliberate: every third doctor speaks both
+// languages, every third speaks Hebrew only, every third speaks English
+// only. Every doctor carries a fictional phone number (D-04).
 // ============================================================================
 
 type DemoDoctor = {
   full_name: string;
   bio: string;
+  phone: string;
   specialty_name_en: string;
   location_neighborhood: string;
   languages: Array<"he" | "en">;
@@ -106,6 +107,7 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Noa Ben-David",
     bio: "Family physician with over a decade of experience treating patients of all ages in Lev HaIr.",
+    phone: "03-555-0101",
     specialty_name_en: "Family Medicine",
     location_neighborhood: "Lev HaIr",
     languages: ["he", "en"],
@@ -113,6 +115,7 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Avi Rosenberg",
     bio: "Cardiologist specializing in preventive heart health and echocardiography.",
+    phone: "050-555-0102",
     specialty_name_en: "Cardiology",
     location_neighborhood: "Florentin",
     languages: ["he"],
@@ -120,6 +123,7 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Michal Katz",
     bio: "Dermatologist focused on skin cancer screening and cosmetic dermatology.",
+    phone: "03-555-0103",
     specialty_name_en: "Dermatology",
     location_neighborhood: "Neve Tzedek",
     languages: ["en"],
@@ -127,6 +131,7 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Yossi Peretz",
     bio: "Pediatrician providing well-child visits and vaccination care for infants through teens.",
+    phone: "052-555-0104",
     specialty_name_en: "Pediatrics",
     location_neighborhood: "Ramat Aviv",
     languages: ["he", "en"],
@@ -134,6 +139,7 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Tamar Levi",
     bio: "Gynecologist offering routine women's health care and prenatal consultations.",
+    phone: "03-555-0105",
     specialty_name_en: "Gynecology",
     location_neighborhood: "Old North",
     languages: ["he"],
@@ -141,6 +147,7 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Ronen Shapira",
     bio: "Orthopedic surgeon treating sports injuries and joint conditions.",
+    phone: "054-555-0106",
     specialty_name_en: "Orthopedics",
     location_neighborhood: "New North",
     languages: ["en"],
@@ -148,6 +155,7 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Dana Avraham",
     bio: "Ophthalmologist with a focus on cataract care and routine eye exams.",
+    phone: "03-555-0107",
     specialty_name_en: "Ophthalmology",
     location_neighborhood: "Yad Eliyahu",
     languages: ["he", "en"],
@@ -155,6 +163,7 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Eli Mizrahi",
     bio: "ENT specialist treating sinus, hearing and throat conditions for adults and children.",
+    phone: "058-555-0108",
     specialty_name_en: "Otolaryngology (ENT)",
     location_neighborhood: "Jaffa",
     languages: ["he"],
@@ -162,6 +171,7 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Shira Cohen-Barak",
     bio: "Gastroenterologist specializing in digestive health and endoscopic procedures.",
+    phone: "03-555-0109",
     specialty_name_en: "Gastroenterology",
     location_neighborhood: "Kerem HaTeimanim",
     languages: ["en"],
@@ -169,6 +179,7 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Omer Golan",
     bio: "Psychiatrist providing outpatient care for anxiety, depression and mood disorders.",
+    phone: "050-555-0110",
     specialty_name_en: "Psychiatry",
     location_neighborhood: "Bavli",
     languages: ["he", "en"],
@@ -176,6 +187,7 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Liora Segal",
     bio: "Neurologist treating headache disorders, epilepsy and general neurological complaints.",
+    phone: "03-555-0111",
     specialty_name_en: "Neurology",
     location_neighborhood: "Montefiore",
     languages: ["he"],
@@ -183,8 +195,153 @@ const DOCTORS: DemoDoctor[] = [
   {
     full_name: "Dr. Amit Friedman",
     bio: "Urologist offering care for kidney stones, urinary conditions and men's health.",
+    phone: "052-555-0112",
     specialty_name_en: "Urology",
     location_neighborhood: "Shapira",
+    languages: ["en"],
+  },
+  {
+    full_name: "Dr. Yael Barnea",
+    bio: "Family physician offering routine checkups and chronic-condition management for adults in Florentin.",
+    phone: "03-555-0113",
+    specialty_name_en: "Family Medicine",
+    location_neighborhood: "Florentin",
+    languages: ["he", "en"],
+  },
+  {
+    full_name: "Dr. Itai Shalev",
+    bio: "Cardiologist focused on hypertension management and routine cardiac screening.",
+    phone: "054-555-0114",
+    specialty_name_en: "Cardiology",
+    location_neighborhood: "Lev HaIr",
+    languages: ["he"],
+  },
+  {
+    full_name: "Dr. Roni Halevi",
+    bio: "Dermatologist treating acne, eczema and other common skin conditions in adults and teens.",
+    phone: "03-555-0115",
+    specialty_name_en: "Dermatology",
+    location_neighborhood: "Ramat Aviv",
+    languages: ["en"],
+  },
+  {
+    full_name: "Dr. Sivan Ashkenazi",
+    bio: "Pediatrician caring for newborns through adolescents, with a focus on developmental checkups.",
+    phone: "058-555-0116",
+    specialty_name_en: "Pediatrics",
+    location_neighborhood: "Old North",
+    languages: ["he", "en"],
+  },
+  {
+    full_name: "Dr. Gilad Sharabi",
+    bio: "Gynecologist providing annual exams, contraceptive counseling and general women's health care.",
+    phone: "03-555-0117",
+    specialty_name_en: "Gynecology",
+    location_neighborhood: "Jaffa",
+    languages: ["he"],
+  },
+  {
+    full_name: "Dr. Maayan Doron",
+    bio: "Psychiatrist offering outpatient treatment for anxiety, mood disorders and sleep difficulties.",
+    phone: "050-555-0118",
+    specialty_name_en: "Psychiatry",
+    location_neighborhood: "Neve Tzedek",
+    languages: ["en"],
+  },
+  {
+    full_name: "Dr. Nadav Tzur",
+    bio: "Orthopedic specialist treating back pain, joint injuries and post-surgical rehabilitation.",
+    phone: "03-555-0119",
+    specialty_name_en: "Orthopedics",
+    location_neighborhood: "Bavli",
+    languages: ["he", "en"],
+  },
+  {
+    full_name: "Dr. Efrat Nagar",
+    bio: "Ophthalmologist providing routine vision exams and glaucoma screening for adult patients.",
+    phone: "052-555-0120",
+    specialty_name_en: "Ophthalmology",
+    location_neighborhood: "Montefiore",
+    languages: ["he"],
+  },
+  {
+    full_name: "Dr. Boaz Harari",
+    bio: "ENT specialist treating chronic sinus issues, hearing loss and voice disorders.",
+    phone: "03-555-0121",
+    specialty_name_en: "Otolaryngology (ENT)",
+    location_neighborhood: "New North",
+    languages: ["en"],
+  },
+  {
+    full_name: "Dr. Hila Vaknin",
+    bio: "Gastroenterologist managing reflux, irritable bowel symptoms and routine colonoscopy referrals.",
+    phone: "054-555-0122",
+    specialty_name_en: "Gastroenterology",
+    location_neighborhood: "Yad Eliyahu",
+    languages: ["he", "en"],
+  },
+  {
+    full_name: "Dr. Assaf Reuveni",
+    bio: "Neurologist treating migraines, nerve pain and general neurological evaluations.",
+    phone: "03-555-0123",
+    specialty_name_en: "Neurology",
+    location_neighborhood: "Kerem HaTeimanim",
+    languages: ["he"],
+  },
+  {
+    full_name: "Dr. Talia Ben-Ari",
+    bio: "Urologist providing care for urinary tract conditions and men's and women's urological health.",
+    phone: "058-555-0124",
+    specialty_name_en: "Urology",
+    location_neighborhood: "Lev HaIr",
+    languages: ["en"],
+  },
+  {
+    full_name: "Dr. Oren Malka",
+    bio: "Family physician supporting patients of all ages with preventive care and chronic-illness follow-up.",
+    phone: "03-555-0125",
+    specialty_name_en: "Family Medicine",
+    location_neighborhood: "Ramat Aviv",
+    languages: ["he", "en"],
+  },
+  {
+    full_name: "Dr. Keren Elbaz",
+    bio: "Cardiologist specializing in arrhythmia monitoring and post-cardiac-event follow-up care.",
+    phone: "050-555-0126",
+    specialty_name_en: "Cardiology",
+    location_neighborhood: "Old North",
+    languages: ["he"],
+  },
+  {
+    full_name: "Dr. Doron Sela",
+    bio: "Dermatologist offering mole checks, psoriasis treatment and general skin health consultations.",
+    phone: "03-555-0127",
+    specialty_name_en: "Dermatology",
+    location_neighborhood: "Shapira",
+    languages: ["en"],
+  },
+  {
+    full_name: "Dr. Adi Zohar",
+    bio: "Pediatrician providing well-child visits and vaccination schedules for infants and young children.",
+    phone: "052-555-0128",
+    specialty_name_en: "Pediatrics",
+    location_neighborhood: "Florentin",
+    languages: ["he", "en"],
+  },
+  {
+    full_name: "Dr. Lior Amsalem",
+    bio: "Gynecologist offering prenatal care, routine screenings and general reproductive health services.",
+    phone: "03-555-0129",
+    specialty_name_en: "Gynecology",
+    location_neighborhood: "New North",
+    languages: ["he"],
+  },
+  {
+    full_name: "Dr. Nitzan Kaplan",
+    bio: "Psychiatrist providing therapy-informed medication management for adults with anxiety and depression.",
+    phone: "054-555-0130",
+    specialty_name_en: "Psychiatry",
+    location_neighborhood: "Jaffa",
     languages: ["en"],
   },
 ];
@@ -305,6 +462,7 @@ async function seedDoctors(
     return {
       full_name: doctor.full_name,
       bio: doctor.bio,
+      phone: doctor.phone,
       specialty_id: specialtyId,
       location_id: locationId,
       is_active: true,
@@ -612,12 +770,39 @@ async function printSummary(): Promise<void> {
   const specialtiesCount = await countRows("specialties");
   const locationsCount = await countRows("locations");
   const doctorsCount = await countRows("doctors", { is_demo: true });
+
+  // countRows() only supports equality filters; the catalog counters below
+  // need `.in()` and `.not(...)`, so they are written as their own inline
+  // queries rather than bending that helper.
+  const doctorNames = DOCTORS.map((doctor) => doctor.full_name);
+
+  const { count: catalogDoctorsCount, error: catalogError } = await supabase
+    .from("doctors")
+    .select("*", { count: "exact", head: true })
+    .eq("is_demo", true)
+    .in("full_name", doctorNames);
+
+  if (catalogError) {
+    throw new Error(`Failed to count catalog doctors: ${catalogError.message}`);
+  }
+
+  const { count: catalogDoctorsWithPhoneCount, error: catalogPhoneError } = await supabase
+    .from("doctors")
+    .select("*", { count: "exact", head: true })
+    .eq("is_demo", true)
+    .in("full_name", doctorNames)
+    .not("phone", "is", null);
+
+  if (catalogPhoneError) {
+    throw new Error(`Failed to count catalog doctors with phone: ${catalogPhoneError.message}`);
+  }
+
   const doctorLanguagesCount = await countRows("doctor_languages");
   const availabilitySlotsCount = await countRows("availability_slots");
   const patientsCount = await countRows("profiles", { role: "patient" });
 
   console.log(
-    `seed complete: specialties=${specialtiesCount} locations=${locationsCount} doctors=${doctorsCount} doctor_languages=${doctorLanguagesCount} availability_slots=${availabilitySlotsCount} patients=${patientsCount}`,
+    `seed complete: specialties=${specialtiesCount} locations=${locationsCount} doctors=${doctorsCount} catalog_doctors=${catalogDoctorsCount ?? 0} catalog_doctors_with_phone=${catalogDoctorsWithPhoneCount ?? 0} doctor_languages=${doctorLanguagesCount} availability_slots=${availabilitySlotsCount} patients=${patientsCount}`,
   );
 }
 

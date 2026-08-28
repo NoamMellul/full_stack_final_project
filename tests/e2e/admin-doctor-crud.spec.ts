@@ -353,7 +353,13 @@ test.describe("ADMIN-01: doctors list states", () => {
   test("zero doctors renders the empty-state heading and body copy", async ({ page }) => {
     await loginAsAdmin(page);
 
-    await page.route("**/api/admin/doctors", async (route) => {
+    // Playwright glob matches the FULL url including its query string, and a
+    // `?` is a single-character wildcard in Playwright's glob dialect — so a
+    // plain "**/api/admin/doctors" string stops matching once the client
+    // requests ?page=N. Use a regex anchored on the path segment (with or
+    // without a query string) instead, so it still matches the base list
+    // endpoint but never swallows /api/admin/doctors/[id] sub-routes.
+    await page.route(/\/api\/admin\/doctors(\?.*)?$/, async (route) => {
       if (route.request().method() === "GET") {
         await route.fulfill({ status: 200, json: { doctors: [] } });
         return;
@@ -405,7 +411,13 @@ test.describe("ADMIN-01: doctors list states", () => {
   test("with exactly one doctor, the count caption reads '1 doctor'", async ({ page }) => {
     await loginAsAdmin(page);
 
-    await page.route("**/api/admin/doctors", async (route) => {
+    // Playwright glob matches the FULL url including its query string, and a
+    // `?` is a single-character wildcard in Playwright's glob dialect — so a
+    // plain "**/api/admin/doctors" string stops matching once the client
+    // requests ?page=N. Use a regex anchored on the path segment (with or
+    // without a query string) instead, so it still matches the base list
+    // endpoint but never swallows /api/admin/doctors/[id] sub-routes.
+    await page.route(/\/api\/admin\/doctors(\?.*)?$/, async (route) => {
       if (route.request().method() === "GET") {
         await route.fulfill({
           status: 200,

@@ -7,6 +7,8 @@
 // an attendance outcome ("completed"/"no_show") back to appointments.status
 // — "Past" is a UI-computed label only, never a stored value (D-16, D-17).
 
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+
 export type AppointmentStatus =
   | "scheduled"
   | "confirmed"
@@ -25,8 +27,18 @@ export function isCancelledStatus(status: AppointmentStatus): boolean {
 }
 
 export type AppointmentBadge = {
-  label: string;
+  labelKey: TranslationKey;
   variant: "default" | "secondary" | "outline";
+  // Presentation-only (06-UI-REVIEW.md fix 3): a status-colored inline-start
+  // border, added here so the three consuming pages (patient dashboard,
+  // patient appointments, doctor appointments) cannot drift on status color.
+  // Deliberately additive — labelKey/variant are never renamed, reordered or
+  // reshaped, since labelKey drives cancel/reschedule eligibility (T-06-40).
+  // Expressed as an all-sides border color plus a per-side border width
+  // (never a per-side border-color utility), because tailwind-merge does not
+  // reliably model per-side border-color utilities and Badge's own base
+  // class already sets an all-sides transparent border that must be beaten.
+  accentClassName: string;
 };
 
 // A stored status of `scheduled` renders as `Confirmed` — the label is a
@@ -40,15 +52,36 @@ export function appointmentBadge(
   now: number = Date.now(),
 ): AppointmentBadge {
   if (status === "cancelled_by_patient") {
-    return { label: "Cancelled by patient", variant: "outline" };
+    return {
+      labelKey: "appointment_status.cancelled_by_patient",
+      variant: "outline",
+      // Documented one-step extension of 06-UI-SPEC.md's destructive
+      // reservation (previously "appointment-cancellation actions only"): a
+      // red inline-start bar on the cancelled STATUS badge itself. Text
+      // stays neutral and variant stays outline, so the badge never reads
+      // as a clickable destructive affordance.
+      accentClassName: "border-s-2 border-destructive/70",
+    };
   }
   if (status === "cancelled_by_doctor") {
-    return { label: "Cancelled by doctor", variant: "outline" };
+    return {
+      labelKey: "appointment_status.cancelled_by_doctor",
+      variant: "outline",
+      accentClassName: "border-s-2 border-destructive/70",
+    };
   }
   if (new Date(startAt).getTime() < now) {
-    return { label: "Past", variant: "secondary" };
+    return {
+      labelKey: "appointment_status.past",
+      variant: "secondary",
+      accentClassName: "border-s-2 border-muted-foreground/40",
+    };
   }
-  return { label: "Confirmed", variant: "default" };
+  return {
+    labelKey: "appointment_status.confirmed",
+    variant: "default",
+    accentClassName: "border-s-2 border-primary-foreground/60",
+  };
 }
 
 export function splitAppointments<T extends AppointmentLike>(

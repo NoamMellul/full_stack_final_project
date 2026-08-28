@@ -60,6 +60,7 @@ export async function createTestDoctor(opts: {
   locationId: string;
   bio?: string;
   photoUrl?: string;
+  phone?: string;
   isActive?: boolean;
   profileId?: string;
 }): Promise<{ id: string; fullName: string }> {
@@ -74,6 +75,7 @@ export async function createTestDoctor(opts: {
       location_id: opts.locationId,
       bio: opts.bio ?? null,
       photo_url: opts.photoUrl ?? null,
+      phone: opts.phone ?? null,
       is_active: opts.isActive ?? false,
       profile_id: opts.profileId ?? null,
     })
@@ -86,6 +88,15 @@ export async function createTestDoctor(opts: {
 
   createdDoctorIds.push(data.id);
   return { id: data.id, fullName };
+}
+
+// Doctors born inside the flow under test (created via the UI rather than
+// through createTestDoctor) are never in `createdDoctorIds` and would
+// survive cleanup as residue. Mirrors trackDoctorRequestId (helpers/
+// doctor-requests.ts) and trackLinkedAccountEmail (helpers/test-users.ts),
+// which exist for exactly this case.
+export function trackDoctorId(id: string): void {
+  createdDoctorIds.push(id);
 }
 
 export async function cleanupTestReferenceData(): Promise<void> {

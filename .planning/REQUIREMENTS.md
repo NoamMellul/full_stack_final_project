@@ -61,15 +61,15 @@
 
 ### Patient Space
 
-- [ ] **PATIENT-01**: Patient can add a doctor to favorites
-- [ ] **PATIENT-02**: Patient can remove a doctor from favorites
-- [ ] **PATIENT-03**: Patient can view their list of favorite doctors
-- [ ] **PATIENT-04**: Patient dashboard shows a summary of upcoming appointments
+- [x] **PATIENT-01**: Patient can add a doctor to favorites
+- [x] **PATIENT-02**: Patient can remove a doctor from favorites
+- [x] **PATIENT-03**: Patient can view their list of favorite doctors
+- [x] **PATIENT-04**: Patient dashboard shows a summary of upcoming appointments
 
 ### Doctor Space
 
-- [ ] **DOCTOR-01**: Doctor dashboard shows count of upcoming appointments
-- [ ] **DOCTOR-02**: Doctor dashboard shows count of remaining available slots
+- [x] **DOCTOR-01**: Doctor dashboard shows count of upcoming appointments
+- [x] **DOCTOR-02**: Doctor dashboard shows count of remaining available slots
 
 ### Admin
 
@@ -84,15 +84,15 @@
 
 ### Notifications
 
-- [ ] **NOTIF-01**: Patient receives an in-app notification when a booking is confirmed
-- [ ] **NOTIF-02**: Patient receives an in-app notification when their appointment is cancelled
-- [ ] **NOTIF-03**: Doctor receives an in-app notification when a new appointment is booked
-- [ ] **NOTIF-04**: Patient receives an in-app notification when their appointment is rescheduled
+- [x] **NOTIF-01**: Patient receives an in-app notification when a booking is confirmed
+- [x] **NOTIF-02**: Patient receives an in-app notification when their appointment is cancelled
+- [x] **NOTIF-03**: Doctor receives an in-app notification when a new appointment is booked
+- [x] **NOTIF-04**: Patient receives an in-app notification when their appointment is rescheduled
 
 ### Internationalization
 
-- [ ] **I18N-01**: User can switch the interface between Hebrew and English
-- [ ] **I18N-02**: Interface layout mirrors correctly (RTL) when Hebrew is selected
+- [x] **I18N-01**: User can switch the interface between Hebrew and English
+- [x] **I18N-02**: Interface layout mirrors correctly (RTL) when Hebrew is selected
 
 ## v2 Requirements
 
@@ -180,18 +180,18 @@ Which phases cover which requirements.
 | APPT-11 | Phase 5 | Complete |
 | APPT-12 | Phase 5 | Complete |
 | APPT-13 | Phase 5 | Complete |
-| PATIENT-01 | Phase 6 | Pending |
-| PATIENT-02 | Phase 6 | Pending |
-| PATIENT-03 | Phase 6 | Pending |
-| PATIENT-04 | Phase 6 | Pending |
-| DOCTOR-01 | Phase 6 | Pending |
-| DOCTOR-02 | Phase 6 | Pending |
-| NOTIF-01 | Phase 6 | Pending |
-| NOTIF-02 | Phase 6 | Pending |
-| NOTIF-03 | Phase 6 | Pending |
-| NOTIF-04 | Phase 6 | Pending |
-| I18N-01 | Phase 6 | Pending |
-| I18N-02 | Phase 6 | Pending |
+| PATIENT-01 | Phase 6 | Complete |
+| PATIENT-02 | Phase 6 | Complete |
+| PATIENT-03 | Phase 6 | Complete |
+| PATIENT-04 | Phase 6 | Complete |
+| DOCTOR-01 | Phase 6 | Complete |
+| DOCTOR-02 | Phase 6 | Complete |
+| NOTIF-01 | Phase 6 | Complete |
+| NOTIF-02 | Phase 6 | Complete |
+| NOTIF-03 | Phase 6 | Complete |
+| NOTIF-04 | Phase 6 | Complete |
+| I18N-01 | Phase 6 | Complete |
+| I18N-02 | Phase 6 | Complete |
 
 **Coverage:**
 

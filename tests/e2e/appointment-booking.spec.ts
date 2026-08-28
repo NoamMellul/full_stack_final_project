@@ -546,6 +546,6 @@ test.describe("APPT-01/APPT-02/APPT-03/APPT-04/APPT-10/APPT-11: booking end to e
     await expect(
       page.getByText("Book an appointment with a doctor to see it here."),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: "Find a doctor" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Find a doctor" })).toBeVisible();
   });
 });

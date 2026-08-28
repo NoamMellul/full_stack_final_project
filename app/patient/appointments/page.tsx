@@ -18,6 +18,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { appointmentBadge, isCancelledStatus, splitAppointments, type AppointmentStatus } from "@/lib/appointments";
+import { useT } from "@/lib/i18n/locale-provider";
+import { translateValidationMessage } from "@/lib/i18n/validation-messages";
 import {
   formatJerusalemDayHeading,
   formatJerusalemTime,
@@ -68,7 +70,7 @@ function groupSlotsByJerusalemDay(slots: PickerSlot[]): PickerSlotDayGroup[] {
 
 function AppointmentListSkeleton() {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {[0, 1, 2].map((row) => (
         <Skeleton key={row} className="h-6 w-full" />
       ))}
@@ -85,22 +87,27 @@ function AppointmentRow({
   onReschedule: (appointment: PatientAppointment) => void;
   onCancel: (appointment: PatientAppointment) => void;
 }) {
+  const t = useT();
   const slot = appointment.slot;
   const badge = slot ? appointmentBadge(appointment.status, slot.start_at) : null;
 
   // Eligible for reschedule/cancel only while the slot has not yet started
-  // and the appointment is not already cancelled. `badge.label ===
-  // "Confirmed"` already encodes exactly that "start_at >= now and not
-  // cancelled" test (appointmentBadge()'s own derivation), so eligibility is
-  // read from the already-computed badge rather than a second, impure
-  // `Date.now()` call in this render body; isCancelledStatus() is applied
+  // and the appointment is not already cancelled. `badge.labelKey ===
+  // "appointment_status.confirmed"` already encodes exactly that "start_at
+  // >= now and not cancelled" test (appointmentBadge()'s own derivation), so
+  // eligibility is read from the already-computed badge's stable key rather
+  // than a second, impure `Date.now()` call in this render body — and never
+  // from the rendered, translatable label text, so eligibility cannot vary
+  // with the interface language (T-06-40); isCancelledStatus() is applied
   // directly too, so eligibility is decided by the shared helper, never a
   // locally reimplemented status list. Reschedule and cancel share the exact
   // same eligibility predicate. Ineligible rows omit both controls entirely
   // rather than rendering them disabled (Phase 3's established "omit rather
   // than disable" precedent).
   const canManage =
-    slot !== null && badge?.label === "Confirmed" && !isCancelledStatus(appointment.status);
+    slot !== null &&
+    badge?.labelKey === "appointment_status.confirmed" &&
+    !isCancelledStatus(appointment.status);
 
   return (
     <div className="flex items-center gap-3">
@@ -114,19 +121,24 @@ function AppointmentRow({
           ) : null}
         </span>
         <span className="text-sm text-muted-foreground">
-          with Dr. {appointment.doctor?.full_name ?? "Unknown"}
+          {t("patient_appointments.with_doctor_prefix")}{" "}
+          {appointment.doctor?.full_name ?? t("patient_appointments.unknown_doctor")}
         </span>
       </div>
-      {badge ? <Badge variant={badge.variant}>{badge.label}</Badge> : null}
+      {badge ? (
+        <Badge variant={badge.variant} className={badge.accentClassName}>
+          {t(badge.labelKey)}
+        </Badge>
+      ) : null}
       {canManage && slot ? (
         <Button
           type="button"
           variant="outline"
           className="min-h-11"
-          aria-label={`Reschedule appointment ${formatJerusalemDayHeading(slot.start_at)}, ${formatJerusalemTime(slot.start_at)}–${formatJerusalemTime(slot.end_at)}`}
+          aria-label={`${t("patient_appointments.reschedule_aria_prefix")} ${formatJerusalemDayHeading(slot.start_at)}, ${formatJerusalemTime(slot.start_at)}–${formatJerusalemTime(slot.end_at)}`}
           onClick={() => onReschedule(appointment)}
         >
-          Reschedule
+          {t("patient_appointments.reschedule_button")}
         </Button>
       ) : null}
       {canManage && slot ? (
@@ -134,10 +146,10 @@ function AppointmentRow({
           type="button"
           variant="destructive"
           className="min-h-11"
-          aria-label={`Cancel appointment ${formatJerusalemDayHeading(slot.start_at)}, ${formatJerusalemTime(slot.start_at)}–${formatJerusalemTime(slot.end_at)}`}
+          aria-label={`${t("patient_appointments.cancel_appointment")} ${formatJerusalemDayHeading(slot.start_at)}, ${formatJerusalemTime(slot.start_at)}–${formatJerusalemTime(slot.end_at)}`}
           onClick={() => onCancel(appointment)}
         >
-          Cancel appointment
+          {t("patient_appointments.cancel_appointment")}
         </Button>
       ) : null}
     </div>
@@ -145,6 +157,7 @@ function AppointmentRow({
 }
 
 function PatientAppointmentsPageInner() {
+  const t = useT();
   const searchParams = useSearchParams();
 
   const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
@@ -154,7 +167,7 @@ function PatientAppointmentsPageInner() {
   // setter is also used by the cancellation and reschedule success paths
   // below.
   const [statusMessage, setStatusMessage] = useState<string | null>(() =>
-    searchParams.get("booked") === "1" ? "Your appointment has been booked successfully." : null,
+    searchParams.get("booked") === "1" ? t("patient_appointments.booked_status_message") : null,
   );
 
   const [cancellingAppointment, setCancellingAppointment] = useState<PatientAppointment | null>(
@@ -225,7 +238,7 @@ function PatientAppointmentsPageInner() {
 
     const validationError = validateCancelInput(body);
     if (validationError) {
-      setCancelError(validationError);
+      setCancelError(translateValidationMessage(validationError, t));
       return;
     }
 
@@ -241,15 +254,15 @@ function PatientAppointmentsPageInner() {
       if (!response.ok) {
         // Leave the dialog open so the patient can read the rejection and
         // dismiss deliberately — no list refresh from inside this path.
-        setCancelError(data.error ?? "Could not cancel this appointment. Please try again.");
+        setCancelError(data.error ?? t("patient_appointments.cancel_generic_error"));
         return;
       }
 
       closeCancelDialog();
-      setStatusMessage("Appointment cancelled.");
+      setStatusMessage(t("patient_appointments.cancelled_status_message"));
       await loadAppointments();
     } catch {
-      setCancelError("Could not cancel this appointment. Please try again.");
+      setCancelError(t("patient_appointments.cancel_generic_error"));
     } finally {
       setIsCancelling(false);
     }
@@ -321,16 +334,16 @@ function PatientAppointmentsPageInner() {
         // Leave the dialog open with the list intact so the patient can
         // pick a different slot.
         setRescheduleError(
-          data.error ?? "Could not reschedule this appointment. Please try again.",
+          data.error ?? t("patient_appointments.reschedule_generic_error"),
         );
         return;
       }
 
       closeRescheduleDialog();
-      setStatusMessage("Your appointment has been rescheduled.");
+      setStatusMessage(t("patient_appointments.rescheduled_status_message"));
       await loadAppointments();
     } catch {
-      setRescheduleError("Could not reschedule this appointment. Please try again.");
+      setRescheduleError(t("patient_appointments.reschedule_generic_error"));
     } finally {
       setReschedulingSlotId(null);
     }
@@ -342,7 +355,7 @@ function PatientAppointmentsPageInner() {
 
   return (
     <main className="flex flex-1 flex-col gap-6 ps-4 pe-4 py-6">
-      <h1 className="text-2xl font-semibold">My appointments</h1>
+      <h1 className="text-2xl font-semibold">{t("patient_appointments.title")}</h1>
 
       <Dialog
         open={cancellingAppointment !== null}
@@ -352,13 +365,13 @@ function PatientAppointmentsPageInner() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Cancel this appointment?</DialogTitle>
+            <DialogTitle>{t("patient_appointments.cancel_dialog_title")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This will cancel the appointment for both you and the other party. This cannot be undone.
+            {t("patient_appointments.cancel_dialog_body")}
           </p>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="cancel-reason">Reason (optional)</Label>
+            <Label htmlFor="cancel-reason">{t("patient_appointments.reason_label")}</Label>
             <Textarea
               id="cancel-reason"
               value={cancelReason}
@@ -380,7 +393,7 @@ function PatientAppointmentsPageInner() {
               disabled={isCancelling}
               className="min-h-11"
             >
-              Keep appointment
+              {t("patient_appointments.keep_appointment")}
             </Button>
             <Button
               type="button"
@@ -389,7 +402,9 @@ function PatientAppointmentsPageInner() {
               disabled={isCancelling}
               className="min-h-11"
             >
-              {isCancelling ? "Cancelling…" : "Cancel appointment"}
+              {isCancelling
+                ? t("patient_appointments.cancelling")
+                : t("patient_appointments.cancel_appointment")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -403,7 +418,7 @@ function PatientAppointmentsPageInner() {
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Reschedule your appointment</DialogTitle>
+            <DialogTitle>{t("patient_appointments.reschedule_dialog_title")}</DialogTitle>
           </DialogHeader>
 
           {rescheduleError ? (
@@ -421,7 +436,7 @@ function PatientAppointmentsPageInner() {
           ) : pickerStatus === "error" ? (
             <div className="flex flex-col items-center gap-3 py-4 text-center">
               <p className="text-sm text-destructive">
-                Could not load this doctor. Please try again.
+                {t("patient_appointments.reschedule_picker_error")}
               </p>
               <Button
                 type="button"
@@ -431,14 +446,16 @@ function PatientAppointmentsPageInner() {
                   if (reschedulingAppointment) void loadPickerSlots(reschedulingAppointment);
                 }}
               >
-                Retry
+                {t("common.retry")}
               </Button>
             </div>
           ) : pickerSlotGroups.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-4 text-center">
-              <h3 className="text-lg font-semibold">No other upcoming availability</h3>
+              <h3 className="text-lg font-semibold">
+                {t("patient_appointments.reschedule_empty_heading")}
+              </h3>
               <p className="text-sm text-muted-foreground">
-                This doctor has no other available slots right now.
+                {t("patient_appointments.reschedule_empty_body")}
               </p>
             </div>
           ) : (
@@ -461,7 +478,9 @@ function PatientAppointmentsPageInner() {
                           disabled={reschedulingSlotId !== null}
                           onClick={() => void handleSelectRescheduleSlot(slot)}
                         >
-                          {reschedulingSlotId === slot.id ? "Rescheduling…" : "Select this slot"}
+                          {reschedulingSlotId === slot.id
+                            ? t("patient_appointments.reschedule_selecting")
+                            : t("patient_appointments.reschedule_select_slot")}
                         </Button>
                       </div>
                     ))}
@@ -481,28 +500,28 @@ function PatientAppointmentsPageInner() {
         <AppointmentListSkeleton />
       ) : listStatus === "error" ? (
         <div className="flex flex-col items-center gap-3 py-8 text-center">
-          <p className="text-sm text-destructive">
-            Could not load your appointments. Please try again.
-          </p>
+          <p className="text-sm text-destructive">{t("patient_appointments.load_error")}</p>
           <Button variant="outline" onClick={handleRetry}>
-            Retry
+            {t("common.retry")}
           </Button>
         </div>
       ) : isEmpty ? (
         <div className="flex flex-col items-center gap-3 py-8 text-center">
-          <h2 className="text-lg font-semibold">No appointments yet</h2>
+          <h2 className="text-lg font-semibold">{t("patient_appointments.empty_heading")}</h2>
           <p className="max-w-md text-sm text-muted-foreground">
-            Book an appointment with a doctor to see it here.
+            {t("patient_appointments.empty_body")}
           </p>
           <Button className="min-h-11" render={<Link href="/search" />}>
-            Find a doctor
+            {t("patient_appointments.find_doctor_cta")}
           </Button>
         </div>
       ) : (
         <div className="flex flex-col gap-6">
           {upcoming.length > 0 ? (
-            <div className="flex flex-col gap-2" data-testid="upcoming-section">
-              <h2 className="text-lg font-semibold">Upcoming</h2>
+            <div className="flex flex-col gap-3" data-testid="upcoming-section">
+              <h2 className="text-lg font-semibold">
+                {t("patient_appointments.upcoming_heading")}
+              </h2>
               <div className="flex flex-col gap-3">
                 {upcoming.map((appointment) => (
                   <AppointmentRow
@@ -517,8 +536,8 @@ function PatientAppointmentsPageInner() {
           ) : null}
 
           {past.length > 0 ? (
-            <div className="flex flex-col gap-2" data-testid="past-section">
-              <h2 className="text-lg font-semibold">Past</h2>
+            <div className="flex flex-col gap-3" data-testid="past-section">
+              <h2 className="text-lg font-semibold">{t("patient_appointments.past_heading")}</h2>
               <div className="flex flex-col gap-3">
                 {past.map((appointment) => (
                   <AppointmentRow

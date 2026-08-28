@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { validateDoctorPatch } from "@/lib/validation/doctor";
 
 const DOCTOR_LIST_SELECT =
-  "id, full_name, bio, photo_url, is_active, is_demo, profile_id, created_at, " +
+  "id, full_name, bio, photo_url, phone, is_active, is_demo, profile_id, created_at, " +
   "specialty:specialties(id,name_en,name_he), " +
   "location:locations(id,city,neighborhood), " +
   "languages:doctor_languages(languages(id,code))";
@@ -14,6 +14,7 @@ type RawDoctorRow = {
   full_name: string;
   bio: string | null;
   photo_url: string | null;
+  phone: string | null;
   is_active: boolean;
   is_demo: boolean;
   profile_id: string | null;
@@ -29,6 +30,7 @@ function toListRow(row: RawDoctorRow) {
     full_name: row.full_name,
     bio: row.bio,
     photo_url: row.photo_url,
+    phone: row.phone,
     is_active: row.is_active,
     is_demo: row.is_demo,
     profile_id: row.profile_id,
@@ -70,12 +72,13 @@ export async function PATCH(
     return NextResponse.json({ error: "Doctor not found." }, { status: 404 });
   }
 
-  const { fullName, specialtyId, locationId, bio, photoUrl, languageIds } = body as {
+  const { fullName, specialtyId, locationId, bio, photoUrl, phone, languageIds } = body as {
     fullName?: string;
     specialtyId?: string;
     locationId?: string;
     bio?: string | null;
     photoUrl?: string | null;
+    phone?: string | null;
     languageIds?: string[];
   };
 
@@ -88,6 +91,12 @@ export async function PATCH(
   if ("locationId" in body) updates.location_id = locationId;
   if ("photoUrl" in body) updates.photo_url = photoUrl ?? null;
   if ("bio" in body) updates.bio = bio ?? null;
+  // D-04: a non-blank string is stored trimmed; blank/undefined/null all
+  // store NULL — this is what makes clearing the input in the edit dialog
+  // persist as NULL rather than an empty string.
+  if ("phone" in body) {
+    updates.phone = typeof phone === "string" && phone.trim() ? phone.trim() : null;
+  }
 
   if (Object.keys(updates).length > 0) {
     const { error: updateError } = await guard.supabase

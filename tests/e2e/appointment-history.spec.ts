@@ -400,7 +400,7 @@ test.describe("APPT-10/APPT-11/APPT-12/APPT-13: patient and doctor appointment h
     await expect(
       patientPage.getByText("Book an appointment with a doctor to see it here."),
     ).toBeVisible();
-    await expect(patientPage.getByRole("link", { name: "Find a doctor" })).toBeVisible();
+    await expect(patientPage.getByRole("button", { name: "Find a doctor" })).toBeVisible();
     await emptyPatientContext.close();
 
     const emptyDoctorUser = await createTestUser("doctor");
@@ -432,13 +432,16 @@ test.describe("APPT-10/APPT-11/APPT-12/APPT-13: patient and doctor appointment h
   test("10. Navigation: /doctor reaches /doctor/appointments and /patient reaches /patient/appointments", async () => {
     const doctorHomePage = await doctorContext.newPage();
     await doctorHomePage.goto("/doctor");
-    await doctorHomePage.getByRole("link", { name: "My appointments" }).click();
+    await doctorHomePage.getByRole("button", { name: "My appointments" }).click();
     await doctorHomePage.waitForURL("/doctor/appointments");
     await doctorHomePage.close();
 
     const patientHomePage = await patientContext.newPage();
     await patientHomePage.goto("/patient");
-    await patientHomePage.getByRole("link", { name: "My appointments" }).click();
+    // /patient's dashboard (plan 06-03) renames this quick link to
+    // "Appointment history" (same /patient/appointments target as the old
+    // placeholder's "My appointments" button).
+    await patientHomePage.getByRole("button", { name: "Appointment history" }).click();
     await patientHomePage.waitForURL("/patient/appointments");
     await patientHomePage.close();
   });

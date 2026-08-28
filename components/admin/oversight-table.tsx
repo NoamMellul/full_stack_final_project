@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import PaginationNav from "@/components/pagination-nav";
 
 // Read-only oversight table shared by /admin/users and /admin/appointments
 // (ADMIN-07, ADMIN-08). No create/edit/delete affordance exists anywhere in
@@ -39,6 +40,15 @@ type OversightTableProps = {
   columns: OversightColumn[];
   emptyHeading: string;
   emptyBody: string;
+  /**
+   * Presence enables paginated mode: a `page` param is appended to
+   * `endpoint` and a PaginationNav is rendered below the table. Absent by
+   * default so consumers (e.g. /admin/appointments) keep their exact
+   * current unpaginated behaviour.
+   */
+  pageSize?: number;
+  /** Required in paginated mode — the PaginationNav's aria-label. */
+  paginationNavLabel?: string;
 };
 
 type Row = Record<string, unknown>;
@@ -82,46 +92,69 @@ export default function OversightTable({
   columns,
   emptyHeading,
   emptyBody,
+  pageSize,
+  paginationNavLabel,
 }: OversightTableProps) {
   const [rows, setRows] = useState<Row[]>([]);
   // "loading" only covers the very first GET for this endpoint — later
   // refetches (filter changes, Retry) update the table in place without
   // re-showing the skeleton rows, matching the doctors list convention.
   const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
+  const [page, setPage] = useState(1);
+  // null (not 0) so a response with no `total` key falls back cleanly to the
+  // rendered row count rather than reading as "zero rows".
+  const [total, setTotal] = useState<number | null>(null);
+  const [isPageFetching, setIsPageFetching] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const response = await fetch(endpoint);
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error ?? `Could not load ${resourceLabel}. Please refresh the page.`);
+  const paginated = typeof pageSize === "number";
+
+  const load = useCallback(
+    async (targetPage: number) => {
+      setIsPageFetching(true);
+      try {
+        const url = paginated
+          ? `${endpoint}${endpoint.includes("?") ? "&" : "?"}page=${targetPage}`
+          : endpoint;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(
+            data.error ?? `Could not load ${resourceLabel}. Please refresh the page.`,
+          );
+        }
+        setRows((data[resourceKey] ?? []) as Row[]);
+        setPage(targetPage);
+        setTotal(typeof data.total === "number" ? data.total : null);
+        setListStatus("ready");
+      } catch {
+        setListStatus("error");
+      } finally {
+        setIsPageFetching(false);
       }
-      setRows((data[resourceKey] ?? []) as Row[]);
-      setListStatus("ready");
-    } catch {
-      setListStatus("error");
-    }
-  }, [endpoint, resourceKey, resourceLabel]);
+    },
+    [endpoint, resourceKey, resourceLabel, paginated],
+  );
 
   useEffect(() => {
     async function initialLoad() {
-      await load();
+      await load(1);
     }
     void initialLoad();
   }, [load]);
 
   function handleRetry() {
     setListStatus("loading");
-    void load();
+    void load(page);
   }
 
   const columnCount = columns.length;
+  const displayCount = total ?? rows.length;
 
   return (
     <div className="flex flex-col gap-2">
       {listStatus === "ready" ? (
         <p className="text-sm text-muted-foreground">
-          {rows.length === 1 ? `1 ${countNounSingular}` : `${rows.length} ${countNounPlural}`}
+          {displayCount === 1 ? `1 ${countNounSingular}` : `${displayCount} ${countNounPlural}`}
         </p>
       ) : null}
 
@@ -185,6 +218,19 @@ export default function OversightTable({
           )}
         </Table>
       </div>
+
+      {paginated && listStatus === "ready" ? (
+        <PaginationNav
+          page={page}
+          pageCount={Math.max(1, Math.ceil((total ?? 0) / (pageSize as number)))}
+          onPageChange={(targetPage) => void load(targetPage)}
+          disabled={isPageFetching}
+          navLabel={paginationNavLabel as string}
+          previousLabel="Previous page"
+          nextLabel="Next page"
+          pageLabelPrefix="Page"
+        />
+      ) : null}
     </div>
   );
 }

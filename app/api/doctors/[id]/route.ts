@@ -13,7 +13,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 // `is_active` and `created_at` are omitted so they never reach a public
 // response (T-03-05); `address` is added because PROFILE-01 requires it.
 const PUBLIC_DOCTOR_SELECT =
-  "id, full_name, bio, photo_url, is_demo, " +
+  "id, full_name, bio, photo_url, phone, is_demo, " +
   "specialty:specialties(id,name_en,name_he), " +
   "location:locations(id,city,neighborhood,address), " +
   "languages:doctor_languages(languages(id,code))";
@@ -23,6 +23,7 @@ type RawDoctorRow = {
   full_name: string;
   bio: string | null;
   photo_url: string | null;
+  phone: string | null;
   is_demo: boolean;
   specialty: { id: string; name_en: string; name_he: string } | null;
   location: { id: string; city: string; neighborhood: string; address: string | null } | null;
@@ -35,6 +36,7 @@ function toPublicDoctor(row: RawDoctorRow) {
     full_name: row.full_name,
     bio: row.bio,
     photo_url: row.photo_url,
+    phone: row.phone,
     is_demo: row.is_demo,
     specialty: row.specialty,
     location: row.location,

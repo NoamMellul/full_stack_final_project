@@ -1,0 +1,14 @@
+-- Phase 6 plan 04: enable Realtime replication for public.notifications
+-- (NOTIF-01/02/03/04, D-02).
+--
+-- Adds public.notifications to the supabase_realtime publication so an
+-- INSERT into that table is broadcast as a postgres_changes event. No
+-- REPLICA IDENTITY change: the default primary-key replica identity is
+-- sufficient for INSERT/UPDATE events; FULL is only needed for DELETE
+-- events carrying old-row data, and this application never deletes
+-- notification rows. No RLS policy is added, dropped, or altered here —
+-- notifications_select_own and notifications_update_own
+-- (20260803230000_initial_schema.sql:271-275) already exist and remain the
+-- per-subscriber authorization boundary Realtime evaluates for every event:
+-- replication broadens transport, not authorization.
+alter publication supabase_realtime add table public.notifications;

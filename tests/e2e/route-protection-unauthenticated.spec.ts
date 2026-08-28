@@ -34,9 +34,14 @@ test.describe("AUTH-06: unauthenticated route protection", () => {
     await expect(page.getByText("Nothing here yet")).not.toBeVisible();
   });
 
-  test("an unauthenticated visit to / is not redirected", async ({ page }) => {
+  test("an unauthenticated visit to / is redirected to /login with no from param", async ({
+    page,
+  }) => {
     await page.goto("/");
-    await expect(page).toHaveURL("/");
+    await page.waitForURL(/\/login/);
+    const url = new URL(page.url());
+    expect(url.pathname).toBe("/login");
+    expect(url.searchParams.get("from")).toBeNull();
   });
 
   test("an unauthenticated visit to /signup is not redirected", async ({ page }) => {

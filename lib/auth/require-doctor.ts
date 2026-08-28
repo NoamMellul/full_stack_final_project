@@ -50,5 +50,34 @@ export async function requireDoctor(): Promise<DoctorGuardResult> {
     };
   }
 
+  // The `(gated)` layout only blocks the doctor *pages* on an unresolved
+  // must_change_password flag — it never covers /api/doctor/*, leaving those
+  // routes reachable indefinitely on an admin-issued temp password. This
+  // closes that gap (T-EQS-02).
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("must_change_password")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profileError) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Something went wrong. Please try again." },
+        { status: 500 },
+      ),
+    };
+  }
+  if (profile?.must_change_password) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "You must change your temporary password before continuing." },
+        { status: 403 },
+      ),
+    };
+  }
+
   return { ok: true, supabase, userId: user.id, doctorId: doctor.id };
 }

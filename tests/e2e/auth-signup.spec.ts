@@ -30,7 +30,9 @@ test.describe("AUTH-01: patient signup", () => {
     await page.getByRole("button", { name: "Create account" }).click();
 
     await page.waitForURL("/patient");
-    await expect(page.getByText("Nothing here yet")).toBeVisible();
+    // /patient now renders the real dashboard (plan 06-03) rather than the
+    // "Nothing here yet" placeholder this test originally asserted.
+    await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
 
     const admin = testAdminClient();
     const { data: profile, error } = await admin
@@ -69,6 +71,22 @@ test.describe("AUTH-01: patient signup", () => {
 
     expect(error).toBeNull();
     expect(profile?.role).toBe("patient");
+  });
+
+  test("a non-string email in the request body returns 400, not a 500 (T-EQS-04)", async ({
+    request,
+  }) => {
+    const response = await request.post("/api/auth/signup", {
+      data: {
+        email: 123,
+        password: TEST_PASSWORD,
+        fullName: "Non-String Email Tester",
+      },
+    });
+
+    expect(response.status()).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBe("Email is required.");
   });
 
   test("submitting a completely empty form shows inline required errors and makes no network call", async ({

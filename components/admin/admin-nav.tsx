@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const SECTIONS = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/doctors", label: "Doctors" },
+  { href: "/admin/doctor-requests", label: "Doctor requests" },
   { href: "/admin/specialties", label: "Specialties" },
   { href: "/admin/locations", label: "Locations" },
   { href: "/admin/users", label: "Users" },

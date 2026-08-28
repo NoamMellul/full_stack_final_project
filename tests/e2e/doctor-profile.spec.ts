@@ -258,7 +258,7 @@ test.describe("PROFILE-01/02/03, D-06, D-18: public doctor profile", () => {
       page.getByText("This doctor profile doesn't exist or is no longer active."),
     ).toBeVisible();
 
-    await page.getByRole("link", { name: "Back to search" }).click();
+    await page.getByRole("button", { name: "Back to search" }).click();
     await page.waitForURL("/search");
   });
 

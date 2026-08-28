@@ -16,17 +16,29 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import FavoriteToggle from "@/components/favorite-toggle";
 import InitialsAvatar from "@/components/initials-avatar";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { specialtyLabel } from "@/lib/i18n/specialty";
 import { createClient } from "@/lib/supabase/client";
 import { formatJerusalemDayHeading, formatJerusalemTime, jerusalemDayKey } from "@/lib/timezone";
 
-const LANGUAGE_LABELS: Record<string, string> = { he: "Hebrew", en: "English" };
+// Resolves a spoken-language badge from the shared languages.he/languages.en
+// dictionary pair, falling back to the raw code for any value that is
+// neither — completes the RESEARCH Pitfall 6 consolidation started in
+// components/search/doctor-card.tsx (half 2 of 2).
+const LANGUAGE_KEY_BY_CODE: Record<string, TranslationKey> = {
+  he: "languages.he",
+  en: "languages.en",
+};
 
 type DoctorProfile = {
   id: string;
   full_name: string;
   bio: string | null;
   photo_url: string | null;
+  phone: string | null;
   is_demo: boolean;
   specialty: { id: string; name_en: string; name_he: string } | null;
   location: { id: string; city: string; neighborhood: string; address: string | null } | null;
@@ -42,6 +54,11 @@ type UpcomingSlot = {
 type SlotDayGroup = {
   dayKey: string;
   slots: UpcomingSlot[];
+};
+
+type FavoritesState = {
+  role: "patient" | "anonymous" | "hidden";
+  favoritedIds: Set<string>;
 };
 
 function groupSlotsByJerusalemDay(slots: UpcomingSlot[]): SlotDayGroup[] {
@@ -79,6 +96,8 @@ function DoctorProfileSkeleton() {
 }
 
 function DoctorProfilePageInner() {
+  const t = useT();
+  const locale = useLocale();
   const params = useParams<{ id: string }>();
   const id = params.id;
   const router = useRouter();
@@ -91,6 +110,15 @@ function DoctorProfilePageInner() {
   const [selectedSlot, setSelectedSlot] = useState<UpcomingSlot | null>(null);
   const [bookingApiError, setBookingApiError] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
+
+  // Resolved once on mount — no separate loading state, the toggle simply
+  // renders unfavorited until this resolves. 200 means the viewer is a
+  // patient (populate the set), 401 means anonymous, 403 means a doctor or
+  // admin viewer (hidden entirely, per D-01's role-gating rule).
+  const [favoritesState, setFavoritesState] = useState<FavoritesState>({
+    role: "anonymous",
+    favoritedIds: new Set(),
+  });
 
   const loadDoctor = useCallback(async () => {
     setStatus("loading");
@@ -120,6 +148,31 @@ function DoctorProfilePageInner() {
     }
     void runLoad();
   }, [loadDoctor]);
+
+  useEffect(() => {
+    async function loadFavoritesState() {
+      try {
+        const response = await fetch("/api/patient/favorites");
+        if (response.status === 401) {
+          setFavoritesState({ role: "anonymous", favoritedIds: new Set() });
+          return;
+        }
+        if (response.status === 403) {
+          setFavoritesState({ role: "hidden", favoritedIds: new Set() });
+          return;
+        }
+        if (!response.ok) return;
+        const data = await response.json();
+        const favoritedIds = new Set<string>(
+          (data.favorites as { doctor_id: string }[]).map((entry) => entry.doctor_id),
+        );
+        setFavoritesState({ role: "patient", favoritedIds });
+      } catch {
+        // Leave the default (anonymous, unfavorited) state on a network error.
+      }
+    }
+    void loadFavoritesState();
+  }, []);
 
   // Session check happens client-side because /doctors/[id] is a public
   // page that never passes through proxy.ts's request gate (D-04). An
@@ -158,13 +211,17 @@ function DoctorProfilePageInner() {
       const data = await response.json();
 
       if (!response.ok) {
-        setBookingApiError(data.error ?? "Could not book this appointment. Please try again.");
+        // data.error is the appointments route's own literal (unchanged by
+        // this plan); the client renders it as-is. Only the fallback
+        // default — used when the response body carries no error, or the
+        // request itself throws — is routed through t().
+        setBookingApiError(data.error ?? t("doctor_profile.booking_generic_error"));
         return;
       }
 
       router.push("/patient/appointments?booked=1");
     } catch {
-      setBookingApiError("Could not book this appointment. Please try again.");
+      setBookingApiError(t("doctor_profile.booking_generic_error"));
     } finally {
       setIsBooking(false);
     }
@@ -181,11 +238,13 @@ function DoctorProfilePageInner() {
   if (status === "notFound") {
     return (
       <main className="flex flex-1 flex-col items-center gap-3 ps-4 pe-4 py-16 text-center">
-        <h1 className="text-2xl font-semibold text-destructive">Doctor not found</h1>
+        <h1 className="text-2xl font-semibold text-destructive">
+          {t("doctor_profile.not_found_heading")}
+        </h1>
         <p className="max-w-md text-sm text-destructive">
-          This doctor profile doesn&apos;t exist or is no longer active.
+          {t("doctor_profile.not_found_body")}
         </p>
-        <Button render={<Link href="/search" />}>Back to search</Button>
+        <Button render={<Link href="/search" />}>{t("doctor_profile.back_to_search")}</Button>
       </main>
     );
   }
@@ -193,9 +252,9 @@ function DoctorProfilePageInner() {
   if (status === "error") {
     return (
       <main className="flex flex-1 flex-col items-center gap-3 ps-4 pe-4 py-16 text-center">
-        <p className="text-sm text-destructive">Could not load this doctor. Please try again.</p>
+        <p className="text-sm text-destructive">{t("doctor_profile.load_error")}</p>
         <Button variant="outline" onClick={() => void loadDoctor()}>
-          Retry
+          {t("common.retry")}
         </Button>
       </main>
     );
@@ -211,6 +270,7 @@ function DoctorProfilePageInner() {
 
   const showPhoto = Boolean(doctor.photo_url) && !photoFailed;
   const bio = doctor.bio?.trim();
+  const phone = doctor.phone?.trim();
   const slotGroups = groupSlotsByJerusalemDay(upcomingSlots);
 
   return (
@@ -228,20 +288,40 @@ function DoctorProfilePageInner() {
           <InitialsAvatar name={doctor.full_name} size="default" className="size-16 text-base" />
         )}
         <h1 className="text-2xl font-semibold">{doctor.full_name}</h1>
-        {doctor.is_demo ? <Badge variant="secondary">Demo profile</Badge> : null}
+        {doctor.is_demo ? (
+          <Badge variant="secondary">{t("doctor_card.demo_profile")}</Badge>
+        ) : null}
+        {favoritesState.role !== "hidden" ? (
+          <FavoriteToggle
+            doctorId={doctor.id}
+            initialFavorited={favoritesState.favoritedIds.has(doctor.id)}
+            viewerRole={favoritesState.role}
+          />
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-        {doctor.specialty ? <span>{doctor.specialty.name_en}</span> : null}
+        {doctor.specialty ? (
+          <span>{specialtyLabel(locale, doctor.specialty.name_en, doctor.specialty.name_he)}</span>
+        ) : null}
         {addressParts.length > 0 ? <span>{addressParts.join(", ")}</span> : null}
+        {phone ? (
+          <span className="flex items-center gap-1">
+            <span>{t("doctor_profile.phone_label")}:</span>
+            <span dir="ltr">{phone}</span>
+          </span>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap gap-1">
-        {doctor.languages.map((language) => (
-          <Badge key={language.id} variant="secondary">
-            {LANGUAGE_LABELS[language.code] ?? language.code}
-          </Badge>
-        ))}
+        {doctor.languages.map((language) => {
+          const key = LANGUAGE_KEY_BY_CODE[language.code];
+          return (
+            <Badge key={language.id} variant="secondary">
+              {key ? t(key) : language.code}
+            </Badge>
+          );
+        })}
       </div>
 
       <Card>
@@ -249,16 +329,16 @@ function DoctorProfilePageInner() {
           {bio ? (
             <p className="whitespace-pre-line">{bio}</p>
           ) : (
-            <p className="text-sm text-muted-foreground">No description provided.</p>
+            <p className="text-sm text-muted-foreground">{t("doctor_profile.no_description")}</p>
           )}
         </CardContent>
       </Card>
 
       <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">Upcoming availability</h2>
+        <h2 className="text-lg font-semibold">{t("doctor_profile.availability_heading")}</h2>
 
         {slotGroups.length === 0 ? (
-          <Badge variant="secondary">No upcoming availability</Badge>
+          <Badge variant="secondary">{t("doctor_card.no_availability")}</Badge>
         ) : (
           <div className="flex flex-col gap-4">
             {slotGroups.map((group) => (
@@ -276,7 +356,7 @@ function DoctorProfilePageInner() {
                         className="min-h-11 px-4"
                         onClick={() => void handleSelectSlot(slot)}
                       >
-                        Select this slot
+                        {t("doctor_profile.select_slot")}
                       </Button>
                     </div>
                   ))}
@@ -295,12 +375,14 @@ function DoctorProfilePageInner() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirm your appointment</DialogTitle>
+            <DialogTitle>{t("doctor_profile.booking_dialog_title")}</DialogTitle>
           </DialogHeader>
           {selectedSlot ? (
             <div className="flex flex-col gap-2 text-sm">
               <span className="font-semibold">{doctor.full_name}</span>
-              {doctor.specialty ? <span>{doctor.specialty.name_en}</span> : null}
+              {doctor.specialty ? (
+                <span>{specialtyLabel(locale, doctor.specialty.name_en, doctor.specialty.name_he)}</span>
+              ) : null}
               <span>
                 {formatJerusalemDayHeading(selectedSlot.start_at)},{" "}
                 {formatJerusalemTime(selectedSlot.start_at)}–
@@ -328,7 +410,7 @@ function DoctorProfilePageInner() {
               onClick={closeBookingDialog}
               disabled={isBooking}
             >
-              Cancel
+              {t("doctor_profile.booking_dialog_cancel")}
             </Button>
             <Button
               type="button"
@@ -336,7 +418,9 @@ function DoctorProfilePageInner() {
               onClick={() => void handleConfirmBooking()}
               disabled={isBooking}
             >
-              {isBooking ? "Booking…" : "Confirm booking"}
+              {isBooking
+                ? t("doctor_profile.booking_dialog_confirming")
+                : t("doctor_profile.booking_dialog_confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>

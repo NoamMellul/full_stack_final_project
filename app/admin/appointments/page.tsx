@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import OversightTable, { type OversightColumn } from "@/components/admin/oversight-table";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createClient } from "@/lib/supabase/client";
 import { JERUSALEM_TIME_ZONE, jerusalemBoundaryToUtcIso } from "@/lib/timezone";
 
 // Mirrors the appointments check constraint
@@ -43,21 +42,51 @@ const COLUMNS: OversightColumn[] = [
 
 type DoctorOption = { id: string; label: string };
 
+type DoctorOptionsStatus = "loading" | "error" | "ready";
+
 export default function AdminAppointmentsPage() {
   const [status, setStatus] = useState("");
   const [doctorId, setDoctorId] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [doctorOptions, setDoctorOptions] = useState<DoctorOption[]>([]);
+  const [doctorOptionsStatus, setDoctorOptionsStatus] = useState<DoctorOptionsStatus>("loading");
+
+  // Routed through the admin-gated GET /api/admin/doctors (not a direct
+  // browser-client table query) — this adds a route-level authorization
+  // check in front of the RLS layer that was previously the only gate
+  // (T-FHM-01). That route orders by created_at, not by name, so the
+  // alphabetical dropdown order the page has always had is reproduced here
+  // via an explicit client-side localeCompare sort.
+  const loadDoctorOptions = useCallback(async () => {
+    try {
+      const response = await fetch("/api/admin/doctors");
+      if (!response.ok) {
+        setDoctorOptionsStatus("error");
+        return;
+      }
+      const data = await response.json();
+      const options = (data.doctors as { id: string; full_name: string }[])
+        .map((row) => ({ id: row.id, label: row.full_name }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+      setDoctorOptions(options);
+      setDoctorOptionsStatus("ready");
+    } catch {
+      setDoctorOptionsStatus("error");
+    }
+  }, []);
 
   useEffect(() => {
-    async function loadDoctorOptions() {
-      const supabase = createClient();
-      const { data } = await supabase.from("doctors").select("id,full_name").order("full_name");
-      setDoctorOptions((data ?? []).map((row) => ({ id: row.id, label: row.full_name })));
+    async function initialLoad() {
+      await loadDoctorOptions();
     }
+    void initialLoad();
+  }, [loadDoctorOptions]);
+
+  function handleRetryDoctorOptions() {
+    setDoctorOptionsStatus("loading");
     void loadDoctorOptions();
-  }, []);
+  }
 
   const params = new URLSearchParams();
   if (status) params.set("status", status);
@@ -111,6 +140,21 @@ export default function AdminAppointmentsPage() {
               ))}
             </SelectContent>
           </Select>
+          {doctorOptionsStatus === "error" ? (
+            <>
+              <p className="text-sm text-destructive">
+                Could not load doctors. Please refresh the page.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRetryDoctorOptions}
+              >
+                Retry
+              </Button>
+            </>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-2">

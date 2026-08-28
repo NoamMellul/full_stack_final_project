@@ -28,18 +28,21 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import InitialsAvatar from "@/components/initials-avatar";
+import PaginationNav from "@/components/pagination-nav";
 import TempPasswordDialog from "@/components/admin/temp-password-dialog";
 import { createClient } from "@/lib/supabase/client";
 import { validateEmail } from "@/lib/validation/auth";
 import { validateDoctorInput, validateDoctorPatch } from "@/lib/validation/doctor";
+import { ADMIN_PAGE_SIZE } from "@/lib/validation/pagination";
 
-const TABLE_COLUMN_COUNT = 7;
+const TABLE_COLUMN_COUNT = 8;
 
 type DoctorListRow = {
   id: string;
   full_name: string;
   bio: string | null;
   photo_url: string | null;
+  phone: string | null;
   is_active: boolean;
   is_demo: boolean;
   profile_id: string | null;
@@ -52,7 +55,14 @@ type DoctorListRow = {
 type OptionRow = { id: string; label: string };
 type LanguageOption = { id: string; code: string };
 
-type FieldName = "fullName" | "specialtyId" | "locationId" | "photoUrl" | "bio" | "languageIds";
+type FieldName =
+  | "fullName"
+  | "specialtyId"
+  | "locationId"
+  | "photoUrl"
+  | "bio"
+  | "phone"
+  | "languageIds";
 type FieldErrors = Partial<Record<FieldName, string>>;
 
 const FIELD_BY_MESSAGE: Record<string, FieldName> = {
@@ -61,6 +71,8 @@ const FIELD_BY_MESSAGE: Record<string, FieldName> = {
   "Location is required.": "locationId",
   "Photo URL must be a valid http(s) URL.": "photoUrl",
   "Bio must be text.": "bio",
+  "Phone number must be text.": "phone",
+  "Phone number must be 20 characters or fewer.": "phone",
   "Languages must be a list of language ids.": "languageIds",
 };
 
@@ -78,6 +90,8 @@ function DoctorFormFields({
   onToggleLanguage,
   bio,
   onBioChange,
+  phone,
+  onPhoneChange,
   photoUrl,
   onPhotoUrlChange,
   fieldErrors,
@@ -96,6 +110,8 @@ function DoctorFormFields({
   onToggleLanguage: (id: string) => void;
   bio: string;
   onBioChange: (value: string) => void;
+  phone: string;
+  onPhoneChange: (value: string) => void;
   photoUrl: string;
   onPhotoUrlChange: (value: string) => void;
   fieldErrors: FieldErrors;
@@ -103,6 +119,20 @@ function DoctorFormFields({
   locations: OptionRow[];
   languages: LanguageOption[];
 }) {
+  // `items` maps handed to each Select so Select.Value can resolve the
+  // trigger's display label from a value that was set programmatically
+  // (the Approve prefill) without the popup ever having opened. Without
+  // this, a prefilled specialty renders as a raw uuid in the trigger until
+  // the popup is opened — mirrors components/search/search-filters.tsx's
+  // specialtyItems/neighborhoodItems pattern. Also fixes the same latent
+  // issue in the edit dialog.
+  const specialtyItems: Record<string, string> = Object.fromEntries(
+    specialties.map((option) => [option.id, option.label]),
+  );
+  const locationItems: Record<string, string> = Object.fromEntries(
+    locations.map((option) => [option.id, option.label]),
+  );
+
   return (
     <>
       <div className="flex flex-col gap-2">
@@ -122,7 +152,11 @@ function DoctorFormFields({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor={`${idPrefix}-specialtyId`}>Specialty</Label>
-        <Select value={specialtyId} onValueChange={(value) => onSpecialtyIdChange(value ?? "")}>
+        <Select
+          items={specialtyItems}
+          value={specialtyId}
+          onValueChange={(value) => onSpecialtyIdChange(value ?? "")}
+        >
           <SelectTrigger
             id={`${idPrefix}-specialtyId`}
             aria-invalid={fieldErrors.specialtyId ? true : undefined}
@@ -144,7 +178,11 @@ function DoctorFormFields({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor={`${idPrefix}-locationId`}>Location</Label>
-        <Select value={locationId} onValueChange={(value) => onLocationIdChange(value ?? "")}>
+        <Select
+          items={locationItems}
+          value={locationId}
+          onValueChange={(value) => onLocationIdChange(value ?? "")}
+        >
           <SelectTrigger
             id={`${idPrefix}-locationId`}
             aria-invalid={fieldErrors.locationId ? true : undefined}
@@ -197,6 +235,21 @@ function DoctorFormFields({
       </div>
 
       <div className="flex flex-col gap-2">
+        <Label htmlFor={`${idPrefix}-phone`}>Phone</Label>
+        <Input
+          id={`${idPrefix}-phone`}
+          name="phone"
+          type="text"
+          value={phone}
+          onChange={(e) => onPhoneChange(e.target.value)}
+          aria-invalid={fieldErrors.phone ? true : undefined}
+        />
+        {fieldErrors.phone ? (
+          <p className="text-sm font-normal text-destructive">{fieldErrors.phone}</p>
+        ) : null}
+      </div>
+
+      <div className="flex flex-col gap-2">
         <Label htmlFor={`${idPrefix}-photoUrl`}>Photo URL</Label>
         <Input
           id={`${idPrefix}-photoUrl`}
@@ -214,18 +267,33 @@ function DoctorFormFields({
   );
 }
 
-export default function DoctorsPageClient() {
+type Prefill = { fullName: string; specialtyId: string; email: string; requestId: string };
+
+export default function DoctorsPageClient({ prefill }: { prefill?: Prefill }) {
   const [doctors, setDoctors] = useState<DoctorListRow[]>([]);
   const [specialties, setSpecialties] = useState<OptionRow[]>([]);
   const [locations, setLocations] = useState<OptionRow[]>([]);
   const [languages, setLanguages] = useState<LanguageOption[]>([]);
 
-  const [fullName, setFullName] = useState("");
-  const [specialtyId, setSpecialtyId] = useState("");
+  // Seeded once from `prefill` at mount via the useState initializer — never
+  // re-synced by an effect, so nothing can clobber a later in-page edit.
+  // locationId is deliberately left empty: doctors.location_id is NOT NULL
+  // and a doctor_requests row carries no location, so the admin must pick
+  // one.
+  const [fullName, setFullName] = useState(() => prefill?.fullName ?? "");
+  const [specialtyId, setSpecialtyId] = useState(() => prefill?.specialtyId ?? "");
   const [locationId, setLocationId] = useState("");
   const [languageIds, setLanguageIds] = useState<string[]>([]);
   const [bio, setBio] = useState("");
+  const [phone, setPhone] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+
+  // Non-null only when the create form was entered via Approve — makes
+  // every downstream behaviour (auto-open Link account, auto-PATCH the
+  // request) conditional on having entered through that path.
+  const [approveContext, setApproveContext] = useState<{ requestId: string; email: string } | null>(
+    () => (prefill?.requestId ? { requestId: prefill.requestId, email: prefill.email } : null),
+  );
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
@@ -238,6 +306,7 @@ export default function DoctorsPageClient() {
   const [editLocationId, setEditLocationId] = useState("");
   const [editLanguageIds, setEditLanguageIds] = useState<string[]>([]);
   const [editBio, setEditBio] = useState("");
+  const [editPhone, setEditPhone] = useState("");
   const [editPhotoUrl, setEditPhotoUrl] = useState("");
   const [editFieldErrors, setEditFieldErrors] = useState<FieldErrors>({});
   const [editApiError, setEditApiError] = useState<string | null>(null);
@@ -264,31 +333,43 @@ export default function DoctorsPageClient() {
   // "loading" only covers the very first GET — later refreshes (post-submit,
   // Retry) update `doctors` in place without re-showing the skeleton rows.
   const [listStatus, setListStatus] = useState<"loading" | "error" | "ready">("loading");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [isPageFetching, setIsPageFetching] = useState(false);
 
-  const loadDoctors = useCallback(async () => {
+  const loadDoctors = useCallback(async (targetPage: number) => {
+    setIsPageFetching(true);
     try {
-      const response = await fetch("/api/admin/doctors");
+      const response = await fetch(`/api/admin/doctors?page=${targetPage}`);
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error ?? "Could not load doctors. Please refresh the page.");
       }
-      setDoctors(data.doctors as DoctorListRow[]);
+      const rows = data.doctors as DoctorListRow[];
+      setDoctors(rows);
+      setPage(targetPage);
+      // Two admin-doctor-crud.spec.ts tests stub this endpoint with a body
+      // that has `doctors` but no `total` — this fallback keeps the count
+      // caption accurate for those fixtures.
+      setTotal(typeof data.total === "number" ? data.total : rows.length);
       setListStatus("ready");
     } catch {
       setListStatus("error");
+    } finally {
+      setIsPageFetching(false);
     }
   }, []);
 
   useEffect(() => {
     async function initialLoad() {
-      await loadDoctors();
+      await loadDoctors(1);
     }
     void initialLoad();
   }, [loadDoctors]);
 
   function handleRetry() {
     setListStatus("loading");
-    void loadDoctors();
+    void loadDoctors(page);
   }
 
   useEffect(() => {
@@ -326,6 +407,7 @@ export default function DoctorsPageClient() {
     setLocationId("");
     setLanguageIds([]);
     setBio("");
+    setPhone("");
     setPhotoUrl("");
     setFieldErrors({});
   }
@@ -339,6 +421,7 @@ export default function DoctorsPageClient() {
       specialtyId,
       locationId,
       bio,
+      phone,
       photoUrl,
       languageIds,
     };
@@ -365,8 +448,22 @@ export default function DoctorsPageClient() {
         return;
       }
 
+      // Full DoctorListRow, same shape as the list endpoint — the exact row
+      // to hand the Link account dialog rather than searching for it in the
+      // freshly reloaded (and paginated) table.
+      const createdDoctor = data.doctor as DoctorListRow;
       resetForm();
-      await loadDoctors();
+
+      // Open the dialog before awaiting the list refresh so the admin isn't
+      // left staring at a fetch.
+      if (approveContext) {
+        openLinkDialog(createdDoctor, approveContext.email);
+      }
+
+      // A new doctor sorts to the top under created_at descending — return
+      // to page 1 so it's visible even if the admin submitted from a later
+      // page.
+      await loadDoctors(1);
     } catch {
       setApiError("Could not save doctor. Please try again.");
     } finally {
@@ -381,6 +478,7 @@ export default function DoctorsPageClient() {
     setEditLocationId(doctor.location?.id ?? "");
     setEditLanguageIds(doctor.languages.map((language) => language.id));
     setEditBio(doctor.bio ?? "");
+    setEditPhone(doctor.phone ?? "");
     setEditPhotoUrl(doctor.photo_url ?? "");
     setEditFieldErrors({});
     setEditApiError(null);
@@ -405,6 +503,7 @@ export default function DoctorsPageClient() {
     if (editSpecialtyId !== (original.specialty?.id ?? "")) payload.specialtyId = editSpecialtyId;
     if (editLocationId !== (original.location?.id ?? "")) payload.locationId = editLocationId;
     if (editBio !== (original.bio ?? "")) payload.bio = editBio;
+    if (editPhone !== (original.phone ?? "")) payload.phone = editPhone;
     if (editPhotoUrl !== (original.photo_url ?? "")) payload.photoUrl = editPhotoUrl;
 
     const originalLanguageIds = [...original.languages.map((language) => language.id)].sort();
@@ -450,7 +549,8 @@ export default function DoctorsPageClient() {
       }
 
       closeEditDialog();
-      await loadDoctors();
+      // Stay on the page the admin was on.
+      await loadDoctors(page);
     } catch {
       setEditApiError("Could not save doctor. Please try again.");
     } finally {
@@ -487,9 +587,9 @@ export default function DoctorsPageClient() {
     }
   }
 
-  function openLinkDialog(doctor: DoctorListRow) {
+  function openLinkDialog(doctor: DoctorListRow, presetEmail?: string) {
     setLinkingDoctor(doctor);
-    setLinkEmail("");
+    setLinkEmail(presetEmail ?? "");
     setLinkFieldError(null);
     setLinkApiError(null);
   }
@@ -528,8 +628,34 @@ export default function DoctorsPageClient() {
 
       const doctorName = linkingDoctor.full_name;
       closeLinkDialog();
+      // The temporary password is one-time and unrecoverable — it must
+      // already be on screen before the auto-PATCH below can possibly fail,
+      // so a failing PATCH can never take the password off screen with it.
       setTempPasswordInfo({ password: data.tempPassword, doctorName });
-      await loadDoctors();
+
+      if (approveContext) {
+        const { requestId } = approveContext;
+        // Null out before firing so this can only ever fire once per
+        // approve, even if something re-renders this handler.
+        setApproveContext(null);
+        try {
+          const patchResponse = await fetch(`/api/admin/doctor-requests/${requestId}`, {
+            method: "PATCH",
+          });
+          setStatusMessage(
+            patchResponse.ok
+              ? "Doctor request marked reviewed."
+              : "Doctor created and linked, but the request was not marked reviewed. Mark it reviewed manually on the Doctor requests page.",
+          );
+        } catch {
+          setStatusMessage(
+            "Doctor created and linked, but the request was not marked reviewed. Mark it reviewed manually on the Doctor requests page.",
+          );
+        }
+      }
+
+      // Stay on the page the admin was on.
+      await loadDoctors(page);
     } catch {
       setLinkApiError("Could not create a login for this doctor. Please try again.");
     } finally {
@@ -557,6 +683,8 @@ export default function DoctorsPageClient() {
               onToggleLanguage={toggleLanguage}
               bio={bio}
               onBioChange={setBio}
+              phone={phone}
+              onPhoneChange={setPhone}
               photoUrl={photoUrl}
               onPhotoUrlChange={setPhotoUrl}
               fieldErrors={fieldErrors}
@@ -602,6 +730,8 @@ export default function DoctorsPageClient() {
                 onToggleLanguage={toggleEditLanguage}
                 bio={editBio}
                 onBioChange={setEditBio}
+                phone={editPhone}
+                onPhoneChange={setEditPhone}
                 photoUrl={editPhotoUrl}
                 onPhotoUrlChange={setEditPhotoUrl}
                 fieldErrors={editFieldErrors}
@@ -679,7 +809,7 @@ export default function DoctorsPageClient() {
       <div className="flex flex-col gap-2">
         {listStatus === "ready" ? (
           <p className="text-sm text-muted-foreground">
-            {doctors.length === 1 ? "1 doctor" : `${doctors.length} doctors`}
+            {total === 1 ? "1 doctor" : `${total} doctors`}
           </p>
         ) : null}
 
@@ -694,6 +824,7 @@ export default function DoctorsPageClient() {
                 <TableHead>Name</TableHead>
                 <TableHead>Specialty</TableHead>
                 <TableHead>Location</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Bio</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Link status</TableHead>
@@ -762,6 +893,7 @@ export default function DoctorsPageClient() {
                     <TableCell className="max-w-32 truncate">
                       {doctor.location ? `${doctor.location.neighborhood}, ${doctor.location.city}` : ""}
                     </TableCell>
+                    <TableCell className="max-w-32 truncate">{doctor.phone ?? ""}</TableCell>
                     <TableCell className="max-w-48 truncate">{doctor.bio ?? ""}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -813,6 +945,19 @@ export default function DoctorsPageClient() {
             )}
           </Table>
         </div>
+
+        {listStatus === "ready" ? (
+          <PaginationNav
+            page={page}
+            pageCount={Math.max(1, Math.ceil(total / ADMIN_PAGE_SIZE))}
+            onPageChange={(targetPage) => void loadDoctors(targetPage)}
+            disabled={isPageFetching}
+            navLabel="Doctors pagination"
+            previousLabel="Previous page"
+            nextLabel="Next page"
+            pageLabelPrefix="Page"
+          />
+        ) : null}
       </div>
     </div>
   );

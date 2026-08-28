@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Doctor Discovery — Search & Public Profiles** - Patients can find and evaluate doctors matching their criteria (completed 2026-08-08)
 - [x] **Phase 4: Doctor Availability Management** - Doctors control their own schedule with conflict-safe slot and block-period management (completed 2026-08-09)
 - [x] **Phase 5: Appointment Booking & Lifecycle** - Patients can book, cancel, and reschedule appointments with a guaranteed anti-double-booking constraint (completed 2026-08-11)
-- [ ] **Phase 6: Dashboards, Notifications & Localization** - Patients and doctors get a personalized home base with real-time updates, in a fully bilingual (Hebrew/English, RTL) interface
+- [x] **Phase 6: Dashboards, Notifications & Localization** - Patients and doctors get a personalized home base with real-time updates, in a fully bilingual (Hebrew/English, RTL) interface (completed 2026-08-27)
 
 ## Phase Details
 
@@ -196,7 +196,39 @@ Plans:
   3. Patient receives an in-app notification when a booking is confirmed, cancelled, or rescheduled, and a doctor receives an in-app notification when a new appointment is booked.
   4. User can switch the entire interface between Hebrew and English from any page, and the layout correctly mirrors to RTL when Hebrew is selected.
 
-**Plans**: TBD
+**Plans**: 10/10 plans executed
+**Wave 1**
+
+- [x] 06-01-PLAN.md
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 06-02-PLAN.md
+- [x] 06-03-PLAN.md
+- [x] 06-04-PLAN.md
+- [x] 06-05-PLAN.md
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [x] 06-06-PLAN.md
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [x] 06-07-PLAN.md
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [x] 06-08-PLAN.md
+- [x] 06-09-PLAN.md
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [x] 06-10-PLAN.md
+
+**Cross-cutting constraints:**
+
+- No key is added to either dictionary file by this plan: every t() call resolves against the inventory authored in 06-07, enforced by the TranslationKey type.
+
 **UI hint**: yes
 
 ## Progress
@@ -211,4 +243,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Doctor Discovery — Search & Public Profiles | 7/7 | Complete    | 2026-08-08 |
 | 4. Doctor Availability Management | 4/4 | In Progress|  |
 | 5. Appointment Booking & Lifecycle | 5/5 | Complete    | 2026-08-11 |
-| 6. Dashboards, Notifications & Localization | 0/TBD | Not started | - |
+| 6. Dashboards, Notifications & Localization | 10/10 | In Progress|  |

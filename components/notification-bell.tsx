@@ -1,0 +1,281 @@
+"use client";
+
+import { Bell } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useT } from "@/lib/i18n/locale-provider";
+import { notificationCopyKey, type NotificationViewerRole } from "@/lib/i18n/notification-copy";
+import { createClient } from "@/lib/supabase/client";
+import { formatJerusalemDayHeading, formatJerusalemTime } from "@/lib/timezone";
+
+// Payload shape matches GET /api/notifications's NOTIFICATION_SELECT
+// allowlist exactly (app/api/notifications/route.ts). There is no `message`
+// field, and none may be added — the stored English text must never be
+// rendered (D-03); displayed copy comes exclusively from
+// notificationCopyKey() + the dictionary.
+export type NotificationRow = {
+  id: string;
+  type: string;
+  related_appointment_id: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+type LoadStatus = "loading" | "error" | "ready";
+
+const BADGE_OVERFLOW_LABEL = "9+";
+
+// Subscribes to live INSERTs on the caller's own notifications row set.
+// `userId` is `null` for an anonymous visitor or an admin session (the
+// header never mounts NotificationBell for either) — the effect returns
+// immediately without opening a channel in that case.
+//
+// The `.on()` filter string (`user_id=eq.<userId>`) and the
+// notifications_select_own RLS policy both already scope delivery; the
+// handler's own comparison below is defense in depth, not the boundary
+// (T-06-26) — a Realtime payload is never rendered without independently
+// confirming its user_id equals the signed-in user's id.
+export function useNotificationRealtime(
+  userId: string | null,
+  onInsert: (row: NotificationRow) => void,
+) {
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+
+    const supabase = createClient();
+
+    async function run() {
+      // `userId` is a server-sourced prop (SiteHeader's own
+      // supabase.auth.getUser() call) — nothing on the client has touched
+      // this browser Supabase client's own auth state yet. Its Realtime
+      // connection authorizes postgres_changes per-subscriber using
+      // whatever JWT createClient()'s internal auth-state listener has
+      // handed to realtime.setAuth() so far, which only fires once that
+      // listener has actually run. Awaiting getSession() here forces that
+      // hydration (and therefore the setAuth() call) to complete before
+      // .subscribe() opens the channel — without it, .subscribe() can race
+      // ahead and join authenticated only as the anon key, so postgres_
+      // changes broadcasts silently never pass RLS for this connection
+      // (the join itself still acks "ok", so nothing about it look wrong).
+      // This also doubles as this effect's Strict-Mode-safety gate: a
+      // synchronous double-invoke's first ("phantom") run has `cancelled`
+      // flipped true by its cleanup well before this await resolves, so it
+      // exits below without ever opening a channel.
+      await supabase.auth.getSession();
+      if (cancelled) return;
+
+      const channel = supabase
+        .channel(`notifications-${userId}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+          (payload) => {
+            const row = payload.new as NotificationRow & { user_id: string };
+            if (row.user_id !== userId) return;
+            onInsert(row);
+          },
+        )
+        .subscribe();
+
+      return () => {
+        void supabase.removeChannel(channel);
+      };
+    }
+
+    const cleanupPromise = run();
+    // Mandatory cleanup: without eventually calling removeChannel, every
+    // unmount/remount of the header (i.e. every same-page navigation) leaks
+    // a websocket subscription and its closure (T-06-29).
+    return () => {
+      cancelled = true;
+      void cleanupPromise.then((cleanup) => cleanup?.());
+    };
+  }, [userId, onInsert]);
+}
+
+export default function NotificationBell({
+  userId,
+  viewerRole,
+}: {
+  userId: string;
+  viewerRole: NotificationViewerRole;
+}) {
+  const t = useT();
+  const [rows, setRows] = useState<NotificationRow[]>([]);
+  const [status, setStatus] = useState<LoadStatus>("loading");
+  const [open, setOpen] = useState(false);
+
+  const load = useCallback(async () => {
+    setStatus("loading");
+    try {
+      const response = await fetch("/api/notifications");
+      if (!response.ok) {
+        setStatus("error");
+        return;
+      }
+      const body = await response.json();
+      setRows(body.notifications as NotificationRow[]);
+      setStatus("ready");
+    } catch {
+      setStatus("error");
+    }
+  }, []);
+
+  useEffect(() => {
+    async function runLoad() {
+      await load();
+    }
+    void runLoad();
+  }, [load]);
+
+  const handleInsert = useCallback((row: NotificationRow) => {
+    // The mount-time fetch and the first live event can race — guard
+    // against prepending a row already present from the initial load.
+    setRows((current) => {
+      if (current.some((existing) => existing.id === row.id)) {
+        return current;
+      }
+      return [row, ...current];
+    });
+  }, []);
+
+  useNotificationRealtime(userId, handleInsert);
+
+  const unreadCount = rows.filter((row) => row.read_at === null).length;
+  const badgeLabel = unreadCount > 9 ? BADGE_OVERFLOW_LABEL : String(unreadCount);
+
+  async function markReadOnOpen(unreadIds: string[]) {
+    // Fire all reads together and resolve exactly which ids the server
+    // actually confirmed — Promise.allSettled so one rejected/erroring
+    // request never blocks the others from updating local state.
+    const results = await Promise.allSettled(
+      unreadIds.map(async (id) => {
+        const response = await fetch(`/api/notifications/${id}/read`, { method: "PATCH" });
+        if (!response.ok) throw new Error("mark-read failed");
+        return id;
+      }),
+    );
+    const succeededIds = new Set(
+      results
+        .filter((result): result is PromiseFulfilledResult<string> => result.status === "fulfilled")
+        .map((result) => result.value),
+    );
+    if (succeededIds.size === 0) return;
+
+    // Functional updater (never the captured `rows` array) so a live
+    // insert landing mid-flight is not clobbered. Only succeeded ids move
+    // to read; a rejected or non-ok id stays unread and is retried on the
+    // next open.
+    setRows((current) =>
+      current.map((row) =>
+        succeededIds.has(row.id) && row.read_at === null
+          ? { ...row, read_at: new Date().toISOString() }
+          : row,
+      ),
+    );
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+
+    if (nextOpen) {
+      // Snapshot the currently-listed unread ids at open time — a
+      // notification arriving live while the dropdown is already open is
+      // deliberately excluded from this snapshot, so it stays visually
+      // unread until the next open. The actual PATCH requests and local
+      // state update happen asynchronously in markReadOnOpen(); this
+      // handler itself must stay synchronous (Base UI's onOpenChange must
+      // not receive a promise).
+      const unreadIds = rows.filter((row) => row.read_at === null).map((row) => row.id);
+      if (unreadIds.length === 0) return;
+      void markReadOnOpen(unreadIds);
+    }
+  }
+
+  return (
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative size-11 sm:size-8"
+            aria-label={t("notifications.title")}
+          />
+        }
+      >
+        <span className="relative inline-flex">
+          <Bell />
+          {unreadCount > 0 ? (
+            <span
+              data-testid="notification-badge"
+              className="absolute -top-1 end-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[0.65rem] leading-none font-medium text-primary-foreground"
+            >
+              {badgeLabel}
+            </span>
+          ) : null}
+        </span>
+      </PopoverTrigger>
+      <PopoverContent align="end" side="bottom" className="w-80">
+        <PopoverHeader>
+          <PopoverTitle>{t("notifications.title")}</PopoverTitle>
+        </PopoverHeader>
+        <div className="max-h-96 overflow-y-auto">
+          {status === "loading" ? (
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : status === "error" ? (
+            <div className="flex flex-col items-center gap-2 py-4 text-center">
+              <p className="text-sm text-destructive">{t("notifications.load_error")}</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => void load()}>
+                {t("common.retry")}
+              </Button>
+            </div>
+          ) : rows.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              {t("notifications.empty")}
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {rows.map((row) => {
+                const unread = row.read_at === null;
+                return (
+                  <li key={row.id} className="flex items-start gap-2 py-1">
+                    <span
+                      className={
+                        unread
+                          ? "mt-1.5 size-2 shrink-0 rounded-full bg-primary"
+                          : "mt-1.5 size-2 shrink-0"
+                      }
+                    />
+                    <div className="flex flex-col gap-0.5">
+                      <span className={unread ? "text-sm font-semibold" : "text-sm"}>
+                        {t(notificationCopyKey(row.type, viewerRole))}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatJerusalemDayHeading(row.created_at)}{" "}
+                        {formatJerusalemTime(row.created_at)}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}

@@ -122,6 +122,21 @@ test.describe("ADMIN-04: link a doctor login", () => {
     await expect(page.getByText("Set a new password")).toBeVisible();
   });
 
+  test("3b. while must_change_password is true, GET /api/doctor/slots returns 403 with the guard message (T-EQS-02)", async ({
+    page,
+  }) => {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(doctorEmail);
+    await page.getByLabel("Password").fill(capturedPassword);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await page.waitForURL("/doctor/change-password");
+
+    const response = await page.request.get("/api/doctor/slots");
+    expect(response.status()).toBe(403);
+    const body = await response.json();
+    expect(body.error).toBe("You must change your temporary password before continuing.");
+  });
+
   test("4. submitting a new password lands on /doctor, and the next login goes straight there", async ({
     page,
   }) => {
@@ -136,10 +151,12 @@ test.describe("ADMIN-04: link a doctor login", () => {
     await page.getByRole("button", { name: "Update password" }).click();
 
     await page.waitForURL("/doctor");
-    await expect(page.getByText("Nothing here yet")).toBeVisible();
+    // /doctor now renders the real dashboard (plan 06-03) rather than the
+    // "Nothing here yet" placeholder this test originally asserted.
+    await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
 
     await page.getByRole("button", { name: "Log out" }).click();
-    await page.waitForURL("/");
+    await page.waitForURL(/\/login/);
 
     await page.goto("/login");
     await page.getByLabel("Email").fill(doctorEmail);
@@ -148,6 +165,19 @@ test.describe("ADMIN-04: link a doctor login", () => {
 
     await page.waitForURL("/doctor");
     await expect(page).toHaveURL("/doctor");
+  });
+
+  test("4b. after the password change, GET /api/doctor/slots succeeds (T-EQS-02)", async ({
+    page,
+  }) => {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(doctorEmail);
+    await page.getByLabel("Password").fill(NEW_PASSWORD);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await page.waitForURL("/doctor");
+
+    const response = await page.request.get("/api/doctor/slots");
+    expect(response.ok()).toBe(true);
   });
 
   test("5. a second link-account call on the same doctor returns 409 and creates no second account", async ({

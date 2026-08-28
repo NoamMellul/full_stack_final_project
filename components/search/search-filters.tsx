@@ -12,10 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLocale, useT } from "@/lib/i18n/locale-provider";
+import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { specialtyLabel } from "@/lib/i18n/specialty";
 import { createClient } from "@/lib/supabase/client";
 import { jerusalemDayKey } from "@/lib/timezone";
 
-type OptionRow = { id: string; label: string };
+type SpecialtyOptionRow = { id: string; nameEn: string; nameHe: string | null };
 
 type SearchFiltersProps = {
   nameValue: string;
@@ -43,19 +46,14 @@ function addCalendarDays(dayKey: string, days: number): string {
 // D-07/RESEARCH.md Open Question 1: "Today" is [now, end of today], not
 // [start of today, end of today] — the always-applied future-only predicate
 // in the route's pre-query trims the lower bound to the present instant, so
-// no special-casing is needed here beyond the end-day offset.
-const QUICK_SELECTS: Array<{ label: string; endOffsetDays: number }> = [
-  { label: "Today", endOffsetDays: 0 },
-  { label: "Next 7 days", endOffsetDays: 6 },
-  { label: "Next 30 days", endOffsetDays: 29 },
+// no special-casing is needed here beyond the end-day offset. `labelKey`
+// (not a literal label) since this constant lives outside the component and
+// t() is only available once useT() has run inside it.
+const QUICK_SELECTS: Array<{ labelKey: TranslationKey; endOffsetDays: number }> = [
+  { labelKey: "search.filters.quick_today", endOffsetDays: 0 },
+  { labelKey: "search.filters.quick_next_7_days", endOffsetDays: 6 },
+  { labelKey: "search.filters.quick_next_30_days", endOffsetDays: 29 },
 ];
-
-// Static value->label map for the language Select's `items` prop (see
-// below) — Base UI's `Select.Value` only resolves a label from `items` (or
-// from a currently-mounted `Select.Item`), so without this a page loaded
-// directly on a `?language=he` URL would render the raw code instead of
-// "Hebrew" until the popup was opened once.
-const LANGUAGE_ITEMS: Record<string, string> = { he: "Hebrew", en: "English" };
 
 // Filter panel for /search: name, specialty, spoken language, neighborhood
 // and an availability date range with quick-select shortcuts. `nameValue`/
@@ -72,22 +70,33 @@ export default function SearchFilters({
   availableTo,
   onFilterChange,
 }: SearchFiltersProps) {
-  const [specialties, setSpecialties] = useState<OptionRow[]>([]);
+  const t = useT();
+  const locale = useLocale();
+  const [specialties, setSpecialties] = useState<SpecialtyOptionRow[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
 
   // Loaded once from the browser client — specialties/locations are public
   // reference data under `select using (true)` RLS (mirrors
   // components/admin/doctors-page-client.tsx's option-loading effect).
+  //
+  // Both raw name fields are kept in state (not a pre-resolved label):
+  // this effect has an empty dependency array and never re-runs on a locale
+  // switch, so resolving through specialtyLabel() has to happen at render
+  // time in every consumer below, not here.
   useEffect(() => {
     async function loadOptions() {
       const supabase = createClient();
       const [specialtiesRes, locationsRes] = await Promise.all([
-        supabase.from("specialties").select("id,name_en").order("name_en"),
+        supabase.from("specialties").select("id,name_en,name_he").order("name_en"),
         supabase.from("locations").select("neighborhood").order("neighborhood"),
       ]);
 
       setSpecialties(
-        (specialtiesRes.data ?? []).map((row) => ({ id: row.id, label: row.name_en })),
+        (specialtiesRes.data ?? []).map((row) => ({
+          id: row.id,
+          nameEn: row.name_en,
+          nameHe: row.name_he,
+        })),
       );
 
       const uniqueNeighborhoods = Array.from(
@@ -108,11 +117,18 @@ export default function SearchFilters({
   // without ever having opened the popup (required for D-13's reload/share
   // parity — otherwise the trigger briefly/permanently shows the raw id).
   const specialtyItems: Record<string, string> = Object.fromEntries(
-    specialties.map((option) => [option.id, option.label]),
+    specialties.map((option) => [
+      option.id,
+      specialtyLabel(locale, option.nameEn, option.nameHe),
+    ]),
   );
   const neighborhoodItems: Record<string, string> = Object.fromEntries(
     neighborhoods.map((option) => [option, option]),
   );
+  const languageItems: Record<string, string> = {
+    he: t("languages.he"),
+    en: t("languages.en"),
+  };
 
   const hasActiveFilter = Boolean(
     nameValue || specialty || language || neighborhood || availableFrom || availableTo,
@@ -132,7 +148,7 @@ export default function SearchFilters({
   return (
     <div className="flex flex-wrap items-end gap-4 rounded-lg bg-secondary p-4">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="search-name">Doctor name</Label>
+        <Label htmlFor="search-name">{t("search.filters.name_label")}</Label>
         <Input
           id="search-name"
           name="q"
@@ -143,19 +159,19 @@ export default function SearchFilters({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="search-specialty">Specialty</Label>
+        <Label htmlFor="search-specialty">{t("search.filters.specialty_label")}</Label>
         <Select
           value={specialty ?? ""}
           onValueChange={(value) => onFilterChange({ specialty: value || null })}
           items={specialtyItems}
         >
           <SelectTrigger id="search-specialty">
-            <SelectValue placeholder="All specialties" />
+            <SelectValue placeholder={t("search.filters.specialty_placeholder")} />
           </SelectTrigger>
           <SelectContent>
             {specialties.map((option) => (
               <SelectItem key={option.id} value={option.id}>
-                {option.label}
+                {specialtyLabel(locale, option.nameEn, option.nameHe)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -163,31 +179,31 @@ export default function SearchFilters({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="search-language">Spoken language</Label>
+        <Label htmlFor="search-language">{t("search.filters.language_label")}</Label>
         <Select
           value={language ?? ""}
           onValueChange={(value) => onFilterChange({ language: value || null })}
-          items={LANGUAGE_ITEMS}
+          items={languageItems}
         >
           <SelectTrigger id="search-language">
-            <SelectValue placeholder="All languages" />
+            <SelectValue placeholder={t("search.filters.language_placeholder")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="he">Hebrew</SelectItem>
-            <SelectItem value="en">English</SelectItem>
+            <SelectItem value="he">{t("languages.he")}</SelectItem>
+            <SelectItem value="en">{t("languages.en")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="search-neighborhood">Neighborhood</Label>
+        <Label htmlFor="search-neighborhood">{t("search.filters.neighborhood_label")}</Label>
         <Select
           value={neighborhood ?? ""}
           onValueChange={(value) => onFilterChange({ neighborhood: value || null })}
           items={neighborhoodItems}
         >
           <SelectTrigger id="search-neighborhood">
-            <SelectValue placeholder="All neighborhoods" />
+            <SelectValue placeholder={t("search.filters.neighborhood_placeholder")} />
           </SelectTrigger>
           <SelectContent>
             {neighborhoods.map((option) => (
@@ -200,7 +216,7 @@ export default function SearchFilters({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="search-available-from">Available from</Label>
+        <Label htmlFor="search-available-from">{t("search.filters.available_from_label")}</Label>
         <Input
           id="search-available-from"
           type="date"
@@ -210,7 +226,7 @@ export default function SearchFilters({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="search-available-to">Available to</Label>
+        <Label htmlFor="search-available-to">{t("search.filters.available_to_label")}</Label>
         <Input
           id="search-available-to"
           type="date"
@@ -225,20 +241,20 @@ export default function SearchFilters({
           const isSelected = availableFrom === todayKey && availableTo === endKey;
           return (
             <Button
-              key={quick.label}
+              key={quick.labelKey}
               type="button"
               variant={isSelected ? "default" : "outline"}
               size="sm"
               onClick={() => onFilterChange({ availableFrom: todayKey, availableTo: endKey })}
             >
-              {quick.label}
+              {t(quick.labelKey)}
             </Button>
           );
         })}
       </div>
 
       <Button type="button" variant="outline" disabled={!hasActiveFilter} onClick={handleClear}>
-        Clear filters
+        {t("search.filters.clear")}
       </Button>
     </div>
   );

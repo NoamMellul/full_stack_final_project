@@ -2,6 +2,29 @@
 // Messages must match the UI-SPEC Copywriting Contract verbatim so the client
 // and server produce identical text.
 
+const PHONE_MAX_LENGTH = 20;
+
+// Shared by validateDoctorInput and validateDoctorPatch (D-03, D-04): a
+// phone is optional — undefined, null, "", or a whitespace-only string all
+// mean "no phone" and return null (no error). A present, non-blank value
+// must be a string no longer than PHONE_MAX_LENGTH after trimming. No
+// Israeli-phone regex, no digit-only rule, no prefix table — free text.
+function validatePhoneValue(phone: unknown): string | null {
+  if (phone === undefined || phone === null || phone === "") {
+    return null;
+  }
+  if (typeof phone !== "string") {
+    return "Phone number must be text.";
+  }
+  if (!phone.trim()) {
+    return null;
+  }
+  if (phone.trim().length > PHONE_MAX_LENGTH) {
+    return "Phone number must be 20 characters or fewer.";
+  }
+  return null;
+}
+
 export function validateDoctorInput(body: Record<string, unknown>): string | null {
   const fullName = body.fullName;
   if (typeof fullName !== "string" || !fullName.trim()) {
@@ -30,6 +53,11 @@ export function validateDoctorInput(body: Record<string, unknown>): string | nul
     return "Bio must be text.";
   }
 
+  const phoneError = validatePhoneValue(body.phone);
+  if (phoneError) {
+    return phoneError;
+  }
+
   const languageIds = body.languageIds;
   if (languageIds !== undefined && languageIds !== null) {
     const isValidList =
@@ -49,6 +77,7 @@ const EDITABLE_KEYS = [
   "locationId",
   "bio",
   "photoUrl",
+  "phone",
   "languageIds",
 ] as const;
 
@@ -95,6 +124,13 @@ export function validateDoctorPatch(body: Record<string, unknown>): string | nul
     const bio = body.bio;
     if (bio !== undefined && bio !== null && typeof bio !== "string") {
       return "Bio must be text.";
+    }
+  }
+
+  if ("phone" in body) {
+    const phoneError = validatePhoneValue(body.phone);
+    if (phoneError) {
+      return phoneError;
     }
   }
 

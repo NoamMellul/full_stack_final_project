@@ -137,6 +137,30 @@ test.describe("ADMIN-07 / ADMIN-08: platform oversight views", () => {
       await expect(rows.first().getByText(SHARED_PATIENT_NAME)).toBeVisible();
     });
 
+    test("the appointments doctor filter surfaces a failed doctor load", async ({ page }) => {
+      await loginAs(page, adminCreds, "/admin");
+
+      const requestPromise = page.waitForRequest("**/api/admin/doctors");
+      await page.route("**/api/admin/doctors", (route) =>
+        route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "Could not load doctors. Please refresh the page." }),
+        }),
+      );
+
+      await page.goto("/admin/appointments");
+
+      // Proves the direct table query is gone: the page really requests
+      // the admin-gated API route rather than reading `doctors` itself.
+      await requestPromise;
+
+      await expect(
+        page.getByText("Could not load doctors. Please refresh the page."),
+      ).toBeVisible();
+      await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
+    });
+
     test("filtering by status narrows to the matching appointment", async ({ page }) => {
       await loginAs(page, adminCreds, "/admin");
 

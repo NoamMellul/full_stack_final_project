@@ -10,5 +10,11 @@ export function safeRedirectPath(raw: string | null | undefined, fallback: strin
   if (!raw.startsWith("/")) return fallback;
   if (raw.startsWith("//")) return fallback;
   if (raw.includes(":")) return fallback;
+  // A browser normalizes a backslash immediately after the leading slash into
+  // a second slash, so "/\evil.example.com" resolves to a cross-origin URL
+  // (new URL("/\\evil.example.com", "https://good.com").href ->
+  // "https://evil.example.com/") — slipping past both the "//" check and the
+  // ":" check above (T-EQS-03). Reject any backslash anywhere in the value.
+  if (raw.includes("\\")) return fallback;
   return raw;
 }
