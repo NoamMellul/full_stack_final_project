@@ -135,8 +135,10 @@ docs/                   Architecture deep-dive documentation
 
 ## Documentation
 
+- [`docs/product-spec.md`](docs/product-spec.md) — problem, users, customer, business goals, main flows
 - [`docs/architecture-data-flow.md`](docs/architecture-data-flow.md) — how data flows between Frontend, Backend, and Database
 - [`docs/architecture-tech-choices.md`](docs/architecture-tech-choices.md) — why Tailwind/shadcn, why Postgres, why REST over Server Actions
 - [`docs/architecture-database.md`](docs/architecture-database.md) — full schema, foreign keys, RLS policies
 - [`docs/architecture-scalability.md`](docs/architecture-scalability.md) — indexes, pagination, known limitations
 - [`docs/architecture-security.md`](docs/architecture-security.md) — authentication, authorization, input validation, known risks
+- [`docs/test-plan.md`](docs/test-plan.md) — test strategy and coverage across the 382-test Playwright suite
