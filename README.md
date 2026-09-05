@@ -4,7 +4,8 @@ A Doctolib-inspired web platform, adapted to the Israeli market, that lets a pat
 
 **Core value**: a patient can find a doctor matching their criteria and book an available slot in a few clicks, with an absolute guarantee that two patients can never book the same slot.
 
-Live app: _add the Vercel URL here once deployed_
+Live app: https://medrdv.vercel.app/
+Repository: https://github.com/NoamMellul/full_stack_final_project
 
 ## Tech stack
 
@@ -135,6 +136,7 @@ docs/                   Architecture deep-dive documentation
 
 ## Documentation
 
+- [`docs/submission-links.md`](docs/submission-links.md) — live app URL, repo URL, demo account credentials
 - [`docs/product-spec.md`](docs/product-spec.md) — problem, users, customer, business goals, main flows
 - [`docs/architecture-data-flow.md`](docs/architecture-data-flow.md) — how data flows between Frontend, Backend, and Database
 - [`docs/architecture-tech-choices.md`](docs/architecture-tech-choices.md) — why Tailwind/shadcn, why Postgres, why REST over Server Actions
